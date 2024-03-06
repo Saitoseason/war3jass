@@ -17049,6 +17049,7 @@ endfunction
 function iq takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$4930304B
 endfunction
+// 铁匠铺打造装备
 function ir takes nothing returns nothing
 if bC(GetTriggerUnit(),$72617439)==true and bC(GetTriggerUnit(),$62677374)==true then
 call RemoveItem(aj(GetTriggerUnit(),$72617439))
@@ -17154,6 +17155,7 @@ endfunction
 function it takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$49303038
 endfunction
+// 牛神打造神兵利器
 function iu takes nothing returns nothing
 if bC(GetTriggerUnit(),$72616D34)==true and bC(GetTriggerUnit(),$6F76656E)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=10 then
 if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>10 then
@@ -17424,15 +17426,16 @@ call TriggerRegisterAnyUnitEventBJ(M6,EVENT_PLAYER_UNIT_PICKUP_ITEM)
 call TriggerAddCondition(M6,Condition(function i5))
 call TriggerAddAction(M6,function i6)
 endfunction
+// 清地板物品事件
 function i8 takes nothing returns nothing
 if RequestExtraBooleanData(50,GetTriggerPlayer(),null,null,false,0,0,0)==true and IsItemHiddenBJ(GetEnumItem())==false then
 if GetItemTypeId(GetEnumItem())==$706F6D6E then
-call RemoveItem(GetEnumItem())
-call AdjustPlayerStateBJ(3000,Player(0),PLAYER_STATE_RESOURCE_GOLD)
+// call RemoveItem(GetEnumItem())
+// call AdjustPlayerStateBJ(3000,Player(0),PLAYER_STATE_RESOURCE_GOLD)
 else
 if GetItemTypeId(GetEnumItem())==$73727263 then
-call RemoveItem(GetEnumItem())
-call AdjustPlayerStateBJ(8000,Player(0),PLAYER_STATE_RESOURCE_GOLD)
+// call RemoveItem(GetEnumItem())
+// call AdjustPlayerStateBJ(8000,Player(0),PLAYER_STATE_RESOURCE_GOLD)
 else
 endif
 endif
@@ -18544,10 +18547,10 @@ call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草准时运到"+I2S(p
 call EnableTrigger(Nb)
 call ForForce(ak(Player(8)),function kK)
 if ModuloInteger(provision,10)==0 then
-call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+"次，所有玩家增加全属性5点！")
+call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性5点！")
 call batchAddHero(5)
 elseif ModuloInteger(provision,50)==0 then 
-call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+"次，所有玩家增加全属性50点！")
+call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性50点！")
 call batchAddHero(50)
 else
 endif
@@ -18596,7 +18599,7 @@ call DisplayTextToForce(GetPlayersAll(),"军师命我前来督促粮草！")
 call DisplayTextToForce(GetPlayersAll(),"李严："+"粮草已备好，请将军一路小心！另外还有小小的心意请将军笑纳")
 set provisionUnit = CreateUnit(Player(8),$656E6563,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()),0)
 call IssuePointOrder(provisionUnit,"move",-1500.,-4867.)
-if isSpeed and provision>2 then
+if isSpeed and provision>20 then
 call SetUnitMoveSpeed(provisionUnit, 500)
 else
 endif
@@ -18720,6 +18723,7 @@ endfunction
 function ka takes nothing returns boolean
 return IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true
 endfunction
+// 村长任务
 function kb takes nothing returns nothing
 call DestroyTrigger(GetTriggeringTrigger())
 call SetUnitOwner(CH,Player(8),true)
@@ -20371,6 +20375,7 @@ endif
 endif
 endif
 endfunction
+// 赌博事件
 function nc takes nothing returns nothing
 set Oz=CreateTrigger()
 call TriggerRegisterAnyUnitEventBJ(Oz,EVENT_PLAYER_UNIT_PICKUP_ITEM)
@@ -20404,6 +20409,7 @@ call TriggerRegisterAnyUnitEventBJ(O0,EVENT_PLAYER_UNIT_PICKUP_ITEM)
 call TriggerAddCondition(O0,Condition(function nd))
 call TriggerAddAction(O0,function ne)
 endfunction
+// 武器练级事件
 function ng takes nothing returns nothing
 if bC(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$66726764)==true then
 call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$66726764),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$66726764))+1)
@@ -32794,7 +32800,7 @@ call TriggerRegisterPlayerChatEvent(gg_trg_XHCDXSWP2,Player(10),"",true)
 call TriggerRegisterPlayerChatEvent(gg_trg_XHCDXSWP2,Player(11),"",true)
 call TriggerAddAction(gg_trg_XHCDXSWP2,function Trig_XHCDXSWP2Actions)
 endfunction
-
+// 批量增加英雄属性事件
 function batchAddHero takes integer Number returns nothing
 local integer KW
 set KW=1
