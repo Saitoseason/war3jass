@@ -18352,13 +18352,23 @@ call CreateItemLoc(ChooseRandomItemExBJ(GetRandomInt(3,8),ITEM_TYPE_PERMANENT),M
 else
 endif
 // 百姓数量事件
-if Fr==120 then
+if Fr==100 then
 call ShowUnitShow(CX)
 call SetUnitInvulnerable(CX,false)
-call DisplayTextToForce(GetPlayersAll(),"小道传言:西域有神器存在!")
+call DisplayTextToForce(GetPlayersAll(),"众将军卫护百姓已有100人，据百姓传言:西域有神器存在!")
 call PingMinimapLocForForce(GetPlayersAll(),GetUnitLoc(CX),3.)
-else 
-    
+elseif Fr==150 then
+call SetItemInvulnerable(CreateItem($49303251,-1220.,-5240.),true)
+call DisplayTextToForce(GetPlayersAll(),"众将军卫护百姓已有150人，受百姓感召高祖降下斩蛇剑！）")
+elseif Fr==200 then
+call SetItemInvulnerable(CreateItem($49303251,-1220.,-5240.),true)
+call DisplayTextToForce(GetPlayersAll(),"众将军卫护百姓已有200人，所有英雄增加50点全属性！）")   
+call ExecuteFunc ("batchAddHeroAttributes50")  
+elseif Fr==250 then
+call SetItemInvulnerable(CreateItem($49303251,-1220.,-5240.),true)
+call DisplayTextToForce(GetPlayersAll(),"在魏国的铁骑下居然没有一名百姓流离失所，所有英雄增加100点全属性！）") 
+call ExecuteFunc ("batchAddHeroAttributes50")  
+call ExecuteFunc ("batchAddHeroAttributes50")  
 endif
 if GetRandomInt(GetUnitLevel(Dz),150)==150 and GetUnitLevel(C5)>=15 then
 call CreateNUnitsAtLoc(1,$6E303032,Player(10),Mt[5],bj_UNIT_FACING)
@@ -18554,12 +18564,12 @@ call EnableTrigger(Nb)
 call ForForce(ak(Player(8)),function kK)
 if ModuloInteger(provision,10)==0 then
 call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性5点！")
-call ExecuteFunc ("batchAddHeroAttributes")
+call ExecuteFunc ("batchAddHeroAttributes5")
+
 
 elseif ModuloInteger(provision,50)==0 then 
 call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性50点！")
-call ExecuteFunc ("batchAddHeroAttributes")
-// call batchAddHero(50)
+call ExecuteFunc ("batchAddHeroAttributes50")
 else
 endif
 if GetUnitTypeId(Nc)==$48485959 and isSpeed==false and provision>20 then
@@ -21294,7 +21304,7 @@ else
 endif
 if GetItemTypeId(GetManipulatedItem())==$6A64726E or GetItemTypeId(GetManipulatedItem())==$6D6E7366 or GetItemTypeId(GetManipulatedItem())==$49303251 or GetItemTypeId(GetManipulatedItem())==$6D6C7374 or GetItemTypeId(GetManipulatedItem())==$6D67746B or GetItemTypeId(GetManipulatedItem())==$49303342 or GetItemTypeId(GetManipulatedItem())==$666C6167 or GetItemTypeId(GetManipulatedItem())==$676F626D or GetItemTypeId(GetManipulatedItem())==$49303233 or GetItemTypeId(GetManipulatedItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 then
 if GetItemCharges(GetManipulatedItem())>0 then
-call SetUnitState(GetTriggerUnit(),ConvertUnitState(18),GetUnitState(GetTriggerUnit(),ConvertUnitState(18))+100.*I2R(GetItemCharges(GetManipulatedItem())))
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(18),GetUnitState(GetTriggerUnit(),ConvertUnitState(18))+120.*I2R(GetItemCharges(GetManipulatedItem())))
 else
 endif
 else
@@ -21501,7 +21511,7 @@ call DoNothing()
 endif
 if GetItemTypeId(GetManipulatedItem())==$6A64726E or GetItemTypeId(GetManipulatedItem())==$6D6E7366 or GetItemTypeId(GetManipulatedItem())==$49303251 or GetItemTypeId(GetManipulatedItem())==$6D6C7374 or GetItemTypeId(GetManipulatedItem())==$6D67746B or GetItemTypeId(GetManipulatedItem())==$49303342 or GetItemTypeId(GetManipulatedItem())==$666C6167 or GetItemTypeId(GetManipulatedItem())==$676F626D or GetItemTypeId(GetManipulatedItem())==$49303233 or GetItemTypeId(GetManipulatedItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 then
 if GetItemCharges(GetManipulatedItem())>0 then
-call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))-100.*I2R(GetItemCharges(GetManipulatedItem())))
+call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))-120.*I2R(GetItemCharges(GetManipulatedItem())))
 else
 endif
 else
@@ -27012,7 +27022,7 @@ call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41647467)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303631)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$4130354F)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303332)
-call SetUnitState(GetTriggerUnit(),ConvertUnitState(37),GetUnitState(GetTriggerUnit(),ConvertUnitState(37))-.15)
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(37),GetUnitState(GetTriggerUnit(),ConvertUnitState(37))-.2)
 set Hq[160+GetUnitUserData(GetTriggerUnit())]=0
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"开始修真，天地灵气！能力随修炼提升")
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cff00ffff天地灵气")
@@ -32816,10 +32826,15 @@ function attribute5 takes nothing returns nothing
 call ModifyHeroStat( bj_HEROSTAT_STR, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 5)
 call ModifyHeroStat( bj_HEROSTAT_AGI, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 5)
 call ModifyHeroStat( bj_HEROSTAT_INT, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 5)
+endfunction
 
+function attribute50 takes nothing returns nothing
+call ModifyHeroStat( bj_HEROSTAT_STR, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 50)
+call ModifyHeroStat( bj_HEROSTAT_AGI, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 50)
+call ModifyHeroStat( bj_HEROSTAT_INT, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 50)
 endfunction
 // 每秒加全属性事件
-function playerHeroForeach takes nothing returns nothing
+function playerHeroForeach5 takes nothing returns nothing
 set playerStart = 1
 set playerEnd = 8
 loop
@@ -32832,8 +32847,29 @@ set playerStart = playerStart + 1
 endloop
 endfunction
 
-function batchAddHeroAttributes takes nothing returns nothing
+function playerHeroForeach50 takes nothing returns nothing
+set playerStart = 1
+set playerEnd = 8
+loop
+exitwhen playerStart > playerEnd
+set userUnitGroup[playerStart] = GetUnitsOfPlayerMatching(ConvertedPlayer(playerStart), Condition(function Trig_ui______uFunc001Func001002002))
+call ForGroupBJ( userUnitGroup[playerStart], function attribute50 )
+call GroupClear( userUnitGroup[playerStart] )
+call DestroyGroup( userUnitGroup[playerStart] )
+set playerStart = playerStart + 1
+endloop
+endfunction
+
+function batchAddHeroAttributes5 takes nothing returns nothing
+set attributeTrigger=null
 set attributeTrigger=CreateTrigger()
 call TriggerRegisterTimerEventSingle(attributeTrigger,1)
-call TriggerAddAction(attributeTrigger,function playerHeroForeach)
+call TriggerAddAction(attributeTrigger,function playerHeroForeach5)
+endfunction
+
+function batchAddHeroAttributes50 takes nothing returns nothing
+set attributeTrigger=null
+set attributeTrigger=CreateTrigger()
+call TriggerRegisterTimerEventSingle(attributeTrigger,1)
+call TriggerAddAction(attributeTrigger,function playerHeroForeach50)
 endfunction
