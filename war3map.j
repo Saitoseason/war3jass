@@ -9,6 +9,8 @@ boolean L0=true
 integer provision=0
 unit provisionUnit=null
 boolean isSpeed=false
+// 全体加属性事件
+trigger allHeroAddAttribute=null
 integer Vl=$1E13380
 integer Vk=$1E28500
 integer Vc=28800
@@ -18548,10 +18550,11 @@ call EnableTrigger(Nb)
 call ForForce(ak(Player(8)),function kK)
 if ModuloInteger(provision,10)==0 then
 call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性5点！")
-call batchAddHero(5)
+
+
 elseif ModuloInteger(provision,50)==0 then 
 call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性50点！")
-call batchAddHero(50)
+// call batchAddHero(50)
 else
 endif
 if GetUnitTypeId(Nc)==$48485959 and isSpeed==false and provision>20 then
@@ -32801,15 +32804,41 @@ call TriggerRegisterPlayerChatEvent(gg_trg_XHCDXSWP2,Player(11),"",true)
 call TriggerAddAction(gg_trg_XHCDXSWP2,function Trig_XHCDXSWP2Actions)
 endfunction
 // 批量增加英雄属性事件
-function batchAddHero takes integer Number returns nothing
-local integer KW
-set KW=1
-loop
-exitwhen KW>8
-call ModifyHeroStat(bj_HEROSTAT_STR,Ib[KW],bj_MODIFYMETHOD_ADD,Number)
-call ModifyHeroStat(bj_HEROSTAT_AGI,Ib[KW],bj_MODIFYMETHOD_ADD,Number)
-call ModifyHeroStat(bj_HEROSTAT_INT,Ib[KW],bj_MODIFYMETHOD_ADD,Number)
-// call DestroyTrigger(GetTriggeringTrigger())
-set KW=KW+1
-endloop
+// function batchAddHero takes integer Number returns nothing
+// local integer heroNum
+// set heroNum=1
+// loop
+// exitwhen heroNum>8
+// call ModifyHeroStat(bj_HEROSTAT_STR,Ib[heroNum],bj_MODIFYMETHOD_ADD,Number)
+// call ModifyHeroStat(bj_HEROSTAT_AGI,Ib[heroNum],bj_MODIFYMETHOD_ADD,Number)
+// call ModifyHeroStat(bj_HEROSTAT_INT,Ib[heroNum],bj_MODIFYMETHOD_ADD,Number)
+// set heroNum=heroNum+1
+// endloop
+// endfunction
+
+function batchAddHeroAttributes takes integer number returns nothing
+local player plll
+local integer playerId
+
+    // 循环遍历玩家1-8
+    set playerId = 1
+    loop
+        exitwhen playerId > 8
+        
+        set plll = Player(playerId)
+        
+        // 遍历玩家的所有单位（英雄）
+        // call ForGroupBJ(GetUnitsOfPlayerAll(plll), function AddAttributes)
+        
+        set playerId = playerId + 1
+    endloop
+endfunction
+
+function AddAttributes takes unit u returns nothing
+    if IsUnitType(u, UNIT_TYPE_HERO) then
+        // 给英雄增加全属性值
+        call ModifyHeroStat(bj_HEROSTAT_STR, u, bj_MODIFYMETHOD_ADD, 5)
+        call ModifyHeroStat(bj_HEROSTAT_AGI, u, bj_MODIFYMETHOD_ADD, 5)
+        call ModifyHeroStat(bj_HEROSTAT_INT, u, bj_MODIFYMETHOD_ADD, 5)
+    endif
 endfunction
