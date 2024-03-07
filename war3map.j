@@ -32837,3 +32837,12 @@ set attributeTrigger=CreateTrigger()
 call TriggerRegisterTimerEventSingle(attributeTrigger,1)
 call TriggerAddAction(attributeTrigger,function playerHeroForeach)
 endfunction
+
+function AddAttributes takes unit u returns nothing
+    if IsUnitType(u, UNIT_TYPE_HERO) then
+        // 给英雄增加全属性值
+        call ModifyHeroStat(bj_HEROSTAT_STR, u, bj_MODIFYMETHOD_ADD, 5)
+        call ModifyHeroStat(bj_HEROSTAT_AGI, u, bj_MODIFYMETHOD_ADD, 5)
+        call ModifyHeroStat(bj_HEROSTAT_INT, u, bj_MODIFYMETHOD_ADD, 5)
+    endif
+endfunction
