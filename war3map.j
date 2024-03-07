@@ -20429,6 +20429,33 @@ call TriggerAddAction(O0,function ne)
 endfunction
 // 武器练级事件
 function ng takes nothing returns nothing
+if bC(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36)==true then
+call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))+1)
+if IsUnitType(GetDyingUnit(),UNIT_TYPE_HERO)==true then
+call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))+4)
+else
+endif
+call DisplayTextToPlayer(GetOwningPlayer(GetKillingUnitBJ()),0,0,"|cffB366FF亮银枪（一级）："+(I2S(GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36)))+"/350"))
+if GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))>=350 then
+call RemoveItem(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))
+call UnitAddItemByIdSwapped($72656A34,Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetKillingUnitBJ()))+"你的亮银枪已升至二级")
+else
+endif
+elseif bC(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34)==true then
+call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34))+1)
+if IsUnitType(GetDyingUnit(),UNIT_TYPE_HERO)==true then
+call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34))+4)
+else
+endif
+call DisplayTextToPlayer(GetOwningPlayer(GetKillingUnitBJ()),0,0,"|cffB366FF亮银枪（二级）："+(I2S(GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34)))+"/350"))
+if GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34))>=350 then
+call RemoveItem(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A34))
+call UnitAddItemByIdSwapped($676F626D,Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetKillingUnitBJ()))+"你的亮银枪已升至三级")
+else
+endif
+endif
 if bC(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$66726764)==true then
 call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$66726764),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$66726764))+1)
 if IsUnitType(GetDyingUnit(),UNIT_TYPE_HERO)==true then
@@ -20491,6 +20518,7 @@ if IsUnitType(GetDyingUnit(),UNIT_TYPE_HERO)==true then
 call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$6B6C6D6D),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$6B6C6D6D))+4)
 else
 endif
+
 call DisplayTextToPlayer(GetOwningPlayer(GetKillingUnitBJ()),0,0,"|cffB366FF方天画戟（一级）："+(I2S(GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$6B6C6D6D)))+"/100"))
 if GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$6B6C6D6D))>=100 then
 call RemoveItem(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$6B6C6D6D))
@@ -20498,6 +20526,7 @@ call UnitAddItemByIdSwapped($736F7261,Ib[GetConvertedPlayerId(GetOwningPlayer(Ge
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetKillingUnitBJ()))+"你的方天画戟已升至二级")
 else
 endif
+
 else
 if bC(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$736F7261)==true then
 call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$736F7261),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$736F7261))+1)
@@ -20565,6 +20594,7 @@ call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ
 else
 endif
 call DisplayTextToPlayer(GetOwningPlayer(GetKillingUnitBJ()),0,0,"|cffB366FF李广之弓（二级）："+(I2S(GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$75666C67)))+"/250"))
+
 if GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$75666C67))>=250 then
 call RemoveItem(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$75666C67))
 call UnitAddItemByIdSwapped($666C6167,Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])
@@ -20572,6 +20602,7 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetKilling
 else
 call DoNothing()
 endif
+
 else
 endif
 endif
@@ -20986,7 +21017,7 @@ set PL=CreateTrigger()
 call TriggerRegisterPlayerUnitEventSimple(PL,Player(9),EVENT_PLAYER_UNIT_DEATH)
 call TriggerRegisterPlayerUnitEventSimple(PL,Player(10),EVENT_PLAYER_UNIT_DEATH)
 call TriggerRegisterPlayerUnitEventSimple(PL,Player(PLAYER_NEUTRAL_AGGRESSIVE),EVENT_PLAYER_UNIT_DEATH)
-call TriggerAddAction(PL,function oX)
+// call TriggerAddAction(PL,function oX)
 endfunction
 function oZ takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$49303153 or GetItemTypeId(GetManipulatedItem())==$49303154 or GetItemTypeId(GetManipulatedItem())==$49303155 or GetItemTypeId(GetManipulatedItem())==$49303152
