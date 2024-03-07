@@ -10,7 +10,11 @@ integer provision=0
 unit provisionUnit=null
 boolean isSpeed=false
 // 全体加属性事件
-trigger allHeroAddAttribute=null
+integer playerStart=0
+integer playerEnd=0
+group array userUnitGroup
+trigger attributeTrigger=null
+
 integer Vl=$1E13380
 integer Vk=$1E28500
 integer Vc=28800
@@ -18550,10 +18554,11 @@ call EnableTrigger(Nb)
 call ForForce(ak(Player(8)),function kK)
 if ModuloInteger(provision,10)==0 then
 call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性5点！")
-
+call ExecuteFunc ("batchAddHeroAttributes")
 
 elseif ModuloInteger(provision,50)==0 then 
 call DisplayTimedTextToForce(GetPlayersAll(),2.,"我军粮草累计运到"+I2S(provision)+" 次，所有玩家增加全属性50点！")
+call ExecuteFunc ("batchAddHeroAttributes")
 // call batchAddHero(50)
 else
 endif
@@ -31687,6 +31692,7 @@ endfunction
 function Trig_HKYJ3Conditions takes nothing returns boolean
 return ((IsUnitInForce(GetTriggerUnit(),udg_Wucdwjz1)==true))
 endfunction
+// 每秒加全属性事件
 function Trig_ui______uFunc001Func002A takes nothing returns nothing
 if ((((GetHeroStr(GetEnumUnit(), false)+udg_zdjsx[GetConvertedPlayerId(GetOwningPlayer(GetEnumUnit()))]) <= 2100000000))) then
 call ModifyHeroStat( bj_HEROSTAT_STR, GetEnumUnit(), bj_MODIFYMETHOD_ADD, udg_zdjsx[GetConvertedPlayerId(GetOwningPlayer(GetEnumUnit()))])
@@ -31701,6 +31707,7 @@ call ModifyHeroStat( bj_HEROSTAT_INT, GetEnumUnit(), bj_MODIFYMETHOD_ADD, udg_zd
 else
 endif
 endfunction
+// 每秒加全属性事件
 function Trig_HKYJ18Actions takes nothing returns nothing
 set bj_forLoopAIndex = 1
 set bj_forLoopAIndexEnd = 12
@@ -32804,41 +32811,29 @@ call TriggerRegisterPlayerChatEvent(gg_trg_XHCDXSWP2,Player(11),"",true)
 call TriggerAddAction(gg_trg_XHCDXSWP2,function Trig_XHCDXSWP2Actions)
 endfunction
 // 批量增加英雄属性事件
-// function batchAddHero takes integer Number returns nothing
-// local integer heroNum
-// set heroNum=1
-// loop
-// exitwhen heroNum>8
-// call ModifyHeroStat(bj_HEROSTAT_STR,Ib[heroNum],bj_MODIFYMETHOD_ADD,Number)
-// call ModifyHeroStat(bj_HEROSTAT_AGI,Ib[heroNum],bj_MODIFYMETHOD_ADD,Number)
-// call ModifyHeroStat(bj_HEROSTAT_INT,Ib[heroNum],bj_MODIFYMETHOD_ADD,Number)
-// set heroNum=heroNum+1
-// endloop
-// endfunction
 
-function batchAddHeroAttributes takes integer number returns nothing
-local player plll
-local integer playerId
+function attribute5 takes nothing returns nothing
+call ModifyHeroStat( bj_HEROSTAT_STR, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 5)
+call ModifyHeroStat( bj_HEROSTAT_AGI, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 5)
+call ModifyHeroStat( bj_HEROSTAT_INT, GetEnumUnit(), bj_MODIFYMETHOD_ADD, 5)
 
-    // 循环遍历玩家1-8
-    set playerId = 1
-    loop
-        exitwhen playerId > 8
-        
-        set plll = Player(playerId)
-        
-        // 遍历玩家的所有单位（英雄）
-        // call ForGroupBJ(GetUnitsOfPlayerAll(plll), function AddAttributes)
-        
-        set playerId = playerId + 1
-    endloop
+endfunction
+// 每秒加全属性事件
+function playerHeroForeach takes nothing returns nothing
+set playerStart = 1
+set playerEnd = 8
+loop
+exitwhen playerStart > playerEnd
+set userUnitGroup[playerStart] = GetUnitsOfPlayerMatching(ConvertedPlayer(playerStart), Condition(function Trig_ui______uFunc001Func001002002))
+call ForGroupBJ( userUnitGroup[playerStart], function attribute5 )
+call GroupClear( userUnitGroup[playerStart] )
+call DestroyGroup( userUnitGroup[playerStart] )
+set playerStart = playerStart + 1
+endloop
 endfunction
 
-function AddAttributes takes unit u returns nothing
-    if IsUnitType(u, UNIT_TYPE_HERO) then
-        // 给英雄增加全属性值
-        call ModifyHeroStat(bj_HEROSTAT_STR, u, bj_MODIFYMETHOD_ADD, 5)
-        call ModifyHeroStat(bj_HEROSTAT_AGI, u, bj_MODIFYMETHOD_ADD, 5)
-        call ModifyHeroStat(bj_HEROSTAT_INT, u, bj_MODIFYMETHOD_ADD, 5)
-    endif
+function batchAddHeroAttributes takes nothing returns nothing
+set attributeTrigger=CreateTrigger()
+call TriggerRegisterTimerEventSingle(attributeTrigger,1)
+call TriggerAddAction(attributeTrigger,function playerHeroForeach)
 endfunction
