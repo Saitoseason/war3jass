@@ -14696,8 +14696,15 @@ endif
 else
 endif
 if GetUnitAbilityLevel(Ih,$415A4635)>=1 and GetRandomInt(1,5)<=2 then
+// 张飞携带盘古斧时，大招伤害提高
+if  bC(Ig,$6F636F72)==true then
+call b5("万军取首",Ih,.1,12,255,200,0,255)
+call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.03*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+else
 call b5("万夫莫敌",Ih,.1,12,255,200,0,255)
-call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.01*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.02*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+
+endif
 else
 endif
 if GetUnitAbilityLevel(Ih,$41304736)>=1 then
@@ -26098,6 +26105,9 @@ call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"难度一作弊模式","[难度�
 |n输入：我要钱   增加100000金钱
 |n输入：我要木   增加1000木头
 |n输入：一个英雄不够用   开启多英雄选择模式（游戏开始120秒后无作用）","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
+// 增加任务说明
+call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"保护百姓","*我大汉乃仁义之师，一定要保护好在魏国进攻下逃难的百姓，每保护一个百姓都会有一定的奖励","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
+call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"督粮运粮","*李言奉后主之令支持北伐粮草补给，需要一位大将前往运粮并保护粮草成功抵达间隔，有一人对此非常忧虑……","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 if GetPlayerSlotState(Player(0))==PLAYER_SLOT_STATE_PLAYING and GetPlayerController(Player(0))==MAP_CONTROL_USER then
 call aw(true)
 else
@@ -27880,110 +27890,159 @@ endfunction
 function v5 takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$627A6266 and bC(GetTriggerUnit(),$6B74726D)==true
 endfunction
+// 三国演义兑换事件
 function v6 takes nothing returns nothing
 call RemoveItem(aj(GetTriggerUnit(),$6B74726D))
+if GetUnitTypeId(Iv)==$4F303033 or GetUnitTypeId(Iv)==$4F303035 then
+    // 关凤-赤兔
+call UnitAddItemByIdSwapped($49303049,GetTriggerUnit())
+return
+endif
+if GetUnitTypeId(GetTriggerUnit())==$48505430 then
+    // 庞统-伏羲琴
+call UnitAddItemByIdSwapped($49303049,GetTriggerUnit())
+return
+endif
+if GetUnitTypeId(GetTriggerUnit())==$485A4630 then
+    // 张飞-盘古斧
+call UnitAddItemByIdSwapped($6F636F72,GetTriggerUnit())
+return
+endif
+if GetUnitTypeId(GetTriggerUnit())==$4F726578 then
+    // 孟获-巨象
+call UnitAddItemByIdSwapped($49303037,GetTriggerUnit())
+return
+endif
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(DQ) then
+    // 火神盾
 call UnitAddItemByIdSwapped($726F7473,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Cr) or GetUnitTypeId(GetTriggerUnit())==$48584842 then
+    // 火焰拳套
 call UnitAddItemByIdSwapped($73687273,GetTriggerUnit())
 return
 else
 if GetUnitAbilityLevel(GetTriggerUnit(),$41304C30)>0 then
+    // 丈八蛇矛
 call UnitAddItemByIdSwapped($726E7370,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(DM) then
+    // 问天枪
 call UnitAddItemByIdSwapped($49303034,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Cx) or GetUnitTypeId(GetTriggerUnit())==$484A5731 or GetUnitTypeId(GetTriggerUnit())==$486B616C then
+    // 震天弓和穿云箭
 call UnitAddItemByIdSwapped($72616D34,GetTriggerUnit())
 call UnitAddItemByIdSwapped($6F76656E,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(C3) then
+    // 机关车
 call UnitAddItemByIdSwapped($49303056,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Cw) then
+    // 魔神之翼
 call UnitAddItemByIdSwapped($49303036,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(C2) or GetUnitTypeId(GetTriggerUnit())==$484D5331 then
+    // 雷神管
 call UnitAddItemByIdSwapped($49303142,GetTriggerUnit())
 return
 else
 if GetUnitAbilityLevel(GetTriggerUnit(),$41304C32)>0 then
+    // 天狼枪
 call UnitAddItemByIdSwapped($49303055,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(DE) then
+    // 倚天剑
 call UnitAddItemByIdSwapped($73686377,GetTriggerUnit())
 return
 else
 if GetUnitAbilityLevel(GetTriggerUnit(),$41304C34)>0 then
+    // 养由基之弓
 call UnitAddItemByIdSwapped($72616D33,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Cp) or GetUnitTypeId(GetTriggerUnit())==$48485959 then
+    // 水神戟
 call UnitAddItemByIdSwapped($73747067,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(C0) then
+    // 玄光之翼
 call UnitAddItemByIdSwapped($62666872,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Cz) then
+    // 刑天斧和刑天盾
 call UnitAddItemByIdSwapped($67736F75,GetTriggerUnit())
 call UnitAddItemByIdSwapped($636F736C,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Ct) then
+    // 七星宝刀
 call UnitAddItemByIdSwapped($6E737069,GetTriggerUnit())
 return
 else
 if GetUnitAbilityLevel(GetTriggerUnit(),$41304136)>0 then
+    // 青龙刀
 call UnitAddItemByIdSwapped($73666F67,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(C1) then
+    // 项羽战刃
 call UnitAddItemByIdSwapped($73747265,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(DL) then
+    // 太平要术
 call UnitAddItemByIdSwapped($49303035,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$48475330 or GetUnitTypeId(GetTriggerUnit())==$48475332 and bC(GetTriggerUnit(),$49303147)==true then
+    // 幽冥赤兔
 call UnitAddItemByIdSwapped($49303146,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$48475332 or GetUnitTypeId(GetTriggerUnit())==$48475330 then
+    // 方天鬼戟
 call UnitAddItemByIdSwapped($49303147,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$48575930 or GetUnitTypeId(GetTriggerUnit())==$4E30304D or GetUnitTypeId(GetTriggerUnit())==$48575932 then
+    // 奇谋
 call UnitAddItemByIdSwapped($49303150,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$484A5330 or GetUnitTypeId(GetTriggerUnit())==$484A5331 or GetUnitTypeId(GetTriggerUnit())==$484A5332 or GetUnitTypeId(GetTriggerUnit())==$484A5333 and bC(GetTriggerUnit(),$6D6C7374)==true and HaveSavedInteger(FS,GetHandleId(GetTriggerUnit()),$E48A2A07)==false then
 call SaveInteger(FS,GetHandleId(GetTriggerUnit()),$E48A2A07,1)
+// 九天算尺
 call UnitAddItemByIdSwapped($49303043,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$484A5330 or GetUnitTypeId(GetTriggerUnit())==$484A5331 or GetUnitTypeId(GetTriggerUnit())==$484A5332 or GetUnitTypeId(GetTriggerUnit())==$484A5333 and HaveSavedInteger(FS,GetHandleId(GetTriggerUnit()),$2B390203)==false then
 call SaveInteger(FS,GetHandleId(GetTriggerUnit()),$2B390203,1)
+// 轩辕剑
 call UnitAddItemByIdSwapped($6D6C7374,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Co) then
+    // 日月乾坤轮
 call UnitAddItemByIdSwapped($7664646C,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==$4E303050 and HaveSavedInteger(FS,GetHandleId(GetTriggerUnit()),$2B390203)==false then
+    // 九天算尺
 call SaveInteger(FS,GetHandleId(GetTriggerUnit()),$2B390203,1)
 call UnitAddItemByIdSwapped($49303043,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$48767368 then
+    // 百避双匕
 call UnitAddItemSwapped(CreateItem($49303057,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),GetTriggerUnit())
 return
 else
+
+
 if GetRandomInt(1,100)==38 then
 call UnitAddItemByIdSwapped(LJ[GetRandomInt(180,181)],GetTriggerUnit())
 else
