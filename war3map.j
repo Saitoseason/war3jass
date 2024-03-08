@@ -27895,7 +27895,7 @@ function v6 takes nothing returns nothing
 call RemoveItem(aj(GetTriggerUnit(),$6B74726D))
 if GetUnitTypeId(Iv)==$4F303033 or GetUnitTypeId(Iv)==$4F303035 then
     // 关凤-赤兔
-call UnitAddItemByIdSwapped($49303049,GetTriggerUnit())
+call UnitAddItemByIdSwapped($6F736C6F,GetTriggerUnit())
 return
 endif
 if GetUnitTypeId(GetTriggerUnit())==$48505430 then
