@@ -14747,9 +14747,9 @@ endif
 // 伏羲琴伤害 Gq
 if GetUnitAbilityLevel(Ih,$41303552)>=1 then
 if Gq==7 then
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,2)*.5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,2),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,1),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -17199,7 +17199,21 @@ return GetItemTypeId(GetManipulatedItem())==$49303038
 endfunction
 // 牛神打造神兵利器
 function iu takes nothing returns nothing
+    // 如果带了方天画戟和幽冥赤兔，且强化石数量大于2
+if bC(GetTriggerUnit(),$6D6E7366)==true and bC(GetTriggerUnit(),$49303146)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=2 then
+if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>2 then
+call SetItemCharges(aj(GetTriggerUnit(),$646B6677),GetItemCharges(aj(GetTriggerUnit(),$646B6677))-2)
+else
+call RemoveItem(aj(GetTriggerUnit(),$646B6677))
+endif
+call RemoveItem(aj(GetTriggerUnit(),$6D6E7366))
+call RemoveItem(aj(GetTriggerUnit(),$49303146))
+call UnitAddItem(GetTriggerUnit(),CreateItem($49303147,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了方天鬼戟")
+else 
+   // 如果待了震天弓和穿云箭，且强化石数量大于10
 if bC(GetTriggerUnit(),$72616D34)==true and bC(GetTriggerUnit(),$6F76656E)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=10 then
+    // 如果强化石数量大于10
 if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>10 then
 call SetItemCharges(aj(GetTriggerUnit(),$646B6677),GetItemCharges(aj(GetTriggerUnit(),$646B6677))-10)
 else
@@ -17223,6 +17237,10 @@ call AdjustPlayerStateBJ(20000,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RE
 call AdjustPlayerStateBJ(20,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_LUMBER)
 endif
 endif
+endif
+
+ 
+
 endfunction
 function iv takes nothing returns nothing
 set M2=CreateTrigger()
