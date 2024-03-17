@@ -1233,11 +1233,14 @@ native EXSetUnitMoveType takes unit u,integer t returns nothing
 function archeryEvent takes integer time returns nothing
     if huntingFinish ==true then
     set archeryTime = archeryTime+time
-    // 每层印记+5点射程和5点基础攻击
+    if archeryTime>300 then
+        set archeryTime=300
+        endif
+    // 每层印记+5点射程和
     call DisplayTextToForce(GetPlayersAll(),GetUnitName(huntingUnit)+"|Cff00ff00黄忠当前印记层数："+I2S(archeryTime))
     call SetUnitState(huntingUnit,ConvertUnitState(22),1250+archeryTime*5)
      call SetUnitAcquireRange(huntingUnit,1250+archeryTime*5)
-     call SetUnitState(huntingUnit,ConvertUnitState(18),GetUnitState(huntingUnit,ConvertUnitState(18))+time*5)
+    //  call SetUnitState(huntingUnit,ConvertUnitState(18),GetUnitState(huntingUnit,ConvertUnitState(18))+time*3)
     endif
 endfunction
 
@@ -2426,7 +2429,7 @@ set JT=JT*1.45
 endif
 // 蚩尤套伤害系数1.5
 if GetUnitAbilityLevel(Ij,$4130444B)>0 then
-set JT=JT*1.5
+set JT=JT*1.35
 endif
 // 朱雀修真1.5
 if GetUnitAbilityLevel(Ij,$41303458)>0 then 
@@ -2434,7 +2437,7 @@ set JT=JT*1.5
 endif
 // 自修系数1.3（自改）
 if GetUnitAbilityLevel(Ij,$41304238)>0 then
-set JT=JT*1.3
+set JT=JT*1.15
 endif
 // 霸王套伤害系数1.8
 if GetUnitAbilityLevel(Ij,$41304730)>0 then
@@ -3258,6 +3261,7 @@ call RemoveLocation(Jd[10])
 endif
 elseif bW(JW,$6C6E726E)!=null and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and JW==C0 then
 if GetRandomInt(GetUnitAbilityLevel(JW,$41303645),20)==20 then
+    // 刘湛冲击波伤害
 call UnitDamageTarget(JW,Ig,I2R(GetHeroStr(JW,true)*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
@@ -14712,13 +14716,13 @@ if GetUnitAbilityLevel(Ih,$41303648)>0 then
 call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41303648))))
 else
 endif
-// 马超被动夺命枪效果,如果是玩家的话造成力量系数乘以0.6的伤害，如果携带问天枪，造成1.2系数的伤害
+// 马超被动夺命枪效果,如果是玩家的话造成力量系数乘以0.1的伤害，如果携带问天枪，造成0.3系数的伤害
 if GetUnitAbilityLevel(Ih,$41303755)>0 then
 if IsUnitAlly(Ih,Player(8))==true then
-if bC(Ig,$49303055)==true then 
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*1.2,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+if bC(Ig,$49303055)==true or bC(Ig,$6D6C7374)==true then 
+call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.3,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.6,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.1,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
 else
@@ -14811,7 +14815,7 @@ endif
 else
 endif
 if GetUnitAbilityLevel(Ih,$41304736)>=1 then
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,GetUnitAbilityLevel(Ih,$41304736))*.4,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,GetUnitAbilityLevel(Ih,$41304736))*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 // call UnitDamageTarget(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304736))*200.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call SetUnitManaBJ(Ig,GetUnitState(Ig,UNIT_STATE_MANA)-I2R(GetUnitAbilityLevel(Ih,$41304736))*200.)
 else
@@ -14911,7 +14915,7 @@ endif
 else
 if GetRandomInt(1,10)<=GetUnitAbilityLevel(Ih,$41303653) then
 call SetUnitAnimation(Ih,"spin")
-call bs(Ih,GetUnitX(Ih),GetUnitY(Ih),220,(GetHeroStr(Ih,true)+GetHeroAgi(Ih,true))*I2R(GetUnitAbilityLevel(Ih,$41303653)),5,0)
+call bs(Ih,GetUnitX(Ih),GetUnitY(Ih),260,(GetHeroStr(Ih,true)+GetHeroAgi(Ih,true))*I2R(GetUnitAbilityLevel(Ih,$41303653)),5,0)
 else
 if GetUnitTypeId(Ih)==$48595030 then
 if LoadInteger(Ia,GetHandleId(Ih),$41595030)>=$41595030+1 then
@@ -18038,7 +18042,7 @@ if GetTriggerUnit()==Ck then
     // 黄忠击杀蚩尤判定，因为开头已经默认+6，所以这里+24
 
 if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingFinish==true then
-call archeryEvent(24)
+call archeryEvent(12)
 endif
 if Gq>6 then
 if GetItemPlayer(SY)==Player(PLAYER_NEUTRAL_PASSIVE) then
@@ -18071,7 +18075,7 @@ call TimerStart(MG,60.,false,function ja)
 else
 if GetTriggerUnit()==Cl then
 if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingFinish==true then
-call archeryEvent(12)
+call archeryEvent(9)
 endif
 if Gq>=7 then
 if GetRandomInt(0,2)==2 then
@@ -18113,7 +18117,7 @@ call TimerStart(MG,60.,false,function jZ)
 else
 if GetTriggerUnit()==Cm then
     if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit)and huntingFinish==true then
-call archeryEvent(44)
+call archeryEvent(24)
 endif
     // 霸王套掉落机制
 set VL[0]=PlaceRandomItem(SZ,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
@@ -18284,7 +18288,8 @@ else
 endif
 endif
 // 如果触发单位没有追日靴，且骰子的值》95
-if GetUnitAbilityLevel(GetTriggerUnit(),$4130344D)==0 and GetRandomInt(1,100)>95 then
+// GetUnitAbilityLevel(GetTriggerUnit(),$4130344D)==0 and
+if  GetRandomInt(1,100)>97 then
 call UnitAddAbility(GetTriggerUnit(),$4130344D)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$4130344D)
 call SetItemUserData(CreateItem($49303030,GetUnitX(CN),GetUnitY(CN)),288)
@@ -18856,7 +18861,7 @@ if isSpeed and provision>20 then
 call SetUnitMoveSpeed(provisionUnit, 500)
 else
 endif
-call AdjustPlayerStateBJ(1000*GetUnitLevel(C5),GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1500*GetUnitLevel(C5),GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_GOLD)
 call DisableTrigger(GetTriggeringTrigger())
 set provisionUnit=null
 endfunction
@@ -22072,7 +22077,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,GetOwningPlayer(Iv))==true and KC!=Iv and IsUnitType(KC,UNIT_TYPE_STRUCTURE)==false then
-call UnitDamageTarget(Iv,KC,JT,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Iv,KC,JT*2,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 if IsUnitType(KC,UNIT_TYPE_HERO)==false and GetUnitPointValue(KC)!=55 and GetUnitPointValue(KC)!=50 and GetUnitState(KC,UNIT_STATE_LIFE)>.405 then
 call GroupAddUnit(Hx[0],KC)
 else
@@ -22094,7 +22099,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,GetOwningPlayer(Iv))==true and IsUnitType(KC,UNIT_TYPE_STRUCTURE)==false and KC!=Iv then
-call UnitDamageTarget(Iv,KC,JT,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Iv,KC,JT*2,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 if IsUnitType(KC,UNIT_TYPE_HERO)==false and GetUnitPointValue(KC)!=55 and GetUnitPointValue(KC)!=50 and GetUnitState(KC,UNIT_STATE_LIFE)>.405 then
 call GroupAddUnit(Hx[0],KC)
 else
@@ -25785,10 +25790,11 @@ call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
 else
 call UnitDamageTarget(Iv,GetSpellTargetUnit(),I2R(GetHeroAgi(Iv,true)*GetUnitAbilityLevel(Iv,$41487462)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_COLD,WEAPON_TYPE_WHOKNOWS)
 endif
+// 地裂脚
 elseif GetSpellAbilityId()==$414F7773 then
 set Ii=bk(Iv,1,JS)
 if bC(GetTriggerUnit(),$6D6C7374)==true or bC(GetTriggerUnit(),$726E7370)==true then
-call bs(Iv,GetUnitX(GetSpellTargetUnit()),GetUnitY(GetSpellTargetUnit()),500.,Ii,3,0)
+call bs(Iv,GetUnitX(GetSpellTargetUnit()),GetUnitY(GetSpellTargetUnit()),500.,Ii*2,3,0)
 else
 call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),500.,I2R(GetHeroStr(Iv,true)*GetUnitAbilityLevel(Iv,$414F7773)),3,3)
 endif
@@ -25955,7 +25961,11 @@ endif
 elseif GetSpellAbilityId()==$41304441 then
 call by(Iv,CE)
 elseif GetSpellAbilityId()==$415A4651 then
+    // 泰山压顶效果
 call dr(Iv,GetSpellTargetX(),GetSpellTargetY(),GetUnitState(Iv,ConvertUnitState(1))*.1*I2R(JS),"war3mapImported\\slam.mdx",1)
+// elseif GetSpellAbilityId()==$41304741 then
+
+// call dr(Iv,GetSpellTargetX(),GetSpellTargetY(),GetUnitState(Iv,ConvertUnitState(1))*.1*I2R(JS),"war3mapImported\\slam.mdx",1)
 elseif GetSpellAbilityId()==$41303632 then
 set Ii=bk(Iv,1,JS)
 if GetUnitAbilityLevel(Iv,$4130334E)>0 then
@@ -26200,7 +26210,7 @@ endif
 endif
 // 青囊书、孙子冰法20%CD
 if GetUnitAbilityLevel(GetTriggerUnit(),$41496862)>0 or GetUnitAbilityLevel(GetTriggerUnit(),$41507361)>0 then
-call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.8)
+call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.85)
 else
 endif
 endfunction
@@ -27428,7 +27438,7 @@ call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303458)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303252)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303048)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303431)
-call SetHeroInt(GetTriggerUnit(),GetHeroInt(GetTriggerUnit(),false)+100,true)
+call SetHeroInt(GetTriggerUnit(),GetHeroInt(GetTriggerUnit(),false)+10,true)
 set Hq[40+GetUnitUserData(GetTriggerUnit())]=0
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"开始修真，朱雀之神！智力提升随修炼提升")
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cffff0000朱鸟之力")
@@ -27550,7 +27560,7 @@ call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,GetHeroProperName
 if Hq[40+GetUnitUserData(GetTriggerUnit())]<=160 then
 if ModuloInteger(Hq[40+GetUnitUserData(GetTriggerUnit())],20)==0 then
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+("|cFFFF0000你的元神(朱鸟)修炼至"+Hr[Hq[40+GetUnitUserData(GetTriggerUnit())]/20]))
-call ModifyHeroStat(bj_HEROSTAT_INT,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,5)
+call ModifyHeroStat(bj_HEROSTAT_INT,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,10)
 else
 endif
 else
@@ -27568,9 +27578,9 @@ call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,GetHeroProperName
 if Hq[80+GetUnitUserData(GetTriggerUnit())]<=160 then
 if ModuloInteger(Hq[80+GetUnitUserData(GetTriggerUnit())],20)==0 then
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+("|cFF1FBF00你的元神(苍龙)修炼至"+Hr[Hq[80+GetUnitUserData(GetTriggerUnit())]/20]))
-call ModifyHeroStat(bj_HEROSTAT_STR,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,5)
-call ModifyHeroStat(bj_HEROSTAT_AGI,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,5)
-call ModifyHeroStat(bj_HEROSTAT_INT,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,5)
+call ModifyHeroStat(bj_HEROSTAT_STR,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,8)
+call ModifyHeroStat(bj_HEROSTAT_AGI,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,8)
+call ModifyHeroStat(bj_HEROSTAT_INT,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,8)
 else
 endif
 else
@@ -27613,9 +27623,9 @@ endif
 else
 if Hq[160+GetUnitUserData(GetTriggerUnit())]==200 then
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"|cFF1FBF00你的天地灵气修炼至顶,可以选择进入|cffffcc00仙魔")
-call ModifyHeroStat(bj_HEROSTAT_STR,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,10)
-call ModifyHeroStat(bj_HEROSTAT_AGI,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,10)
-call ModifyHeroStat(bj_HEROSTAT_INT,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,10)
+call ModifyHeroStat(bj_HEROSTAT_STR,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,30)
+call ModifyHeroStat(bj_HEROSTAT_AGI,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,30)
+call ModifyHeroStat(bj_HEROSTAT_INT,GetTriggerUnit(),bj_MODIFYMETHOD_ADD,30)
 else
 endif
 endif
@@ -27650,9 +27660,9 @@ endif
 else
 if Hq[320+GetUnitUserData(GetTriggerUnit())]==200 then
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"|cFF808080潜能激发修炼至顶,可以选择进入|cffffcc00仙魔")
-call SetHeroStr(GetTriggerUnit(),GetHeroStr(GetTriggerUnit(),false)+10,true)
-call SetHeroAgi(GetTriggerUnit(),GetHeroAgi(GetTriggerUnit(),false)+10,true)
-call SetHeroInt(GetTriggerUnit(),GetHeroInt(GetTriggerUnit(),false)+10,true)
+call SetHeroStr(GetTriggerUnit(),GetHeroStr(GetTriggerUnit(),false)+50,true)
+call SetHeroAgi(GetTriggerUnit(),GetHeroAgi(GetTriggerUnit(),false)+50,true)
+call SetHeroInt(GetTriggerUnit(),GetHeroInt(GetTriggerUnit(),false)+50,true)
 else
 endif
 endif
