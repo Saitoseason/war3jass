@@ -2393,7 +2393,7 @@ if Ik==0 then
 set JT=I2R((GetHeroStr(Ij,true)+GetHeroAgi(Ij,true)+GetHeroInt(Ij,true))*JS)*.75+JT
 // 力量伤害技能系数
 elseif Ik==1 then
-set JT=I2R(GetHeroStr(Ij,true)*(JS+1))*.7+JT
+set JT=I2R(GetHeroStr(Ij,true)*(JS+1))+JT
 // 敏捷伤害技能系数
 elseif Ik==2 then
 set JT=I2R(GetHeroAgi(Ij,true)*(JS+1))+JT
@@ -2409,15 +2409,15 @@ set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$526F7374,true))*.05)+JT
 set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.07)+JT
 // 伏羲琴伤害系数1.1，即10点法强(修改为1.25)
 if GetUnitAbilityLevel(Ij,$41303552)>0 then
-set JT=JT*1.25
+set JT=JT*1.15
 endif
 //如果带了的卢
 if GetUnitAbilityLevel(Ij,$41304256)>0 then
-set JT=JT*1.3
+set JT=JT*1.2
 endif
 //如果带了青钢
 if GetUnitAbilityLevel(Ij,$41303735)>0 then
-set JT=JT*1.3
+set JT=JT*1.2
 endif
 // 镇魂套伤害系数1.3
 if GetUnitAbilityLevel(Ij,$41303149)>0 then
@@ -2429,11 +2429,11 @@ set JT=JT*1.45
 endif
 // 蚩尤套伤害系数1.5
 if GetUnitAbilityLevel(Ij,$4130444B)>0 then
-set JT=JT*1.35
-endif
-// 朱雀修真1.5
-if GetUnitAbilityLevel(Ij,$41303458)>0 then 
 set JT=JT*1.5
+endif
+// 朱雀修真1.35
+if GetUnitAbilityLevel(Ij,$41303458)>0 then 
+set JT=JT*1.3
 endif
 // 自修系数1.3（自改）
 if GetUnitAbilityLevel(Ij,$41304238)>0 then
@@ -2458,7 +2458,7 @@ endif
 // 七星灯效果增伤 基础1.05 + 每级灯0.05
 if GetUnitAbilityLevel(Ij,$41303231)>0 then
 set Ix=GetItemCharges(bW(Ij,$7372746C))
-set JT=JT*(1.25+I2R(Ix)*.07)
+set JT=JT*(1.1+I2R(Ix)*.07)
 endif
 // 入魔系数1.1
 if GetUnitAbilityLevel(Ij,$4130354E)>0 then
@@ -2478,9 +2478,9 @@ if awakeTime>0 then
     set JT=JT*(1+awakeTime*.2)
     endif
 endif
-// 如果是玩家8，系数0.3
+// 如果是玩家8，系数0.2
 if IsUnitEnemy(Ij,Player(8)) then
-set JT=JT*.3
+set JT=JT*.2
 endif
 return JT
 endfunction
@@ -14693,7 +14693,7 @@ if GetUnitAbilityLevel(Ih,$41303041)>=1 then
 if IsUnitAlly(Ih,Player(8))==true then
 call EXSetEventDamage((GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.1)*1.)
 else
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.1,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -14730,7 +14730,7 @@ endif
 // 马忠淬毒箭效果
 if GetUnitAbilityLevel(Ih,$414F414F)>0 then
     // GetEventDamage()
- call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.001,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+ call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.01,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 // call EXSetEventDamage(GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.001)
 else
 endif
@@ -14806,10 +14806,10 @@ if GetUnitAbilityLevel(Ih,$415A4635)>=1 and GetRandomInt(1,5)<=2 then
 // 张飞携带盘古斧时，大招伤害提高
 if  GetUnitAbilityLevel(Ih,$41303041)>=1 then
 call b5("万军取首",Ih,.1,12,255,200,0,255)
-call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.035*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.025*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 call b5("万夫莫敌",Ih,.1,12,255,200,0,255)
-call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.02*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.01*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 
 endif
 else
@@ -14827,9 +14827,9 @@ endif
 // 伏羲琴伤害 Gq
 if GetUnitAbilityLevel(Ih,$41303552)>=1 then
 if Gq==7 then
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.7,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.7,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -22641,10 +22641,11 @@ call DestroyGroup(I2)
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",Gx[FN],Gy[FN]))
 call SetUnitFlyHeight(Pw[FN],0,0.)
 if Gq<6 or IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==false then
-call SetUnitPathing(Pw[FN],true)
+call SetUnitPathing(Pw[FN],false)
 endif
 call UnitRemoveType(Pw[FN],UNIT_TYPE_GIANT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_ANCIENT)
+call UnitRemoveType(Pw[FN],UNIT_TYPE_FLYING)
 if IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==true then
 call UnitDamageTarget(Pv[FN],Pw[FN],P0*1.5,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 endif
@@ -22664,7 +22665,9 @@ local real Iu=GetUnitY(Pw[FN])
 local location LQ=Location(It*1.+100*1.*Cos(Im*1.*bj_DEGTORAD),Iu*1.+100*1.*Sin(Im*1.*bj_DEGTORAD))
 if GetUnitState(Pw[FN],UNIT_STATE_LIFE)<=.403 then
 call bh(FN)
-elseif bI(It,Iu,Gx[FN],Gy[FN])>50 and IsTerrainPathable(GetLocationX(LQ),GetLocationY(LQ),PATHING_TYPE_WALKABILITY)==false then
+elseif bI(It,Iu,Gx[FN],Gy[FN])>50  then
+// 不知道是哪一行进行的路径判定，现在可以扔过墙
+// elseif bI(It,Iu,Gx[FN],Gy[FN])>50 and IsTerrainPathable(GetLocationX(LQ),GetLocationY(LQ),PATHING_TYPE_WALKABILITY)==false then
 call SetUnitPosition(Pw[FN],It*1.+50*1.*Cos(Im*1.*bj_DEGTORAD),Iu*1.+50*1.*Sin(Im*1.*bj_DEGTORAD))
 if bI(GetUnitX(Pw[FN]),GetUnitY(Pw[FN]),Gx[FN],Gy[FN])>Gz[FN] then
 call SetUnitFlyHeight(Pw[FN],GetUnitFlyHeight(Pw[FN])+100.,0.)
@@ -22674,10 +22677,11 @@ endif
 else
 call PauseTimer(GetExpiredTimer())
 set P0=bk(Pv[FN],1,Gu[FN])
-if IsTerrainPathable(GetLocationX(LQ),GetLocationY(LQ),PATHING_TYPE_WALKABILITY)==false then
-set It=Gx[FN]
-set Iu=Gy[FN]
-endif
+// if IsTerrainPathable(GetLocationX(LQ),GetLocationY(LQ),PATHING_TYPE_WALKABILITY)==false then
+// if IsTerrainPathable(GetLocationX(LQ),GetLocationY(LQ),PATHING_TYPE_WALKABILITY)==false then
+// set It=Gx[FN]
+// set Iu=Gy[FN]
+// endif
 set I2=CreateGroup()
 call GroupEnumUnitsInRange(I2,It,Iu,330.,null)
 loop
@@ -22690,13 +22694,14 @@ endif
 endloop
 call DestroyGroup(I2)
 if IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==false or Gq<6 then
-call SetUnitPathing(Pw[FN],true)
+call SetUnitPathing(Pw[FN],false)
 endif
 call SetUnitPosition(Pw[FN],It,Iu)
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",It,Iu))
 call SetUnitFlyHeight(Pw[FN],0,0.)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_GIANT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_ANCIENT)
+call UnitRemoveType(Pw[FN],UNIT_TYPE_FLYING)
 if IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==true then
 call UnitDamageTarget(Pv[FN],Pw[FN],P0*1.5,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 endif
@@ -22713,6 +22718,7 @@ call UnitAddAbility(Ps,$416D7266)
 call UnitRemoveAbility(Ps,$416D7266)
 call UnitAddType(Ps,UNIT_TYPE_GIANT)
 call UnitAddType(Ps,UNIT_TYPE_ANCIENT)
+call UnitAddType(Ps, UNIT_TYPE_FLYING)
 call SetUnitPathing(Ps,false)
 if IsUnitEnemy(Ps,GetOwningPlayer(Ig))==true then
 call EXSetUnitMoveType(Ps,0)
@@ -22774,7 +22780,8 @@ set Pr=null
 endfunction
 function px takes nothing returns nothing
 set Pq=CreateTrigger()
-call TriggerRegisterUnitEvent(Pq,Cr,EVENT_UNIT_SPELL_EFFECT)
+// 投掷监听事件
+call TriggerRegisterUnitEvent(Pq,Cu,EVENT_UNIT_SPELL_EFFECT)
 call TriggerAddCondition(Pq,Condition(function pv))
 call TriggerAddAction(Pq,function pw)
 endfunction
@@ -23711,16 +23718,23 @@ elseif GetUnitAbilityLevelSwapped($4130414C,Iv)==2 and GetHeroLevel(Iv)>=70 then
 call IncUnitAbilityLevelSwapped($4130414C,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00无尽怒火的等级已经提升了！")
 endif
-elseif GetUnitAbilityLevel(Iv,$41304335)>0 then
+// 请切换吕布和张苞大招41304C30
+elseif GetUnitAbilityLevel(Iv,$41304C30)>0 then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($414C4235,Iv)<1 then
 call UnitAddAbilityBJ($414C4235,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00怒战群雄！")
+call ModifyHeroStat(bj_HEROSTAT_STR,Iv,bj_MODIFYMETHOD_ADD,100)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00获得霸王项羽的祝福！获得额外的100点力量！")
 elseif GetUnitAbilityLevelSwapped($414C4235,Iv)==1 and GetHeroLevel(Iv)>=50 then
 call IncUnitAbilityLevelSwapped($414C4235,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00怒战群雄的等级已经提升了！")
+call ModifyHeroStat(bj_HEROSTAT_STR,Iv,bj_MODIFYMETHOD_ADD,100)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00获得霸王项羽的祝福！获得额外的100点力量！")
 elseif GetUnitAbilityLevelSwapped($414C4235,Iv)==2 and GetHeroLevel(Iv)>=70 then
 call IncUnitAbilityLevelSwapped($414C4235,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00怒战群雄的等级已经提升了！")
+call ModifyHeroStat(bj_HEROSTAT_STR,Iv,bj_MODIFYMETHOD_ADD,100)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00获得霸王项羽的祝福！获得额外的100点力量！")
 endif
 elseif Iv==DH then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($41445335,Iv)<1 then
@@ -23947,23 +23961,24 @@ elseif GetUnitAbilityLevelSwapped($41303759,Iv)==2 and GetHeroLevel(Iv)>=70 then
 call IncUnitAbilityLevelSwapped($41303759,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00天降甘霖的等级已经提升了！")
 endif
-elseif GetUnitAbilityLevel(Iv,$41304C30)>0 then
+// 请切换张苞和吕布大招41304335
+elseif GetUnitAbilityLevel(Iv,$41304335)>0 then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($41486176,Iv)<1 then
 call UnitAddAbilityBJ($41486176,Iv)
-call ModifyHeroStat(bj_HEROSTAT_STR,Iv,bj_MODIFYMETHOD_ADD,100)
+
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00力拔山兮气盖世！")
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00获得霸王项羽的祝福！获得额外的100点力量！")
+
 elseif GetUnitAbilityLevelSwapped($41486176,Iv)==1 and GetHeroLevel(Iv)>=50 then
 call IncUnitAbilityLevelSwapped($41486176,Iv)
-call ModifyHeroStat(bj_HEROSTAT_STR,Iv,bj_MODIFYMETHOD_ADD,100)
+
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00力拔山兮气盖世的等级已经提升了！")
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00获得霸王项羽的祝福！获得额外的100点力量！")
+
 
 elseif GetUnitAbilityLevelSwapped($41486176,Iv)==2 and GetHeroLevel(Iv)>=70 then
 call IncUnitAbilityLevelSwapped($41486176,Iv)
-call ModifyHeroStat(bj_HEROSTAT_STR,Iv,bj_MODIFYMETHOD_ADD,100)
+
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00力拔山兮气盖世的等级已经提升了！")
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00获得霸王项羽的祝福！获得额外的100点力量！")
+
 
 endif
 elseif Iv==Cy or GetUnitTypeId(Iv)==$485A4731 then
@@ -24368,7 +24383,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,GetOwningPlayer(Q8))==true then
-call UnitDamageTargetBJ(Q8,KC,I2R(GetHeroInt(Cw,true)*((GetUnitAbilityLevel(Cw,$4130314B)+2)*3)),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(Q8,KC,I2R(GetHeroInt(Cw,true)*((GetUnitAbilityLevel(Cw,$4130314B)+2)*2)),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
 else
 endif
 endloop
