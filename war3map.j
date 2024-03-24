@@ -2415,6 +2415,10 @@ endif
 if GetUnitAbilityLevel(Ij,$41304256)>0 then
 set JT=JT*1.2
 endif
+//如果带了极八蛇矛
+if GetUnitAbilityLevel(Ij,$41303042)>0 then
+set JT=JT*1.5
+endif
 //如果带了青钢
 if GetUnitAbilityLevel(Ij,$41303735)>0 then
 set JT=JT*1.2
@@ -3193,8 +3197,30 @@ local integer Ix=GetHandleId(CS)
 call SaveUnitHandle(Ia,Ix,$6865726F,Iv)
 call TimerStart(CS,1.,true,function cO)
 endfunction
+// 攻击时触发函数
 function cQ takes unit JW,unit Ig returns nothing
 local integer Je=0
+// 张苞触发丈八效果
+if JW==Cu and bW(JW,$48303031)!=null  then
+if GetRandomInt(0,12)<4 then
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(JW)+"|Cff00ff00真龙吐息！")
+call bv(JW,GetEventDamage()*.7+bk(JW,1,9),bN(JW,Ig),600,320)
+call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$5A303033,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
+// call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$414E6266,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
+// call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$424E6266,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
+endif
+// call UnitDamageTarget(JW,Ig,bk(JW,2,GetUnitAbilityLevel(JW,$414E6567)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+endif
+// 马岱触发无形剑效果
+if GetUnitTypeId(JW)==$45696C6C and GetUnitAbilityLevel(JW,$414E6567)>0 and GetUnitAbilityLevel(JW,$41303342)>0  then
+if GetRandomInt(0,12)<GetUnitAbilityLevel(JW,$414E6567) then
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(JW)+"|Cff00ff00剑气纵横三万里！")
+call bv(JW,GetEventDamage()*.7+bk(JW,1,GetUnitAbilityLevel(JW,$41303342)),bN(JW,Ig),1200,320)
+call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$41303342,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
+endif
+// call UnitDamageTarget(JW,Ig,bk(JW,2,GetUnitAbilityLevel(JW,$414E6567)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+endif
+// 黄忠触发技能效果
 if GetUnitTypeId(JW) == GetUnitTypeId(huntingUnit) and GetRandomInt(1,10)>8 then
 call IssuePointOrder(CreateUnit(GetOwningPlayer(JW),$65303048,GetUnitX(JW),GetUnitY(JW),GetUnitFacing(JW)),"carrionswarm",GetUnitX(Ig),GetUnitY(Ig))
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00百步穿杨！")
@@ -14950,6 +14976,7 @@ set HK[GetConvertedPlayerId(GetOwningPlayer(Ih))]=HK[GetConvertedPlayerId(GetOwn
 call DisplayTextToPlayer(GetOwningPlayer(Ih),0,0,I2S(HK[GetConvertedPlayerId(GetOwningPlayer(Ih))]))
 else
 endif
+// 蛮子暴击伤害
 if GetUnitAbilityLevel(Ih,$41304C4F)>0 and GetRandomReal(0,100.)<=I2R(HK[GetConvertedPlayerId(GetOwningPlayer(Ih))])*.5 then
 call SetUnitAnimation(Ih,"Slam")
 if GetUnitAbilityLevel(Ih,$4230334C)>0 then
@@ -17284,6 +17311,19 @@ return GetItemTypeId(GetManipulatedItem())==$49303038
 endfunction
 // 牛神打造神兵利器
 function iu takes nothing returns nothing
+    // 打造极八蛇矛
+if bC(GetTriggerUnit(),$726E7370)==true  and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=2 then
+if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>2 then
+call SetItemCharges(aj(GetTriggerUnit(),$646B6677),GetItemCharges(aj(GetTriggerUnit(),$646B6677))-2)
+else
+call RemoveItem(aj(GetTriggerUnit(),$646B6677))
+endif
+call RemoveItem(aj(GetTriggerUnit(),$726E7370))
+
+call UnitAddItem(GetTriggerUnit(),CreateItem($48303031,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了极八蛇矛")
+else 
+
     // 如果带了方天画戟和幽冥赤兔，且强化石数量大于2
 if bC(GetTriggerUnit(),$6D6E7366)==true and bC(GetTriggerUnit(),$49303146)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=2 then
 if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>2 then
@@ -17323,7 +17363,7 @@ call AdjustPlayerStateBJ(20,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOU
 endif
 endif
 endif
-
+endif
  
 
 endfunction
@@ -18600,11 +18640,11 @@ elseif Fr==150 then
 call SetItemInvulnerable(CreateItem($49303251,-1220.,-5240.),true)
 call DisplayTextToForce(GetPlayersAll(),"众将军卫护百姓已有150人，受百姓感召高祖降下斩蛇剑！）")
 elseif Fr==200 then
-call SetItemInvulnerable(CreateItem($49303251,-1220.,-5240.),true)
+
 call DisplayTextToForce(GetPlayersAll(),"众将军卫护百姓已有200人，所有英雄增加50点全属性！）")   
 call ExecuteFunc ("batchAddHeroAttributes50")  
 elseif Fr==250 then
-call SetItemInvulnerable(CreateItem($49303251,-1220.,-5240.),true)
+
 call DisplayTextToForce(GetPlayersAll(),"在魏国的铁骑下居然没有一名百姓流离失所，所有英雄增加100点全属性！）") 
 call ExecuteFunc ("batchAddHeroAttributes50")  
 call ExecuteFunc ("batchAddHeroAttributes50")  
@@ -20655,6 +20695,10 @@ call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00姜�
 call SetPlayerHandicapXPBJ(GetOwningPlayer(gambleUnit),100)
 set isJWawake=true
 endif
+if gambleTime==50 then
+call DisplayTextToForce(GetPlayersAll(),"|cffff0000"+(GetUnitName(gambleUnit)+":丞相喟叹：有如此恒心者，若是全力伐贼，岂不能早日实现北伐夙愿！"))
+call SetItemInvulnerable(CreateItem($48303032,-1220.,-5240.),true)
+endif
 endfunction
 // 赌博事件
 function nc takes nothing returns nothing
@@ -20706,6 +20750,10 @@ call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00姜�
 call SetPlayerHandicapXPBJ(GetOwningPlayer(gambleUnit),100)
 set isJWawake=true
 endif
+if gambleTime==50 then
+call DisplayTextToForce(GetPlayersAll(),"|cffff0000"+(GetUnitName(gambleUnit)+":丞相喟叹：有如此恒心者，若是全力伐贼，岂不能早日实现北伐夙愿！"))
+call SetItemInvulnerable(CreateItem($48303032,-1220.,-5240.),true)
+endif
 endfunction
 function nf takes nothing returns nothing
 set O0=CreateTrigger()
@@ -20721,8 +20769,8 @@ if IsUnitType(GetDyingUnit(),UNIT_TYPE_HERO)==true then
 call SetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36),GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))+4)
 else
 endif
-call DisplayTextToPlayer(GetOwningPlayer(GetKillingUnitBJ()),0,0,"|cffB366FF亮银枪（一级）："+(I2S(GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36)))+"/350"))
-if GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))>=350 then
+call DisplayTextToPlayer(GetOwningPlayer(GetKillingUnitBJ()),0,0,"|cffB366FF亮银枪（一级）："+(I2S(GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36)))+"/150"))
+if GetItemUserData(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))>=150 then
 call RemoveItem(aj(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$72656A36))
 call UnitAddItemByIdSwapped($72656A34,Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetKillingUnitBJ()))+"你的亮银枪已升至二级")
@@ -24528,7 +24576,7 @@ return IsUnitAlly(GetFilterUnit(),GetOwningPlayer(RJ))==false
 endfunction
 function rg takes nothing returns nothing
     // 长恨枪技能伤害计算
-call UnitDamageTargetBJ(DR,GetEnumUnit(),I2R(GetHeroStr(RJ,true))*I2R(GetUnitAbilityLevel(RJ,$4130384F))*36.,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
+call UnitDamageTargetBJ(DR,GetEnumUnit(),I2R(GetHeroStr(RJ,true))*I2R(GetUnitAbilityLevel(RJ,$4130384F))*32.,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 endfunction
 function rh takes nothing returns nothing
 local group KB
@@ -24566,7 +24614,7 @@ if bC(DR,$6D6C7374)==true or bC(DR,$49303055)==true then
 set bj_wantDestroyGroup=true
 call ForGroupBJ(an(400.,RL[0],Condition(function rf)),function rg)
 else
-call UnitDamageTargetBJ(DR,RK,I2R(GetHeroStr(RJ,true))*I2R(GetUnitAbilityLevel(RJ,$4130384F))*18.,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
+call UnitDamageTargetBJ(DR,RK,I2R(GetHeroStr(RJ,true))*I2R(GetUnitAbilityLevel(RJ,$4130384F))*16.,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 endif
 call RemoveLocation(RL[0])
 call RemoveLocation(RL[1])
@@ -25635,6 +25683,7 @@ set CE=null
 call DestroyGroup(I2)
 set I2=null
 endfunction
+// 释放技能时触发函数
 function tO takes nothing returns nothing
 local unit Iv=GetTriggerUnit()
 local unit CE=GetSpellTargetUnit()
@@ -25775,6 +25824,7 @@ else
 call dt(Iv,CE,-1)
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41304338,1,GetUnitX(Iv),GetUnitY(Iv),0.,1),852486,CE)
 endif
+// 无形剑效果
 elseif GetSpellAbilityId()==$41303342 then
 call bv(Iv,bk(Iv,2,GetUnitAbilityLevel(Iv,$41303342)),bQ(Iv,GetSpellTargetX(),GetSpellTargetY()),800,330)
 elseif GetSpellAbilityId()==$41303651 then
@@ -26226,6 +26276,11 @@ endif
 // 青囊书、孙子冰法20%CD
 if GetUnitAbilityLevel(GetTriggerUnit(),$41496862)>0 or GetUnitAbilityLevel(GetTriggerUnit(),$41507361)>0 then
 call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.85)
+else
+endif
+// 极八蛇矛20%CD
+if GetUnitAbilityLevel(GetTriggerUnit(),$41303042)>0  then
+call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.8)
 else
 endif
 endfunction
