@@ -5,6 +5,11 @@ real Ly=1
 boolean L1=false
 boolean Lz=true
 boolean L0=true
+// 新模式
+button choosedButton=null
+button potholingButton=null
+button doubleHeroButton=null
+integer array doubleHeroGroup
 // 粮草事件
 integer provision=0
 unit provisionUnit=null
@@ -2415,6 +2420,10 @@ endif
 if GetUnitAbilityLevel(Ij,$41304256)>0 then
 set JT=JT*1.2
 endif
+//如果带了烛龙刀
+if GetUnitAbilityLevel(Ij,$41623031)>0 then
+set JT=JT*1.8
+endif
 //如果带了极八蛇矛
 if GetUnitAbilityLevel(Ij,$41303042)>0 then
 set JT=JT*1.5
@@ -2716,6 +2725,7 @@ endif
 call TimerStart(CS,0.,false,function bx)
 set CS=null
 endfunction
+// 哮天犬加攻击函数
 function bz takes nothing returns nothing
 local timer CS=GetExpiredTimer()
 local integer Ix=GetHandleId(CS)
@@ -3203,7 +3213,7 @@ local integer Je=0
 // 张苞触发丈八效果
 if JW==Cu and bW(JW,$48303031)!=null  then
 if GetRandomInt(0,12)<4 then
-call DisplayTextToForce(GetPlayersAll(),GetUnitName(JW)+"|Cff00ff00真龙吐息！")
+call DisplayTextToPlayer(GetOwningPlayer(JW),0,0,"|Cff00ff00真龙吐息！")
 call bv(JW,GetEventDamage()*.7+bk(JW,1,9),bN(JW,Ig),600,320)
 call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$5A303033,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
 // call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$414E6266,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
@@ -3214,7 +3224,7 @@ endif
 // 马岱触发无形剑效果
 if GetUnitTypeId(JW)==$45696C6C and GetUnitAbilityLevel(JW,$414E6567)>0 and GetUnitAbilityLevel(JW,$41303342)>0  then
 if GetRandomInt(0,12)<GetUnitAbilityLevel(JW,$414E6567) then
-call DisplayTextToForce(GetPlayersAll(),GetUnitName(JW)+"|Cff00ff00剑气纵横三万里！")
+call DisplayTextToPlayer(GetOwningPlayer(JW),0,0,"|Cff00ff00剑气纵横三万里！")
 call bv(JW,GetEventDamage()*.7+bk(JW,1,GetUnitAbilityLevel(JW,$41303342)),bN(JW,Ig),1200,320)
 call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$41303342,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
 endif
@@ -3237,7 +3247,10 @@ if huntingTime>29 and huntingStart==true and huntingFinish==false then
 
 endif
 endif
-
+// 玄龙刀破甲
+if IsPlayerAlly(GetOwningPlayer(Ig),Player(8))==false and GetPlayerController(GetOwningPlayer(Ig))!=MAP_CONTROL_USER and GetUnitAbilityLevel(Ig,$5A303034)<1 and GetUnitAbilityLevel(JW,$41623038)==1 then
+call UnitAddAbility(Ig,$5A303034)
+endif
 if IsPlayerAlly(GetOwningPlayer(Ig),Player(8))==false and GetPlayerController(GetOwningPlayer(Ig))!=MAP_CONTROL_USER and GetUnitAbilityLevel(Ig,$41303348)<1 and GetUnitAbilityLevel(JW,$41303347)==1 then
 call UnitAddAbility(Ig,$41303348)
 endif
@@ -6578,6 +6591,7 @@ call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\RW_WY.mdx",Iv,"origi
 call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\RW_WTX.mdx",Iv,"overhead"))
 elseif JZ==$41595045 then
 set Iv=Iv
+// 瑞文被动计数+1
 if LoadInteger(Ia,GetHandleId(Iv),$41595030)-$41595030<3 then
 call SaveInteger(Ia,GetHandleId(Iv),$41595030,LoadInteger(Ia,GetHandleId(Iv),$41595030)+1)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),LoadInteger(Ia,GetHandleId(Iv),$41595030)-1,false)
@@ -14638,6 +14652,13 @@ else
 endif
 else
 endif
+// 赵统解控效果
+// if GetTriggerUnit()==C8 or UnitHasBuffBJ(GetTriggerUnit(),$42303230)==true or GetUnitAbilityLevel(GetTriggerUnit(),$41304733)>0  then
+// call EXPauseUnit(GetTriggerUnit(),false)
+// call UnitRemoveBuffs(GetTriggerUnit(),false,true)
+// else
+// endif
+// 蛮子大招解控效果
 if GetTriggerUnit()==Cf or UnitHasBuffBJ(GetTriggerUnit(),$42303351)==true or UnitHasBuffBJ(GetTriggerUnit(),$42575935)==true or GetUnitAbilityLevel(Ig,$425A4645)>0 or GetUnitAbilityLevel(Ig,$4230334C)>0 or GetUnitAbilityLevel(Ig,$42475957)>0 then
 call EXPauseUnit(GetTriggerUnit(),false)
 call UnitRemoveBuffs(GetTriggerUnit(),false,true)
@@ -14740,6 +14761,11 @@ endif
 // 血刃吸血效果
 if GetUnitAbilityLevel(Ih,$41303648)>0 then
 call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41303648))))
+else
+endif
+// 赵统吸血
+if GetUnitAbilityLevel(Ih,$41304733)>0 then
+call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41304733))))
 else
 endif
 // 马超被动夺命枪效果,如果是玩家的话造成力量系数乘以0.1的伤害，如果携带问天枪，造成0.3系数的伤害
@@ -14911,6 +14937,40 @@ if IsUnitType(GetEventDamageSource(),UNIT_TYPE_HERO)==true and GetUnitTypeId(Get
 call d10(GetEventDamageSource(),GetTriggerUnit())
 else
 endif
+
+//  霸龙刀暴击伤害
+if GetUnitAbilityLevel(Ih,$41623032)>0 and GetRandomInt(0,10)<=3 then
+call SetUnitAnimation(Ih,"Slam")
+call EXSetEventDamage(GetEventDamage()+R2I(GetUnitState(Ih,ConvertUnitState(21))*5))
+call CreateTextTagUnitBJ(I2S(R2I(GetEventDamage()+R2I(GetUnitState(Ih,ConvertUnitState(21))*5))),Ig,1.,18.,100,0.,0.,20.)
+
+set Jc[10]=GetLastCreatedTextTag()
+call SetTextTagVelocityBJ(Jc[10],64,45.)
+call SetTextTagPermanent(Jc[10],false)
+call SetTextTagLifespan(Jc[10],1.)
+
+// if GetUnitAbilityLevel(Ih,$4230334C)>0 then
+// call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+// call CreateTextTagUnitBJ(I2S(R2I(GetUnitState(Ih,ConvertUnitState(21))*5.)),Ig,1.,18.,100,0.,0.,20.)
+// else
+// call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+// call CreateTextTagUnitBJ(I2S(R2I(GetUnitState(Ih,ConvertUnitState(21))*3.)),Ig,1.,18.,100,0.,0.,20.)
+// endif
+// set Jc[5]=GetLastCreatedTextTag()
+// call SetTextTagVelocityBJ(Jc[5],64,45.)
+// call SetTextTagPermanent(Jc[5],false)
+// call SetTextTagLifespan(Jc[5],1.)
+// if XR(Ih,$41304C4E,1)>0. then
+// if XR(Ih,$41304C4E,1)>1. then
+// call XV(Ih,$41304C4E,1,XR(Ih,$41304C4E,1)-1.)
+// else
+// call XV(Ih,$41304C4E,1,0.)
+// endif
+// else
+// endif
+// else
+endif
+
 if IsUnitType(GetEventDamageSource(),UNIT_TYPE_HERO)==true and GetUnitTypeId(GetEventDamageSource())==$51544453 and GetUnitTypeId(GetEventDamageSource())!=GetUnitTypeId(GetTriggerUnit()) then
 call d4(GetEventDamageSource(),GetTriggerUnit())
 else
@@ -15362,6 +15422,13 @@ if IK[GetConvertedPlayerId(GetTriggerPlayer())]==false then
 call cw(Iv)
 if DzAPI_Map_HasMallItem(GetOwningPlayer(Iv),"XBTZ")==true or RequestExtraBooleanData(50,GetOwningPlayer(Iv),null,null,false,0,0,0)==true or DzAPI_Map_IsBlueVIP(GetOwningPlayer(Iv))==true then
 call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+if potholingButton==choosedButton then
+call CreateItem($746C756D,-1220.,-5240.)
+call CreateItem($746C756D,-1220.,-5240.)
+call CreateItem($746C756D,-1220.,-5240.)
+// call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+
+endif
 else
 endif
 if Gd[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]==true or Ff==1 then
@@ -15404,6 +15471,11 @@ if GetLocalPlayer()==GetOwningPlayer(Iv) then
 set GF[0]=GF[100+Gq]+(" "+GF[GetConvertedPlayerId(GetOwningPlayer(Iv))])+GetPlayerName(GetOwningPlayer(Iv))
 call MultiboardSetTitleText(bj_lastCreatedMultiboard,GF[0])
 else
+endif
+if doubleHeroButton!=null and doubleHeroGroup[GetPlayerId(GetTriggerPlayer())]!=1 then
+set doubleHeroGroup[GetPlayerId(GetTriggerPlayer())] =1
+call SetPlayerStateBJ(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_FOOD_CAP,1)
+call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"|Cffff0000已开启双将模式，请再选择一个副将！")
 endif
 set Iv=null
 endfunction
@@ -16300,6 +16372,11 @@ call RemoveLocation(Jd[15])
 set MU=null
 call AdjustPlayerStateBJ(2000,GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)
 set MT[GetConvertedPlayerId(GetTriggerPlayer())]=GetTriggerPlayer()
+if doubleHeroButton!=null and doubleHeroGroup[GetPlayerId(GetTriggerPlayer())]!=1 then
+set doubleHeroGroup[GetPlayerId(GetTriggerPlayer())] =1
+call SetPlayerStateBJ(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_FOOD_CAP,1)
+call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"|Cffff0000已开启双将模式，请再选择一个副将！")
+endif
 endfunction
 function hu takes nothing returns nothing
 set J6=CreateTrigger()
@@ -17311,8 +17388,56 @@ return GetItemTypeId(GetManipulatedItem())==$49303038
 endfunction
 // 牛神打造神兵利器
 function iu takes nothing returns nothing
+    // 打造青龙魂
+if bC(GetTriggerUnit(),$49303343)==true and bC(GetTriggerUnit(),$73666F67)==true and bC(GetTriggerUnit(),$736F7238)==true then
+   call RemoveItem(aj(GetTriggerUnit(),$49303343))
+   call RemoveItem(aj(GetTriggerUnit(),$73666F67))
+   call RemoveItem(aj(GetTriggerUnit(),$736F7238))
+   call UnitAddItem(GetTriggerUnit(),CreateItem($48303033,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了器魂（青龙）")
+// 如果有青龙器魂+霸王套+人参精
+elseif bC(GetTriggerUnit(),$48303033)==true and bC(GetTriggerUnit(),$49303257)==true and bC(GetTriggerUnit(),$49303256)==true and bC(GetTriggerUnit(),$49303255)==true and bC(GetTriggerUnit(),$776F6C67)==true then
+   call RemoveItem(aj(GetTriggerUnit(),$48303033))
+   call RemoveItem(aj(GetTriggerUnit(),$49303257))
+   call RemoveItem(aj(GetTriggerUnit(),$49303256))
+   call RemoveItem(aj(GetTriggerUnit(),$49303255))
+    call RemoveItem(aj(GetTriggerUnit(),$776F6C67))
+   call UnitAddItem(GetTriggerUnit(),CreateItem($69743034,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了霸龙偃月刀")
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(37),GetUnitState(GetTriggerUnit(),ConvertUnitState(37))-.3)
+// 如果有青龙器魂+朱雀武套+朱雀魂
+elseif bC(GetTriggerUnit(),$48303033)==true and bC(GetTriggerUnit(),$6F666972)==true and bC(GetTriggerUnit(),$63726474)==true and bC(GetTriggerUnit(),$49303143)==true and bC(GetTriggerUnit(),$6B336D33)==true then
+   call RemoveItem(aj(GetTriggerUnit(),$48303033))
+   call RemoveItem(aj(GetTriggerUnit(),$6F666972))
+    call RemoveItem(aj(GetTriggerUnit(),$63726474))
+   call RemoveItem(aj(GetTriggerUnit(),$49303143))
+   call UnitAddItem(GetTriggerUnit(),CreateItem($69743038,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了烛龙偃月刀")
+// 如果有青龙器魂+玄武套+玄武魂
+elseif bC(GetTriggerUnit(),$48303033)==true and bC(GetTriggerUnit(),$7368656E)==true and bC(GetTriggerUnit(),$6667756E)==true and bC(GetTriggerUnit(),$676F7072)==true and bC(GetTriggerUnit(),$676F7072)==true then
+   call RemoveItem(aj(GetTriggerUnit(),$48303033))
+   call RemoveItem(aj(GetTriggerUnit(),$7368656E))
+    call RemoveItem(aj(GetTriggerUnit(),$6667756E))
+   call RemoveItem(aj(GetTriggerUnit(),$6F666C67))
+   call UnitAddItem(GetTriggerUnit(),CreateItem($69743037,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了盘龙偃月刀")
+// 如果有青龙器魂+白虎套+白虎魂
+elseif bC(GetTriggerUnit(),$48303033)==true and bC(GetTriggerUnit(),$72616D32)==true and bC(GetTriggerUnit(),$72646530)==true and bC(GetTriggerUnit(),$68627468)==true and bC(GetTriggerUnit(),$676C736B)==true then
+   call RemoveItem(aj(GetTriggerUnit(),$48303033))
+   call RemoveItem(aj(GetTriggerUnit(),$72616D32))
+    call RemoveItem(aj(GetTriggerUnit(),$72646530))
+   call RemoveItem(aj(GetTriggerUnit(),$68627468))
+   call UnitAddItem(GetTriggerUnit(),CreateItem($69743036,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了苍龙偃月刀")
+// 如果有青龙器魂+玄铁腰带+玄铁手机+青龙魂
+elseif bC(GetTriggerUnit(),$48303033)==true and bC(GetTriggerUnit(),$49303045)==true and bC(GetTriggerUnit(),$49303044)==true and bC(GetTriggerUnit(),$6B336D32)==true then
+   call RemoveItem(aj(GetTriggerUnit(),$48303033))
+   call RemoveItem(aj(GetTriggerUnit(),$49303045))
+   call RemoveItem(aj(GetTriggerUnit(),$49303044))
+   call UnitAddItem(GetTriggerUnit(),CreateItem($69743035,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了玄龙偃月刀")
     // 打造极八蛇矛
-if bC(GetTriggerUnit(),$726E7370)==true  and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=2 then
+elseif bC(GetTriggerUnit(),$726E7370)==true  and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=2 then
 if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>2 then
 call SetItemCharges(aj(GetTriggerUnit(),$646B6677),GetItemCharges(aj(GetTriggerUnit(),$646B6677))-2)
 else
@@ -17322,10 +17447,10 @@ call RemoveItem(aj(GetTriggerUnit(),$726E7370))
 
 call UnitAddItem(GetTriggerUnit(),CreateItem($48303031,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了极八蛇矛")
-else 
+ 
 
     // 如果带了方天画戟和幽冥赤兔，且强化石数量大于2
-if bC(GetTriggerUnit(),$6D6E7366)==true and bC(GetTriggerUnit(),$49303146)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=2 then
+elseif bC(GetTriggerUnit(),$6D6E7366)==true and bC(GetTriggerUnit(),$49303146)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=2 then
 if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>2 then
 call SetItemCharges(aj(GetTriggerUnit(),$646B6677),GetItemCharges(aj(GetTriggerUnit(),$646B6677))-2)
 else
@@ -17335,9 +17460,9 @@ call RemoveItem(aj(GetTriggerUnit(),$6D6E7366))
 call RemoveItem(aj(GetTriggerUnit(),$49303146))
 call UnitAddItem(GetTriggerUnit(),CreateItem($49303147,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了方天鬼戟")
-else 
+ 
    // 如果待了震天弓和穿云箭，且强化石数量大于10
-if bC(GetTriggerUnit(),$72616D34)==true and bC(GetTriggerUnit(),$6F76656E)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=10 then
+elseif bC(GetTriggerUnit(),$72616D34)==true and bC(GetTriggerUnit(),$6F76656E)==true and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=10 then
     // 如果强化石数量大于10
 if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>10 then
 call SetItemCharges(aj(GetTriggerUnit(),$646B6677),GetItemCharges(aj(GetTriggerUnit(),$646B6677))-10)
@@ -17348,8 +17473,8 @@ call RemoveItem(aj(GetTriggerUnit(),$6F76656E))
 call RemoveItem(aj(GetTriggerUnit(),$72616D34))
 call UnitAddItem(GetTriggerUnit(),CreateItem($49303344,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了后羿射日弓")
-else
-if bC(GetTriggerUnit(),$77617264)==true and bC(GetTriggerUnit(),$62737064)==true and bC(GetTriggerUnit(),$636E6F62)==true and bC(GetTriggerUnit(),$72617439)==true then
+
+elseif bC(GetTriggerUnit(),$77617264)==true and bC(GetTriggerUnit(),$62737064)==true and bC(GetTriggerUnit(),$636E6F62)==true and bC(GetTriggerUnit(),$72617439)==true then
 call RemoveItem(aj(GetTriggerUnit(),$77617264))
 call RemoveItem(aj(GetTriggerUnit(),$62737064))
 call RemoveItem(aj(GetTriggerUnit(),$636E6F62))
@@ -17360,9 +17485,7 @@ else
 call DisplayTimedTextToForce(GetPlayersAll(),5.,"|Cffffff00材料不足！")
 call AdjustPlayerStateBJ(20000,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_GOLD)
 call AdjustPlayerStateBJ(20,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_LUMBER)
-endif
-endif
-endif
+
 endif
  
 
@@ -17965,8 +18088,36 @@ local unit killer = GetKillingUnitBJ()
 // if IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetTriggerUnit())!=Player(PLAYER_NEUTRAL_AGGRESSIVE) and GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingFinish==true then
 // call archeryEvent(1)
 // endif
-if IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetTriggerUnit())==Player(PLAYER_NEUTRAL_AGGRESSIVE) and GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingFinish==true then
-call archeryEvent(3)
+// if IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetTriggerUnit())==Player(PLAYER_NEUTRAL_AGGRESSIVE) and GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingFinish==true then
+// call archeryEvent(3)
+// endif
+// 如果被击杀的是潘璋、且触发条件是武神等级>0(击杀者是关锁)
+if GetTriggerUnit()==Ek and GetUnitAbilityLevel(killer,$41303653)>0 then
+call UnitAddAbilityBJ($4130304B,killer)
+call UnitMakeAbilityPermanent(killer,true,$4130304B)
+call IncUnitAbilityLevelSwapped($4130304B,killer)
+call IncUnitAbilityLevelSwapped($4130304B,killer)
+call IncUnitAbilityLevelSwapped($4130304B,killer)
+call SetUnitState(killer,ConvertUnitState(37),GetUnitState(killer,ConvertUnitState(37))-.1)
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(killer)+"：今日以尔首级，告吾父亲在天之灵！")
+// 如果被击杀的是潘璋、且触发条件是圣灵护体等级>0(击杀者是关凤)
+elseif GetTriggerUnit()==Ek and GetUnitAbilityLevel(killer,$41303130)>0 then
+call UnitAddAbilityBJ($41303653,killer)
+call UnitMakeAbilityPermanent(killer,true,$41303653)
+call IncUnitAbilityLevelSwapped($41303653,killer)
+call IncUnitAbilityLevelSwapped($41303653,killer)
+call IncUnitAbilityLevelSwapped($41303653,killer)
+call SetUnitState(killer,ConvertUnitState(37),GetUnitState(killer,ConvertUnitState(37))-.2)
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(killer)+"：今日以尔首级，告吾父亲在天之灵！")
+// 如果被击杀的是潘璋、且触发条件是真实残像等级>0(击杀者是关兴)
+elseif GetTriggerUnit()==Ek and GetUnitAbilityLevel(killer,$4130304B)>0 then
+call UnitAddAbilityBJ($41303130,killer)
+call UnitMakeAbilityPermanent(killer,true,$41303130)
+call IncUnitAbilityLevelSwapped($41303130,killer)
+call IncUnitAbilityLevelSwapped($41303130,killer)
+call IncUnitAbilityLevelSwapped($41303130,killer)
+call SetUnitState(killer,ConvertUnitState(37),GetUnitState(killer,ConvertUnitState(37))-.1)
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(killer)+"：今日以尔首级，告吾父亲在天之灵！")
 endif
 if GetOwningPlayer(GetTriggerUnit())==Player(9) or GetOwningPlayer(GetTriggerUnit())==Player(10) then
 call cF(GetTriggerUnit(),5.)
@@ -21473,6 +21624,8 @@ call UnitRemoveItemSwapped(aj(GetTriggerUnit(),$49303254),GetTriggerUnit())
 call UnitRemoveItemSwapped(aj(GetTriggerUnit(),$7468646D),GetTriggerUnit())
 call UnitRemoveItemSwapped(aj(GetTriggerUnit(),$77746C67),GetTriggerUnit())
 call UnitRemoveItemSwapped(aj(GetTriggerUnit(),$746C756D),GetTriggerUnit())
+call UnitRemoveItemSwapped(aj(GetTriggerUnit(),$69743034),GetTriggerUnit())
+call UnitRemoveItemSwapped(aj(GetTriggerUnit(),$69743038),GetTriggerUnit())
 else
 endif
 if GetItemTypeId(GetManipulatedItem())==$656E6773 then
@@ -22037,7 +22190,7 @@ endfunction
 function on takes nothing returns nothing
 endfunction
 function oo takes nothing returns nothing
-if bC(GetTriggerUnit(),$736F7237)==true and bC(GetTriggerUnit(),$736F7238)==true and bC(GetTriggerUnit(),$73666F67)==true and GetUnitTypeId(GetTriggerUnit())==$4F677268 or GetUnitTypeId(GetTriggerUnit())==$4F706768 or GetUnitAbilityLevel(GetTriggerUnit(),$41304136)>0 then
+if bC(GetTriggerUnit(),$49303343) or bC(GetTriggerUnit(),$736F7237)==true and bC(GetTriggerUnit(),$736F7238)==true and bC(GetTriggerUnit(),$73666F67)==true and GetUnitTypeId(GetTriggerUnit())==$4F677268 or GetUnitTypeId(GetTriggerUnit())==$4F706768 or GetUnitAbilityLevel(GetTriggerUnit(),$41304136)>0 then
 if GetRandomInt(1,80)==2 then
 call DisableTrigger(GetTriggeringTrigger())
 set Jd[3]=GetUnitLoc(GetTriggerUnit())
@@ -22224,6 +22377,7 @@ call SetUnitOwner(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()),true)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+("捕获了："+GetUnitName(GetSpellTargetUnit())))
 // 如果是小血狼
 if GetUnitTypeId(GetSpellTargetUnit())==$6E777766 then
+   call CreateItem($73636C70,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 call CreateUnit( GetOwningPlayer(GetTriggerUnit()), $6E777766, GetUnitX(GetSpellTargetUnit()), GetUnitY(GetSpellTargetUnit()), 0 )
 endif
 call UnitRemoveAbility(GetSpellTargetUnit(),$41706976)
@@ -22233,6 +22387,8 @@ if IsUnitType(GetSpellTargetUnit(),UNIT_TYPE_HERO)==false and GetRandomInt(1,10)
 call SetUnitOwner(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()),true)
 // 如果是小血狼
 if GetUnitTypeId(GetSpellTargetUnit())==$6E777766 then
+    call CreateItem($73636C70,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+
 call CreateUnit( GetOwningPlayer(GetTriggerUnit()), $6E777766, GetUnitX(GetSpellTargetUnit()), GetUnitY(GetSpellTargetUnit()), 0 )
 endif
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+("捕获了："+GetUnitName(GetSpellTargetUnit())))
@@ -22975,6 +23131,15 @@ call TriggerAddCondition(QB,Condition(function p8))
 call TriggerAddAction(QB,function p9)
 endfunction
 function qC takes nothing returns nothing
+    // 学习技能监听
+    // 如果学习的是孤军奋战
+if GetLearnedSkillBJ()==$41623062 then
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"|Cff00ff00孤军奋战！")
+call SetUnitAbilityLevel(GetTriggerUnit(),$41623061,GetUnitAbilityLevel(GetTriggerUnit(),$41623062))
+call SetUnitAbilityLevel(GetTriggerUnit(),$41623063,GetUnitAbilityLevel(GetTriggerUnit(),$41623062))
+// call IncUnitAbilityLevelSwapped($41623061,GetTriggerUnit())
+// call IncUnitAbilityLevelSwapped($41623063,GetTriggerUnit())
+endif
 if GetLearnedSkill()==$414E6963 and GetUnitAbilityLevel(GetTriggerUnit(),$41304639)>0 then
 call UnitRemoveAbility(GetTriggerUnit(),$41304639)
 call UnitAddAbility(GetTriggerUnit(),$41304639)
@@ -23881,7 +24046,20 @@ elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped($41304151,Iv)==2 then
 call IncUnitAbilityLevel(Iv,$41304151)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00狂暴的等级已经提升至3级！")
 endif
+// 赵云
 elseif GetUnitAbilityLevel(Iv,$41304C31)>0 then
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($41303439,Iv)<1 then
+call UnitAddAbilityBJ($41303439,Iv)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00浴血奋战！")
+elseif GetUnitAbilityLevelSwapped($41303439,Iv)==1 and GetHeroLevel(Iv)>=50 then
+call IncUnitAbilityLevelSwapped($41303439,Iv)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00浴血奋战的等级已经提升了！")
+elseif GetUnitAbilityLevelSwapped($41303439,Iv)==2 and GetHeroLevel(Iv)>=70 then
+call IncUnitAbilityLevelSwapped($41303439,Iv)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00浴血奋战的等级已经提升了！")
+endif
+// 赵统
+elseif GetUnitAbilityLevel(Iv,$41303658)>0 then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($41303439,Iv)<1 then
 call UnitAddAbilityBJ($41303439,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00浴血奋战！")
@@ -23894,7 +24072,7 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff
 endif
 elseif GetUnitTypeId(Iv)==$48444430 then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($41304D48,Iv)<1 then
-call UnitAddAbilityBJ($41303439,Iv)
+call UnitAddAbilityBJ($41304D48,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00杀神附体！")
 elseif GetUnitAbilityLevelSwapped($41304D48,Iv)==1 and GetHeroLevel(Iv)>=50 then
 call IncUnitAbilityLevelSwapped($41304D48,Iv)
@@ -23970,9 +24148,9 @@ elseif GetUnitAbilityLevelSwapped($534E696E,Iv)==2 and GetHeroLevel(Iv)>=70 then
 call IncUnitAbilityLevelSwapped($534E696E,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00破军阵法的等级已经提升了！")
 elseif GetHeroLevel(Iv)>=100 and isJWawake then
-    set awakeStr=GetHeroStr(Iv,true)
-    set awakeAgi=GetHeroAgi(Iv,true)
-    set awakeInt=GetHeroInt(Iv,true)
+    set awakeStr=GetHeroStr(Iv,false)
+    set awakeAgi=GetHeroAgi(Iv,false)
+    set awakeInt=GetHeroInt(Iv,false)
     call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"重修前属性：|Cff00ff00力量："+I2S(awakeStr)+"--敏捷："+I2S(awakeAgi)+"--智力"+I2S(awakeInt)+"--")
     call SetHeroLevelBJ(Iv,1,false)
     call SetHeroStr(Iv,awakeAgi,true)
@@ -26264,13 +26442,13 @@ call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbili
 else
 endif
 else
-if GetUnitAbilityLevel(GetTriggerUnit(),$4130464E)>0 then
-if XR(GetTriggerUnit(),GetSpellAbilityId(),1)>=2. then
-call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.7)
-else
-endif
-else
-endif
+// if GetUnitAbilityLevel(GetTriggerUnit(),$4130464E)>0 then
+// if XR(GetTriggerUnit(),GetSpellAbilityId(),1)>=2. then
+// call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.7)
+// else
+// endif
+// else
+// endif
 endif
 endif
 // 青囊书、孙子冰法20%CD
@@ -26281,6 +26459,11 @@ endif
 // 极八蛇矛20%CD
 if GetUnitAbilityLevel(GetTriggerUnit(),$41303042)>0  then
 call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.8)
+else
+endif
+// 烛龙刀20%CD
+if GetUnitAbilityLevel(GetTriggerUnit(),$41623031)>0  then
+call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.7)
 else
 endif
 endfunction
@@ -26865,9 +27048,17 @@ if DzAPI_Map_HasMallItem(Player(0),"ZGGG")==true then
 call EnableTrigger(Sc)
 call DialogSetMessage(IP,"请选择游戏模式: 
 ")
+call DialogAddButtonBJ(IP,"正常模式")
 call DialogAddButtonBJ(IP,"|cffB366FF速通模式|r")
 set Sd=GetLastCreatedButtonBJ()
-call DialogAddButtonBJ(IP,"正常模式")
+call DialogAddButtonBJ(IP,"挖宝模式")
+set potholingButton=GetLastCreatedButtonBJ()
+// if Gq > 6 then
+
+// endif
+call DialogAddButtonBJ(IP,"双将模式")
+set doubleHeroButton=GetLastCreatedButtonBJ()
+
 call DialogDisplayBJ(true,IP,Player(0))
 else
 endif
@@ -26899,12 +27090,25 @@ call TriggerRegisterDialogEvent(SR,Fg)
 call TriggerAddAction(SR,function tu)
 endfunction
 function tw takes nothing returns nothing
+    // 速通模式事件
 if GetClickedButtonBJ()==Sd then
 call StartTimerBJ(Fk,false,75.)
 call StartTimerBJ(G7,true,8.)
 call StartTimerBJ(G8,true,9.)
 call UnitAddAbility(C5,$41304242)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"开启速通模式！！！")
+else
+endif
+// 挖宝模式事件
+if GetClickedButtonBJ()==potholingButton then
+set choosedButton = GetClickedButtonBJ()
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,"开启挖宝模式！！！")
+else
+endif
+// 双将模式事件
+if GetClickedButtonBJ()==doubleHeroButton then
+set choosedButton = GetClickedButtonBJ()
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,"开启双将模式！！！")
 else
 endif
 call DialogClear(IP)
@@ -27467,6 +27671,7 @@ endfunction
 function vO takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$736F7266 and IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true and GetUnitAbilityLevelSwapped($41303451,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303530,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303458,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($4130345A,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303450,GetTriggerUnit())<1 and GetUnitAbilityLevel(GetTriggerUnit(),$41304238)<1
 endfunction
+// 修真事件
 function vP takes nothing returns nothing
 if bC(GetTriggerUnit(),$617A6872)==true then
 call RemoveItem(aj(GetTriggerUnit(),$617A6872))
@@ -27482,8 +27687,8 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTrigger
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cff0000ff战争之神")
 call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 return
-else
-if bC(GetTriggerUnit(),$63686573)==true then
+
+elseif bC(GetTriggerUnit(),$63686573)==true then
 call RemoveItem(aj(GetTriggerUnit(),$63686573))
 call UnitAddAbilityBJ($4130345A,GetTriggerUnit())
 call UnitAddAbilityBJ($41305853,GetTriggerUnit())
@@ -27498,8 +27703,8 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTrigger
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cffffff00真武大帝")
 call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 return
-else
-if bC(GetTriggerUnit(),$6B79736E)==true then
+
+elseif bC(GetTriggerUnit(),$6B79736E)==true then
 call RemoveItem(aj(GetTriggerUnit(),$6B79736E))
 call UnitAddAbilityBJ($41303458,GetTriggerUnit())
 call UnitAddAbilityBJ($41305853,GetTriggerUnit())
@@ -27514,8 +27719,8 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTrigger
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cffff0000朱鸟之力")
 call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 return
-else
-if bC(GetTriggerUnit(),$676D6672)==true then
+
+elseif bC(GetTriggerUnit(),$676D6672)==true then
 call RemoveItem(aj(GetTriggerUnit(),$676D6672))
 call UnitAddAbilityBJ($41303450,GetTriggerUnit())
 call UnitAddAbility(GetTriggerUnit(),$41303443)
@@ -27530,10 +27735,24 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTrigger
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cff00ff00苍龙之神")
 call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 return
-else
-endif
-endif
-if bC(GetTriggerUnit(),$776F6C67)==true then
+// 血狼
+elseif bC(GetTriggerUnit(),$73636C70)==true then
+call RemoveItem(aj(GetTriggerUnit(),$73636C70))
+call UnitAddAbilityBJ($41303655,GetTriggerUnit())
+call UnitAddAbilityBJ($41303451,GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303451)
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303655)
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41647467)
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303631)
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$4130354F)
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303332)
+set Hq[640+GetUnitUserData(GetTriggerUnit())]=0
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"开始修真，狂野之神！全属性随修炼提升")
+call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cff00ff00狂野之神")
+call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
+return
+
+elseif bC(GetTriggerUnit(),$776F6C67)==true then
 call RemoveItem(aj(GetTriggerUnit(),$776F6C67))
 call UnitAddAbilityBJ($41303655,GetTriggerUnit())
 call UnitAddAbilityBJ($41303451,GetTriggerUnit())
@@ -27549,8 +27768,8 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTrigger
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cff00ffff天地灵气")
 call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 return
-else
-if GetHeroLevel(GetTriggerUnit())>=30 and GetUnitAbilityLevelSwapped($41303451,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303530,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303458,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($4130345A,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303450,GetTriggerUnit())<1 then
+
+elseif GetHeroLevel(GetTriggerUnit())>=30 and GetUnitAbilityLevelSwapped($41303451,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303530,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303458,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($4130345A,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($41303450,GetTriggerUnit())<1 then
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"开始修真，修身养性！能力随修炼提升")
 call UnitAddAbilityBJ($41304238,GetTriggerUnit())
 call UnitAddAbilityBJ($41305853,GetTriggerUnit())
@@ -27565,9 +27784,6 @@ call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 return
 else
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"你什么都没有就想来做修真，先去把圣兽杀了，夺取他们的兽魂吧！")
-endif
-endif
-endif
 endif
 endfunction
 function vQ takes nothing returns nothing
@@ -27729,6 +27945,29 @@ else
 endif
 else
 if Hq[320+GetUnitUserData(GetTriggerUnit())]==200 then
+call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"|cFF808080潜能激发修炼至顶,可以选择进入|cffffcc00仙魔")
+call SetHeroStr(GetTriggerUnit(),GetHeroStr(GetTriggerUnit(),false)+50,true)
+call SetHeroAgi(GetTriggerUnit(),GetHeroAgi(GetTriggerUnit(),false)+50,true)
+call SetHeroInt(GetTriggerUnit(),GetHeroInt(GetTriggerUnit(),false)+50,true)
+else
+endif
+endif
+else
+endif
+// 血狼
+if GetUnitAbilityLevelSwapped($41304238,GetTriggerUnit())==1 and Hq[640+GetUnitUserData(GetTriggerUnit())]<200 then
+set Hq[640+GetUnitUserData(GetTriggerUnit())]=Hq[640+GetUnitUserData(GetTriggerUnit())]+1
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,GetHeroProperName(GetTriggerUnit())+("|cFF808080你的元神(血狼)修炼至："+(I2S(Hq[640+GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])+" /200")))
+if Hq[640+GetUnitUserData(GetTriggerUnit())]<=160 then
+if ModuloInteger(Hq[640+GetUnitUserData(GetTriggerUnit())],20)==0 then
+call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"|cFF0000FF通过自身不断修行，自身潜能得到提升，全属性+10")
+call SetHeroStr(GetTriggerUnit(),GetHeroStr(GetTriggerUnit(),false)+10,true)
+call SetHeroAgi(GetTriggerUnit(),GetHeroAgi(GetTriggerUnit(),false)+10,true)
+call SetHeroInt(GetTriggerUnit(),GetHeroInt(GetTriggerUnit(),false)+10,true)
+else
+endif
+else
+if Hq[640+GetUnitUserData(GetTriggerUnit())]==200 then
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"|cFF808080潜能激发修炼至顶,可以选择进入|cffffcc00仙魔")
 call SetHeroStr(GetTriggerUnit(),GetHeroStr(GetTriggerUnit(),false)+50,true)
 call SetHeroAgi(GetTriggerUnit(),GetHeroAgi(GetTriggerUnit(),false)+50,true)
@@ -28008,7 +28247,13 @@ else
 if GetUnitTypeId(GetTriggerUnit())==$45747972 then
 call IncUnitAbilityLevelSwapped($41303741,GetTriggerUnit())
 else
+    // 赵云
 if GetUnitAbilityLevel(GetTriggerUnit(),$41304C31)>0 then
+call IncUnitAbilityLevelSwapped($41303439,GetTriggerUnit())
+else
+endif
+// 赵统
+if GetUnitAbilityLevel(GetTriggerUnit(),$41303439)>0 then
 call IncUnitAbilityLevelSwapped($41303439,GetTriggerUnit())
 else
 endif
@@ -28492,7 +28737,7 @@ if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Ct) then
 call UnitAddItemByIdSwapped($6E737069,GetTriggerUnit())
 return
 else
-if GetUnitAbilityLevel(GetTriggerUnit(),$41304136)>0 then
+if GetUnitAbilityLevel(GetTriggerUnit(),$41304136)>0 or GetUnitAbilityLevel(GetTriggerUnit(),$41475951)>0 then
     // 青龙刀
 call UnitAddItemByIdSwapped($73666F67,GetTriggerUnit())
 return
