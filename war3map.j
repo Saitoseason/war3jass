@@ -3264,7 +3264,7 @@ local integer Je=0
 if JW==Cu and bW(JW,$48303031)!=null  then
 if GetRandomInt(0,12)<4 then
 call DisplayTextToPlayer(GetOwningPlayer(JW),0,0,"|Cff00ff00真龙吐息！")
-call bv(JW,GetEventDamage()*.7+bk(JW,1,9),bN(JW,Ig),600,320)
+call bv(JW,GetEventDamage()*.5+bk(JW,1,3),bN(JW,Ig),600,320)
 call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$5A303033,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
 // call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$414E6266,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
 // call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$424E6266,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
@@ -3338,7 +3338,7 @@ call UnitAddItem(JW,CreateItem($66676668,GetUnitX(JW),GetUnitY(JW)))
 endif
 endif
 elseif GetUnitAbilityLevel(JW,$41304C31)>0 and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and bW(JW,$6D6C7374)!=null or bW(JW,$676F626D)!=null then
-if GetRandomInt(1,5)==5 then
+if GetRandomInt(2,5)==5 then
 set Jd[10]=GetUnitLoc(JW)
 call UnitDamageTargetBJ(JW,Ig,I2R(GetHeroAgi(JW,true))*GetRandomReal(2.,6.),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
 call CreateTextTagLocBJ("冲锋之志",Jd[10],1.,15.,100.,100,40.,20.)
@@ -3351,7 +3351,7 @@ endif
 elseif bW(JW,$6C6E726E)!=null and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and JW==C0 then
 if GetRandomInt(GetUnitAbilityLevel(JW,$41303645),20)==20 then
     // 刘湛冲击波伤害
-call UnitDamageTarget(JW,Ig,I2R(GetHeroStr(JW,true)*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(JW,Ig,I2R(GetEventDamage()+GetHeroStr(JW,true)*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
 if IsUnitAlly(JW,Player(8))==true and IsUnitType(JW,UNIT_TYPE_HERO)==true then
@@ -13698,6 +13698,7 @@ call SelectHeroSkill(DT,$41457471)
 set DU=CreateUnit(CC,$6E6A6762,4294.7,-1785.6,240.92)
 call SetUnitState(DU,UNIT_STATE_MANA,0)
 call IssueImmediateOrder(DU,"")
+// 关羽
 set DV=CreateUnit(CC,$48475930,-2469.9,-6674.2,273.37)
 call SetUnitState(DV,UNIT_STATE_MANA,260)
 call UnitAddItemToSlotById(DV,$6576746C,0)
@@ -13706,13 +13707,16 @@ call UnitAddItemToSlotById(DV,$72616731,2)
 set DW=CreateUnit(CC,$6E6A6762,3726.7,-1291.7,270.59)
 call SetUnitState(DW,UNIT_STATE_MANA,0)
 call IssueImmediateOrder(DW,"")
+// 臣妾做不到
 set DX=CreateUnit(CC,$4E303050,12544.6,-8213.8,266.67)
 call SetUnitState(DX,UNIT_STATE_MANA,420)
 call UnitAddItemToSlotById(DX,$61666163,0)
 set DY=CreateUnit(CC,$6F73686D,6511.5,9660.9,200.)
+// 张星彩
 set DZ=CreateUnit(CC,$48584330,-2733.3,-6902.4,268.16)
 call SetUnitState(DZ,UNIT_STATE_MANA,540)
 call UnitAddItemToSlotById(DZ,$61666163,0)
+// 亚索
 set Da=CreateUnit(CC,$48415330,13520.3,-7121.8,259.82)
 call UnitAddItemToSlotById(Da,$6C676468,0)
 call UnitAddItemToSlotById(Da,$72616731,1)
@@ -13735,10 +13739,12 @@ call SetUnitState(Dg,UNIT_STATE_MANA,0)
 call IssueImmediateOrder(Dg,"")
 set Dh=CreateUnit(CC,$65303039,4301.7,-1269.1,254.98)
 set Di=CreateUnit(CC,$68303039,12546.8,-7572.,13.1)
+// 霍戈
 set Dj=CreateUnit(CC,$48575130,-2289.9,-6696.6,271.4)
 call SetUnitState(Dj,UNIT_STATE_MANA,280)
 call UnitAddItemToSlotById(Dj,$616A656E,0)
 call UnitAddItemToSlotById(Dj,$6C676468,1)
+// 友商
 set Dk=CreateUnit(CC,$6F303037,11832.,-10327.8,279.3)
 set Dl=CreateUnit(CC,$6830304E,-824.6,-6417.5,206.767)
 call SetUnitState(Dl,UNIT_STATE_MANA,0)
@@ -13748,36 +13754,44 @@ call SetUnitState(Dm,UNIT_STATE_MANA,140)
 call UnitAddItemToSlotById(Dm,$6B6C6D6D,0)
 call UnitAddItemToSlotById(Dm,$6C676468,1)
 call UnitAddItemToSlotById(Dm,$746D6D74,2)
+// 积分商店
 set Dn=CreateUnit(CC,$68303053,-1084.7,-6819.3,202.11)
+// 朵思大王
 set Do=CreateUnit(CC,$48444430,-2301.1,-6898.8,270.55)
 call SetUnitState(Do,UNIT_STATE_MANA,140)
 call UnitAddItemToSlotById(Do,$70656E72,0)
 call UnitAddItemToSlotById(Do,$636C666D,1)
 call UnitAddItemToSlotById(Do,$616A656E,2)
+// 黄舞蝶
 set Dp=CreateUnit(CC,$48574430,-3027.8,-6679.,263.08)
 call SetUnitState(Dp,UNIT_STATE_MANA,250)
 call UnitAddItemToSlotById(Dp,$70656E72,0)
 call UnitAddItemToSlotById(Dp,$636C666D,1)
 call UnitAddItemToSlotById(Dp,$6B70696E,2)
+// 鬼神吕布
 set Dq=CreateUnit(CC,$48475330,-3375.3,-6706.,267.8)
 call SetUnitState(Dq,UNIT_STATE_MANA,200)
 call UnitAddItemToSlotById(Dq,$72687468,0)
 call UnitAddItemToSlotById(Dq,$70656E72,1)
 call UnitAddItemToSlotById(Dq,$636C666D,2)
+// 魏延
 set Dr=CreateUnit(CC,$48575930,-3712.3,-6677.4,259.71)
 call SetUnitState(Dr,UNIT_STATE_MANA,100)
 call UnitAddItemToSlotById(Dr,$72687468,0)
 call UnitAddItemToSlotById(Dr,$6C676468,1)
 call UnitAddItemToSlotById(Dr,$72616731,2)
+// 庞统
 set Ds=CreateUnit(CC,$48505430,-2480.1,-6896.7,269.071)
 call SetUnitState(Ds,UNIT_STATE_MANA,400)
 call UnitAddItemToSlotById(Ds,$73707368,0)
 call UnitAddItemToSlotById(Ds,$7374656C,1)
 call UnitAddItemToSlotById(Ds,$62656C76,2)
+// 王越
 set Dt=CreateUnit(CC,$484A5330,-3730.6,-7497.6,274.07)
 call SetUnitState(Dt,UNIT_STATE_MANA,100)
 call UnitAddItemToSlotById(Dt,$6C676468,1)
 call UnitAddItemToSlotById(Dt,$72616731,2)
+// 马云禄
 set Du=CreateUnit(CC,$48594C30,-2602.6,-6911.,236.35)
 call SetUnitState(Du,UNIT_STATE_MANA,200)
 call UnitAddItemToSlotById(Du,$72617436,0)
@@ -13788,11 +13802,14 @@ set Dv=CreateUnit(CC,$485A5930,-3399.9,-6921.6,274.418)
 call SetUnitState(Dv,UNIT_STATE_MANA,200)
 call UnitAddItemToSlotById(Dv,$72656A36,0)
 call UnitAddItemToSlotById(Dv,$736F7231,1)
+// 神秘商店
 set Dw=CreateUnit(CC,$75303054,-11195.1,15655.2,188.31)
+// 吕绮玲
 set Dx=CreateUnit(CC,$484C4C51,-3725.7,-7342.8,263.91)
 call SetUnitState(Dx,UNIT_STATE_MANA,100)
 call UnitAddItemToSlotById(Dx,$6C676468,1)
 call UnitAddItemToSlotById(Dx,$72616731,2)
+// 张飞
 set Dy=CreateUnit(CC,$485A4630,-3563.4,-6940.4,268.69)
 call SetUnitState(Dy,UNIT_STATE_MANA,360)
 call UnitAddItemToSlotById(Dy,$72687468,0)
@@ -15061,7 +15078,7 @@ if LoadInteger(Ia,GetHandleId(Ih),$41595030)>=$41595030+1 then
 call SaveInteger(Ia,GetHandleId(Ih),$41595030,LoadInteger(Ia,GetHandleId(Ih),$41595030)-1)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Ih),LoadInteger(Ia,GetHandleId(Ih),$41595030)+1,false)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Ih),LoadInteger(Ia,GetHandleId(Ih),$41595030),true)
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*I2R(GetHeroStr(Ij,true))*.01,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
+call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*I2R(GetHeroStr(Ih,true))*.007,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
 else
 endif
 else
@@ -18319,6 +18336,10 @@ set MG=CreateTimer()
 call TimerStart(MG,60.,false,function ja)
 else
 if GetTriggerUnit()==Cl then
+if GetRandomInt(1,10)==2 then
+else
+call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+endif
 if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingFinish==true then
 call archeryEvent(9)
 endif
@@ -19220,6 +19241,7 @@ call DisplayTimedTextToForce(GetPlayersAll(),5.,"|Cff00ff00百姓们都在谈论
 call PingMinimapEx(1860.,14560.,3.,0,255,0,true)
 call SetUnitPosition(Dk,6300.,300.)
 call ShowUnitShow(Dk)
+call ShowUnitShow(Db)
 call EnableTrigger(N5)
 call StartTimerBJ(Fv,false,300.)
 endfunction
@@ -19572,7 +19594,7 @@ return GetTriggerUnit()==EC
 endfunction
 function lX takes nothing returns nothing
 call DestroyTrigger(N2)
-call ShowUnitShow(Db)
+
 call UnitAddItemByIdSwapped($4930304F,Dz)
 call UnitAddItemByIdSwapped($49303134,Dz)
 call UnitAddItemByIdSwapped($4930304E,Dz)
