@@ -5,6 +5,10 @@ real Ly=1
 boolean L1=false
 boolean Lz=true
 boolean L0=true
+// 眩晕效果
+    trigger StunTrigger = null
+    unit StunnedUnit = null
+    real StunDuration = 2.0
 // 仙人给物品
 boolean givePaper=false
 boolean giveShield=false
@@ -1238,6 +1242,45 @@ native EXSetUnitFacing takes unit u,real angle returns nothing
 native EXPauseUnit takes unit u,boolean flag returns nothing
 native EXSetUnitCollisionType takes boolean enable,unit u,integer t returns nothing
 native EXSetUnitMoveType takes unit u,integer t returns nothing
+// 眩晕相关事件监听
+function Trig_StunEffect_Conditions takes nothing returns boolean
+    return true
+endfunction
+
+function Trig_StunEffect_Expire takes nothing returns nothing
+    // 让单位恢复正常状态
+    call PauseUnit(StunnedUnit, false)
+    set StunnedUnit = null
+    set StunTrigger = null
+endfunction
+
+function Trig_StunEffect_Actions takes unit effect_unit returns nothing
+    local timer pauseTime = CreateTimer()
+    
+    // 获取触发器事件的目标单位
+    set StunnedUnit = effect_unit
+
+    // 实际上，你可能需要根据游戏中的眩晕效果进行更多的设置
+    call PauseUnit(StunnedUnit, true)
+    
+    // 创建一个定时器，在持续时间后恢复单位正常状态
+    call TimerStart(pauseTime, StunDuration, false, function Trig_StunEffect_Expire)
+endfunction
+
+
+
+//===========================================================================
+// Trigger: StunEffect
+//===========================================================================
+// 此触发器用于给单位添加眩晕效果
+//===========================================================================
+// function InitTrig_StunEffect takes nothing returns nothing
+//     set StunTrigger = CreateTrigger()
+//     call TriggerRegisterAnyUnit  EventBJ(StunTrigger, EVENT_PLAYER_UNIT_SPELL_EFFECT)
+//     call TriggerAddCondition(StunTrigger, Condition(function Trig_StunEffect_Conditions))
+//     call TriggerAddAction(StunTrigger, function Trig_StunEffect_Actions)
+// endfunction
+
     // 黄忠狩猎印记增加
 function archeryEvent takes integer time returns nothing
     if huntingFinish ==true then
@@ -2403,19 +2446,22 @@ set JT=I2R((GetHeroStr(Ij,true)+GetHeroAgi(Ij,true)+GetHeroInt(Ij,true))*JS)*.75
 // 力量伤害技能系数
 elseif Ik==1 then
 set JT=I2R(GetHeroStr(Ij,true)*(JS+1))+JT
+// 力量英雄每级防御科技增加0.04法强系数
+set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.03)+JT
+
 // 敏捷伤害技能系数
 elseif Ik==2 then
 set JT=I2R(GetHeroAgi(Ij,true)*(JS+1))+JT
 // 智力伤害技能系数
 elseif Ik==3 then
-set JT=I2R(GetHeroInt(Ij,true)*(JS+1))*.9+I2R(JS+1)*.05*GetUnitState(Ij,ConvertUnitState(3))+JT
+set JT=I2R(GetHeroInt(Ij,true)*(JS+1))*.9+I2R(JS+1)*.03*GetUnitState(Ij,ConvertUnitState(3))+JT
 elseif Ik==4 then
 set JT=I2R(GetHeroStr(Ij,true))+I2R(GetHeroAgi(Ij,true))+I2R(GetHeroInt(Ij,true)*(JS+1))*.5+I2R(JS)*.02*GetUnitState(Ij,ConvertUnitState(3))+JT
 endif
 // 五虎每级+5%的技能伤害
 set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$526F7374,true))*.05)+JT
 // 攻击科技每级+5%的技能伤害(修改为7%)
-set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.07)+JT
+set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.03)+JT
 // 伏羲琴伤害系数1.1，即10点法强(修改为1.25)
 if GetUnitAbilityLevel(Ij,$41303552)>0 then
 set JT=JT*1.15
@@ -6589,7 +6635,7 @@ if LoadInteger(Ia,GetHandleId(Iv),$41595030)-$41595030<3 then
 call SaveInteger(Ia,GetHandleId(Iv),$41595030,LoadInteger(Ia,GetHandleId(Iv),$41595030)+1)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),LoadInteger(Ia,GetHandleId(Iv),$41595030)-1,false)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),LoadInteger(Ia,GetHandleId(Iv),$41595030)+0,true)
-call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),220,bk(Iv,1,GetUnitAbilityLevel(Iv,$41595057)),5,0)
+call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),360,bk(Iv,1,GetUnitAbilityLevel(Iv,$41595057)),5,0)
 endif
 call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\RW_WY.mdx",Iv,"origin"))
 call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\RW_WTX.mdx",Iv,"overhead"))
@@ -6604,11 +6650,11 @@ else
 endif
 call DestroyEffect(AddSpecialEffect("war3mapImported\\RW_WTX.mdx",GetUnitX(Iv),GetUnitY(Iv)))
 call SaveReal(FS,GetHandleId(Iv),$C5A7DF74,GetUnitFacing(Iv))
-call SaveReal(Ia,GetHandleId(Iv),$30304844,GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41595045))*.4)
+call SaveReal(Ia,GetHandleId(Iv),$30304844,GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41595045))*.5)
 if HaveSavedInteger(FS,GetHandleId(Iv),$130B62EC)==true then
 if LoadReal(FS,GetHandleId(Iv),$A9F08262)<=0. then
 call SaveEffectHandle(FS,GetHandleId(Iv),$3706D225,AddSpecialEffectTarget("war3mapImported\\RW_E.mdx",Iv,"chest"))
-call SaveReal(FS,GetHandleId(Iv),$130B62EC,1.5)
+call SaveReal(FS,GetHandleId(Iv),$130B62EC,4.)
 set CS=CreateTimer()
 set Ix=GetHandleId(CS)
 call SaveUnitHandle(Ia,Ix,0,Iv)
@@ -14776,9 +14822,9 @@ endif
 if GetUnitAbilityLevel(Ih,$41303755)>0 then
 if IsUnitAlly(Ih,Player(8))==true then
 if bC(Ig,$49303055)==true or bC(Ig,$6D6C7374)==true then 
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.3,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.05,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.1,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.03,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
 else
@@ -14883,9 +14929,9 @@ endif
 // 伏羲琴伤害 Gq
 if GetUnitAbilityLevel(Ih,$41303552)>=1 then
 if Gq==7 then
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -14923,6 +14969,7 @@ else
 endif
 else
 endif
+// 魏延反击螺旋
 if GetUnitAbilityLevel(Ih,$41575934)>0 then
 if GetRandomInt(1,10)<=2 then
 call SetUnitState(Ih,UNIT_STATE_LIFE,GetUnitState(Ih,UNIT_STATE_LIFE)+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.05)
@@ -15003,16 +15050,18 @@ else
 call SaveInteger(Ia,GetHandleId(Ih),$41594C35,LoadInteger(Ia,GetHandleId(Ih),$41594C35)+1)
 endif
 else
+    // 武神伤害
 if GetRandomInt(1,10)<=GetUnitAbilityLevel(Ih,$41303653) then
 call SetUnitAnimation(Ih,"spin")
 call bs(Ih,GetUnitX(Ih),GetUnitY(Ih),260,(GetHeroStr(Ih,true)+GetHeroAgi(Ih,true))*I2R(GetUnitAbilityLevel(Ih,$41303653)),5,0)
 else
+    // 瑞文带被动的攻击伤害
 if GetUnitTypeId(Ih)==$48595030 then
 if LoadInteger(Ia,GetHandleId(Ih),$41595030)>=$41595030+1 then
 call SaveInteger(Ia,GetHandleId(Ih),$41595030,LoadInteger(Ia,GetHandleId(Ih),$41595030)-1)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Ih),LoadInteger(Ia,GetHandleId(Ih),$41595030)+1,false)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Ih),LoadInteger(Ia,GetHandleId(Ih),$41595030),true)
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*4,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
+call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*I2R(GetHeroStr(Ij,true))*.01,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
 else
 endif
 else
@@ -22900,6 +22949,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Pw[FN] and IsUnitEnemy(CE,GetOwningPlayer(Pv[FN]))==true then
 call UnitDamageTarget(Pv[FN],CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+
 endif
 endloop
 call DestroyGroup(I2)
@@ -22913,7 +22963,8 @@ call UnitRemoveType(Pw[FN],UNIT_TYPE_GIANT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_ANCIENT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_FLYING)
 if IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==true then
-call UnitDamageTarget(Pv[FN],Pw[FN],P0*1.5,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Pv[FN],Pw[FN],P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call Trig_StunEffect_Actions(Pw[FN])
 endif
 call bh(FN)
 endif
@@ -33766,3 +33817,5 @@ endloop
 endfunction
 
    
+
+
