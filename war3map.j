@@ -5,10 +5,13 @@ real Ly=1
 boolean L1=false
 boolean Lz=true
 boolean L0=true
+// 新英雄
+unit zhuGeGuo=null
+unit zhuiSuiZhe=null
 // 眩晕效果
-    trigger StunTrigger = null
-    unit StunnedUnit = null
-    real StunDuration = 2.0
+trigger StunTrigger = null
+unit StunnedUnit = null
+real StunDuration = 2.0
 // 仙人给物品
 boolean givePaper=false
 boolean giveShield=false
@@ -2775,6 +2778,56 @@ endif
 call TimerStart(CS,0.,false,function bx)
 set CS=null
 endfunction
+// 追随者事件
+function registerZhuisuiBody takes nothing returns nothing
+local timer CS=GetExpiredTimer()
+local integer Ix=GetHandleId(CS)
+local unit Iv=LoadUnitHandle(Ia,Ix,$6865726F)
+// 攻击
+call SetUnitState(zhuiSuiZhe,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(21))*3)
+// 护甲
+call SetUnitState(zhuiSuiZhe,ConvertUnitState(32),GetUnitState(Iv,ConvertUnitState(32))*3)
+if GetOwningPlayer(Iv)==Player(15) then
+call PauseTimer(CS)
+call RemoveUnit(zhuiSuiZhe)
+call DestroyTrigger(LoadTriggerHandle(Ia,Ix,$74726730))
+call FlushChildHashtable(Ia,Ix)
+call FlushChildHashtable(Ia,GetHandleId(Iv))
+call DestroyTimer(CS)
+elseif bO(Iv,zhuiSuiZhe)>30000 then
+call SetUnitPosition(zhuiSuiZhe,GetUnitX(Iv),GetUnitY(Iv))
+call IssuePointOrderById(zhuiSuiZhe,851971,GetUnitX(Iv),GetUnitY(Iv))
+call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\MassTeleport\\MassTeleportTarget.mdl",GetUnitX(zhuiSuiZhe),GetUnitY(zhuiSuiZhe)))
+endif
+set CS=null
+set Iv=null
+endfunction
+function registerZhuisuiMove takes nothing returns nothing
+if GetIssuedOrderId()==851971 then
+if GetWidgetX(GetOrderTarget())!=0. and GetWidgetY(GetOrderTarget())!=0. then
+call IssuePointOrderById(zhuiSuiZhe,851983,GetWidgetX(GetOrderTarget()),GetWidgetY(GetOrderTarget()))
+else
+call IssuePointOrderById(zhuiSuiZhe,851990,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+endif
+endif
+endfunction
+function registerZhuisuiBorn takes unit Iv,integer LD returns nothing
+local trigger Jv=CreateTrigger()
+local timer CS=CreateTimer()
+set zhuiSuiZhe=CreateUnit(GetOwningPlayer(Iv),LD,GetUnitX(Iv),GetUnitY(Iv),0.)
+call UnitRemoveType(zhuiSuiZhe,UNIT_TYPE_HERO)
+call SetHeroLevel(zhuiSuiZhe,200,false)
+call AddHeroXP(zhuiSuiZhe,$895440,false)
+call TriggerRegisterUnitEvent(Jv,Iv,EVENT_UNIT_ISSUED_POINT_ORDER)
+call TriggerRegisterUnitEvent(Jv,Iv,EVENT_UNIT_ISSUED_TARGET_ORDER)
+call TriggerAddAction(Jv,function registerZhuisuiMove)
+call SaveUnitHandle(Ia,GetHandleId(CS),$6865726F,Iv)
+call SaveTriggerHandle(Ia,GetHandleId(CS),$74726730,Jv)
+call TimerStart(CS,1.,true,function registerZhuisuiBody)
+set Jv=null
+set CS=null
+endfunction
+
 // 哮天犬加攻击函数
 function bz takes nothing returns nothing
 local timer CS=GetExpiredTimer()
@@ -2789,7 +2842,7 @@ call DestroyTrigger(LoadTriggerHandle(Ia,Ix,$74726730))
 call FlushChildHashtable(Ia,Ix)
 call FlushChildHashtable(Ia,GetHandleId(Iv))
 call DestroyTimer(CS)
-elseif bO(Iv,LE)>3000 then
+elseif bO(Iv,LE)>30000 then
 call SetUnitPosition(LE,GetUnitX(Iv),GetUnitY(Iv))
 call IssuePointOrderById(LE,851971,GetUnitX(Iv),GetUnitY(Iv))
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\MassTeleport\\MassTeleportTarget.mdl",GetUnitX(LE),GetUnitY(LE)))
@@ -3351,7 +3404,7 @@ endif
 elseif bW(JW,$6C6E726E)!=null and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and JW==C0 then
 if GetRandomInt(GetUnitAbilityLevel(JW,$41303645),20)==20 then
     // 刘湛冲击波伤害
-call UnitDamageTarget(JW,Ig,I2R(GetEventDamage()+GetHeroStr(JW,true)*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(JW,Ig,GetEventDamage()+I2R(GetHeroStr(JW,true)*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
 if IsUnitAlly(JW,Player(8))==true and IsUnitType(JW,UNIT_TYPE_HERO)==true then
@@ -13501,6 +13554,13 @@ call SetUnitState(Cv,UNIT_STATE_MANA,160)
 call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
+// 诸葛果
+set zhuGeGuo=CreateUnit(CC,$485A4747,-3563.4,-7709.7,273.26)
+call SetUnitState(zhuGeGuo,UNIT_STATE_MANA,220)
+call UnitAddItemToSlotById(zhuGeGuo,$7374656C,0)
+call UnitAddItemToSlotById(zhuGeGuo,$73707368,1)
+call UnitAddItemToSlotById(zhuGeGuo,$62656C76,2)
+// 法正
 set Cw=CreateUnit(CC,$4F73616D,-3391.7,-7709.7,273.26)
 call SetUnitState(Cw,UNIT_STATE_MANA,220)
 call UnitAddItemToSlotById(Cw,$7374656C,0)
@@ -15332,6 +15392,7 @@ else
 call WQ(GetOwningPlayer(GetTriggerUnit()),"游戏中",0)
 endif
 call SetUnitUserData(GetTriggerUnit(),GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())))
+// 选英雄后的注册事件
 if GetUnitAbilityLevel(Iv,$41304653)==0 then
 call UnitAddAbility(Iv,$41304653)
 call UnitMakeAbilityPermanent(Iv,true,$41304653)
@@ -15398,10 +15459,17 @@ call SaveItemHandle(Ia,GetHandleId(GetTriggerUnit()),$30707070,CreateItem($49303
 call UnitAddItem(GetTriggerUnit(),LoadItemHandle(Ia,GetHandleId(GetTriggerUnit()),$30707070))
 call TriggerRegisterUnitEvent(LC,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 else
+    // 杨戬
 if GetUnitTypeId(GetTriggerUnit())==$48594A30 then
 call SetPlayerAbilityAvailable(GetOwningPlayer(GetTriggerUnit()),$41594A39,false)
 call b1(Iv,$55585451)
+    // 诸葛果的追随者
+elseif GetUnitTypeId(GetTriggerUnit())==$485A4747 then
+// call CreateUnit(GetOwningPlayer(Iv),$75303061,GetUnitX(Iv),GetUnitY(Iv),0.)
+call registerZhuisuiBorn(Iv,$75303061)
 else
+
+
 if GetUnitTypeId(GetTriggerUnit())==$48595030 then
 call SaveInteger(Ia,GetHandleId(Iv),$41595030,$41595030)
 else
@@ -23890,37 +23958,37 @@ if GetUnitAbilityLevel(Iv,$41594A35)==2 and GetHeroLevel(Iv)>=70 then
 call IncUnitAbilityLevel(Iv,$41594A35)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00法天象地的等级已经提升了！")
 endif
-elseif GetUnitTypeId(Iv)==$485A4747 then
-if GetHeroLevel(Iv)==10 and GetUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$53437661)<1 then
-call UnitAddAbility(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$53437661)
-call UnitMakeAbilityPermanent(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),true,$53437661)
+elseif GetUnitTypeId(Iv) == $485A4747 and GetUnitTypeId(zhuiSuiZhe) == $75303061 then
+if GetHeroLevel(Iv)==10 and GetUnitAbilityLevel(zhuiSuiZhe,$53437661)<1 then
+call UnitAddAbility(zhuiSuiZhe,$41303648)
+call UnitMakeAbilityPermanent(zhuiSuiZhe,true,$41303648)
 else
 endif
-if GetHeroLevel(Iv)==20 and GetUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41436365)<2 then
-call IncUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41436365)
+if GetHeroLevel(Iv)==20 and GetUnitAbilityLevel(zhuiSuiZhe,$41436365)<2 then
+call IncUnitAbilityLevel(zhuiSuiZhe,$41436365)
 else
 endif
-if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41304357)<1 then
-call UnitAddAbility(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41304357)
-call UnitMakeAbilityPermanent(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),true,$41304357)
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevel(zhuiSuiZhe,$41304357)<1 then
+call UnitAddAbility(zhuiSuiZhe,$41304357)
+call UnitMakeAbilityPermanent(zhuiSuiZhe,true,$41304357)
 else
 endif
-if GetHeroLevel(Iv)==40 and GetUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41436365)<3 then
-call IncUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41436365)
+if GetHeroLevel(Iv)==40 and GetUnitAbilityLevel(zhuiSuiZhe,$41436365)<3 then
+call IncUnitAbilityLevel(zhuiSuiZhe,$41436365)
 else
 endif
-if GetHeroLevel(Iv)>=50 and GetUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41304358)<1 then
-call UnitAddAbility(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41304358)
-call UnitMakeAbilityPermanent(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),true,$41304358)
+if GetHeroLevel(Iv)>=50 and GetUnitAbilityLevel(zhuiSuiZhe,$41304358)<1 then
+call UnitAddAbility(zhuiSuiZhe,$41304358)
+call UnitMakeAbilityPermanent(zhuiSuiZhe,true,$41304358)
 else
 endif
-if GetHeroLevel(Iv)==60 and GetUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41436365)<4 then
-call IncUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41436365)
+if GetHeroLevel(Iv)==60 and GetUnitAbilityLevel(zhuiSuiZhe,$41436365)<4 then
+call IncUnitAbilityLevel(zhuiSuiZhe,$41436365)
 else
 endif
-if GetHeroLevel(Iv)>=70 and GetUnitAbilityLevel(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41303659)<1 then
-call UnitAddAbility(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),$41303659)
-call UnitMakeAbilityPermanent(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),true,$41303659)
+if GetHeroLevel(Iv)>=70 and GetUnitAbilityLevel(zhuiSuiZhe,$41303659)<1 then
+call UnitAddAbility(zhuiSuiZhe,$41303659)
+call UnitMakeAbilityPermanent(zhuiSuiZhe,true,$41303659)
 else
 endif
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevel(Iv,$41474831)<1 then
@@ -25763,14 +25831,15 @@ endfunction
 function tJ takes nothing returns nothing
 call UnitDamageTargetBJ(GetTriggerUnit(),GetEnumUnit(),100000000.,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
 endfunction
+// 诸葛果追随者
 function tK takes nothing returns nothing
 local group KB
 local unit KC
 local unit Iv=GetTriggerUnit()
 local integer KX=GetPlayerId(GetOwningPlayer(Iv))+1
 if GetSpellAbilityId()==$414A5338 then
-call SetUnitPosition(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262),GetUnitX(Iv),GetUnitY(Iv))
-call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\MassTeleport\\MassTeleportTarget.mdl",GetUnitX(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262)),GetUnitY(LoadUnitHandle(Ia,GetHandleId(Iv),$30306262))))
+call SetUnitPosition(zhuiSuiZhe,GetUnitX(Iv),GetUnitY(Iv))
+call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\MassTeleport\\MassTeleportTarget.mdl",GetUnitX(zhuiSuiZhe),GetUnitY(zhuiSuiZhe)))
 else
 endif
 if GetSpellAbilityId()==$414A5335 then
