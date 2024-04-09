@@ -2820,15 +2820,26 @@ endif
 call TimerStart(CS,0.,false,function bx)
 set CS=null
 endfunction
+// 根据英雄智力和法强返回相应值
+function getMasterServent takes unit Ij returns integer
+local real JT=0
+local integer result =0
+// set result = R2I(bk(Ij, 3, 1))
+set JT = bk(Ij, 3, 1)
+return JT
+endfunction
 // 追随者事件
 function registerZhuisuiBody takes nothing returns nothing
 local timer CS=GetExpiredTimer()
 local integer Ix=GetHandleId(CS)
 local unit Iv=LoadUnitHandle(Ia,Ix,$6865726F)
+
 // 攻击
-call SetUnitState(zhuiSuiZhe,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(21))*3)
+// call SetUnitState(zhuiSuiZhe,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(21))*3)
+call SetUnitState(zhuiSuiZhe, ConvertUnitState(18), getMasterServent(zhuGeGuo))
 // 护甲
-call SetUnitState(zhuiSuiZhe,ConvertUnitState(32),GetUnitState(Iv,ConvertUnitState(32))*3)
+// call SetUnitState(zhuiSuiZhe,ConvertUnitState(32),GetUnitState(Iv,ConvertUnitState(32))*3)
+call SetUnitState(zhuiSuiZhe,ConvertUnitState(32),getMasterServent(zhuGeGuo))
 if GetOwningPlayer(Iv)==Player(15) then
 call PauseTimer(CS)
 call RemoveUnit(zhuiSuiZhe)
@@ -26578,6 +26589,7 @@ elseif GetSpellAbilityId()==$41304234 then
 call SetUnitPosition(GetSpellTargetUnit(),GetUnitX(Iv),GetUnitY(Iv))
 elseif GetSpellAbilityId()==$41304430 then
 call dF(Iv,GetSpellTargetX(),GetSpellTargetY())
+// 灵魂锁链
 elseif GetSpellAbilityId()==$41474732 then
 set LQ=GetSpellTargetLoc()
 call bb(CE,3)
