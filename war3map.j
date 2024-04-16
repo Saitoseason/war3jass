@@ -26424,9 +26424,11 @@ local unit KC
 local unit Iv=GetTriggerUnit()
 local integer KX=GetPlayerId(GetOwningPlayer(Iv))+1
 local boolean success =false
-// 孙乾偷东西
-if GetSpellAbilityId()==$41623074 then
-    // 偷非英雄单位
+// 孙乾偷东西-偷天换日
+if GetSpellAbilityId()==$41623074  then
+    // 如果没有 专属
+    if bC(Iv, $69743065) == false then
+ // 偷非英雄单位
     if IsUnitType(GetSpellTargetUnit(),UNIT_TYPE_HERO)==false then
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"你怎么忍心对这么穷的小兵下手呢？当然是什么都没偷到啊")
     return
@@ -26466,6 +26468,51 @@ if GetSpellAbilityId()==$41623074 then
     call DisplayTimedTextToForce(GetPlayersAll(), 6., "今天脸太黑了，什么都没偷到，捡个石头当了算了!")
     call AdjustPlayerStateBJ(100 * GetUnitAbilityLevel(Iv, $41623074), GetOwningPlayer(Iv), PLAYER_STATE_RESOURCE_GOLD)
     endif
+    else
+        // 如果有专属  
+        // 偷非英雄单位
+ if IsUnitType(GetSpellTargetUnit(),UNIT_TYPE_HERO)==false then
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"你怎么忍心对这么穷的小兵下手呢？当然是什么都没偷到啊")
+    return
+    endif
+    // 偷钱
+    if GetRandomInt(GetUnitAbilityLevel(Iv, $41623074), 7) < 7 then
+    call AdjustPlayerStateBJ(GetUnitLevel(GetSpellTargetUnit())*100,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_GOLD)
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"从"+GetUnitName(GetSpellTargetUnit())+("身上偷到了："+(I2S(GetUnitLevel(GetSpellTargetUnit())*100)+"钱")))
+    set success =true    
+    endif
+    // 一阶段偷装备
+    if GetRandomInt(GetUnitAbilityLevel(Iv, $41623074) * 10, 50) > 42 then
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(1,22)],GetTriggerUnit())
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"从"+GetUnitName(GetSpellTargetUnit())+("身上偷到了一般宝物："+GetItemName(GetLastCreatedItem())))
+    set success =true
+    endif
+    // 二阶段偷装备
+    if GetRandomInt(GetUnitAbilityLevel(Iv, $41623074) *20, 100) > 85 then
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(23,59)],GetTriggerUnit())
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|Cff00ff00从"+GetUnitName(GetSpellTargetUnit())+("|Cff00ff00身上偷到了稀有宝物："+GetItemName(GetLastCreatedItem())))
+    set success =true
+    endif
+    // 三阶段偷装备
+    if GetUnitAbilityLevel(Iv, $41623074) > 1 and GetRandomInt(GetUnitAbilityLevel(Iv, $41623074) * 30, 150) > 140 then
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(71,84)],GetTriggerUnit())
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffffcc00从"+GetUnitName(GetSpellTargetUnit())+("|cffffcc00身上偷到了珍稀宝物："+GetItemName(GetLastCreatedItem())))
+    set success =true
+    endif
+     // 四阶段偷装备
+    if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) < 4 then
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,120)],GetTriggerUnit())
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000从"+GetUnitName(GetSpellTargetUnit())+("|cffff0000身上偷到了极品宝物："+GetItemName(GetLastCreatedItem())))
+    set success =true
+    endif
+
+    if success !=true then
+    call DisplayTimedTextToForce(GetPlayersAll(), 6., "今天脸太黑了，什么都没偷到，捡个石头当了算了!")
+    call AdjustPlayerStateBJ(10000 * GetUnitAbilityLevel(Iv, $41623074), GetOwningPlayer(Iv), PLAYER_STATE_RESOURCE_GOLD)
+    endif
+        
+    endif
+   
 endif
 // 诸葛果追随者
 if GetSpellAbilityId()==$414A5338 then
