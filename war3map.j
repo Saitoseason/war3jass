@@ -15032,7 +15032,7 @@ if GetUnitAbilityLevel(Ih,$41303041)>=1 and bC(Ig,$69743039)==false then
 if IsUnitAlly(Ih,Player(8))==true then
 call EXSetEventDamage((GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.1)*1.)
 else
-// call UnitDamageTarget(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -15056,6 +15056,10 @@ endif
 // 血刃吸血效果
 if GetUnitAbilityLevel(Ih,$41303648)>0 then
 call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41303648))))
+if Ih == zhuiSuiZhe then
+call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(zhuGeGuo,UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41303648))))
+
+endif
 else
 endif
 // 赵统吸血
@@ -15250,8 +15254,47 @@ endif
 if GetUnitAbilityLevel(Ih,$41623076)>0 then
 if LoadInteger(Ia,GetHandleId(Ih),$41623076)>=3 then
 call SaveInteger(Ia,GetHandleId(Ih),$41623076,0)
+
 // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00卡牌骗术！" + R2S(I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076)))
 call UnitDamageTarget(Ih,Ig,I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+if GetRandomInt(1, 6) ==6 and bC(Ih, $69743065) == false then
+
+    // 黄牌眩晕
+if GetRandomInt(1, 6) < 3 then
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00黄牌大师！"  )
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,3),852095,Ig)
+call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+        // 红牌减速
+elseif GetRandomInt(1, 6) < 3 then 
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00红牌大师！"  )
+// call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,3),852095,Ig)
+call bs(Ih,GetUnitX(Ig),GetUnitY(Ig),330,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.2 ,5,0)
+        // 蓝牌烧蓝
+elseif GetRandomInt(1, 6) < 3 then
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00蓝牌大师！"  )
+call SetUnitManaBJ(Ig,GetUnitState(Ig,UNIT_STATE_MANA)-1000.)
+call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.8,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+endif
+else
+// 如果有专属
+if bC(Ih,$69743065)== true then
+  
+    if GetRandomInt(1, 6) < 4 then
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真黄牌大师！"  )
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,3),852095,Ig)
+call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+    elseif  GetRandomInt(1, 6) < 4 then
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真红牌大师！"  )
+// call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,3),852095,Ig)
+call bs(Ih,GetUnitX(Ig),GetUnitY(Ig),330,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.2 ,5,0)
+    else
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真蓝牌大师！"  )
+call SetUnitManaBJ(Ig,GetUnitState(Ig,UNIT_STATE_MANA)-1000.)
+call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.8,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+    endif
+endif
+endif
+
 else
 call SaveInteger(Ia,GetHandleId(Ih),$41623076,LoadInteger(Ia,GetHandleId(Ih),$41623076)+1)
 endif
@@ -26647,7 +26690,7 @@ call UnitRemoveAbility(CE,$42303054)
 return
 endif
 //乾坤一掷
- if GetSpellAbilityId()==$41623077 and Iv == sunQian then
+ if GetSpellAbilityId() == $41623077 and Iv == sunQian and CE != Dz then
     set touzi =GetRandomInt(1,6)
    call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00乾坤一掷！造成伤害：" + R2S((bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623077)) *0.5 + GetPlayerState(GetTriggerPlayer(), PLAYER_STATE_RESOURCE_GOLD) * .05) * touzi))
     // call (bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623077)) +GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.05) * touzi
