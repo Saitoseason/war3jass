@@ -23,6 +23,7 @@ group StunGroup =null
 boolean givePaper=false
 boolean giveShield=false
 boolean giveGlove=false
+boolean giveTongQian=false
 // 新模式
 button choosedButton=null
 button potholingButton=null
@@ -2572,6 +2573,10 @@ if awakeTime>0 then
     if GetUnitTypeId(Ij)==$486B616C or GetUnitTypeId(Ij)==$484A5731 then
     set JT=JT*(1+awakeTime*.2)
     endif
+endif
+// 落宝铜钱+法强
+if GetUnitAbilityLevel(Ij,$41623078)>0 then
+set JT=JT*1.2
 endif
 // 如果是玩家8，系数0.2
 if IsUnitEnemy(Ij,Player(8)) then
@@ -6747,8 +6752,8 @@ endif
 call DestroyEffect(AddSpecialEffect("war3mapImported\\RW_WTX.mdx",GetUnitX(Iv),GetUnitY(Iv)))
 call SaveReal(FS,GetHandleId(Iv),$C5A7DF74,GetUnitFacing(Iv))
 // 护盾值
-call SaveReal(Ia,GetHandleId(Iv),$30304844,GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41595045))*.3)
-call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00获得护盾！造成伤害：" + R2S(GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41595045))*.5))
+call SaveReal(Ia,GetHandleId(Iv),$30304844,GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41595045))*I2R(GetUnitAbilityLevel(Iv,$41595045))*.02)
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00获得护盾！" + R2S(GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41595045))*I2R(GetUnitAbilityLevel(Iv,$41595045))*.02))
 if HaveSavedInteger(FS,GetHandleId(Iv),$130B62EC)==true then
 if LoadReal(FS,GetHandleId(Iv),$A9F08262)<=0. then
 call SaveEffectHandle(FS,GetHandleId(Iv),$3706D225,AddSpecialEffectTarget("war3mapImported\\RW_E.mdx",Iv,"chest"))
@@ -15253,7 +15258,6 @@ endif
 if GetUnitAbilityLevel(Ih,$41623076)>0 then
 if LoadInteger(Ia,GetHandleId(Ih),$41623076)>=3 then
 call SaveInteger(Ia,GetHandleId(Ih),$41623076,0)
-
 // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00卡牌骗术！" + R2S(I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076)))
 call UnitDamageTarget(Ih,Ig,I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if GetRandomInt(1, 6) ==6 and bC(Ih, $69743065) == false then
@@ -15261,12 +15265,12 @@ if GetRandomInt(1, 6) ==6 and bC(Ih, $69743065) == false then
     // 黄牌眩晕
 if GetRandomInt(1, 6) < 3 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00黄牌大师！"  )
-call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,3),852095,Ig)
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,1),852095,Ig)
 call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
         // 红牌减速
 elseif GetRandomInt(1, 6) < 3 then 
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00红牌大师！"  )
-// call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,3),852095,Ig)
+call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852096)
 call bs(Ih,GetUnitX(Ig),GetUnitY(Ig),330,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.2 ,5,0)
         // 蓝牌烧蓝
 elseif GetRandomInt(1, 6) < 3 then
@@ -15280,11 +15284,11 @@ if bC(Ih,$69743065)== true then
   
     if GetRandomInt(1, 6) < 4 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真黄牌大师！"  )
-call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,3),852095,Ig)
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,1),852095,Ig)
 call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
     elseif  GetRandomInt(1, 6) < 4 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真红牌大师！"  )
-// call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,3),852095,Ig)
+call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852096)
 call bs(Ih,GetUnitX(Ig),GetUnitY(Ig),330,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.2 ,5,0)
     else
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真蓝牌大师！"  )
@@ -22556,7 +22560,13 @@ else
 endif
 else
 endif
-
+// 其他人捡起金箍棒
+if GetItemTypeId(GetManipulatedItem())==$6D67746B and (GetUnitTypeId(GetTriggerUnit())!=$51544453 and GetUnitTypeId(GetTriggerUnit())!=$48303051) then
+call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffFF0000无法承受之重！！|r")
+else
+endif
+// 其他人捡起金箍棒
 if GetItemTypeId(GetManipulatedItem())==$6D67746B and (GetUnitTypeId(GetTriggerUnit())!=$51544453 and GetUnitTypeId(GetTriggerUnit())!=$48303051) then
 call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffFF0000无法承受之重！！|r")
@@ -23334,7 +23344,8 @@ call TriggerAddCondition(Pg,Condition(function pX))
 call TriggerAddAction(Pg,function pY)
 endfunction
 function pa takes nothing returns boolean
-return bC(GetTriggerUnit(),$72656A32)==true and GetUnitTypeId(GetTriggerUnit())!=$4E74696E
+    // 如果带了无字天书、落宝铜钱、混元霹雳手
+return bC(GetTriggerUnit(),$72656A32)==true or bC(GetTriggerUnit(),$69743065)==true or bC(GetTriggerUnit(),$69743061)==true and GetUnitTypeId(GetTriggerUnit())!=$4E74696E
 endfunction
 function pb takes nothing returns boolean
 return IsUnitIllusionBJ(GetFilterUnit())==true
@@ -23366,7 +23377,7 @@ call TriggerAddCondition(Ph,Condition(function pa))
 call TriggerAddAction(Ph,function pc)
 endfunction
 function pe takes nothing returns boolean
-return GetItemTypeId(GetManipulatedItem())==$72656A32 and UnitHasBuffBJ(GetTriggerUnit(),$42303054)==true
+return GetItemTypeId(GetManipulatedItem())==$72656A32 or bC(GetTriggerUnit(),$69743065)==true or bC(GetTriggerUnit(),$69743061)==true and UnitHasBuffBJ(GetTriggerUnit(),$42303054)==true
 endfunction
 function pf takes nothing returns nothing
 call UnitRemoveAbility(GetTriggerUnit(),$42303054)
@@ -26461,12 +26472,18 @@ if GetSpellAbilityId()==$41623074  then
     if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) == 2 then
     call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,120)],GetTriggerUnit())
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000从"+GetUnitName(GetSpellTargetUnit())+("|cffff0000身上偷到了极品宝物："+GetItemName(GetLastCreatedItem())))
+    // 如果偷到的装备是追日靴
+    if GetItemTypeId(GetLastCreatedItem()) == $49303030 then
+    call UnitAddAbility(Iv,$4130344D)
+    call UnitMakeAbilityPermanent(Iv,true,$4130344D)
+    call SetItemUserData(GetLastCreatedItem() ,288)
+    endif
     set success =true
     endif
 
     if success !=true then
-    call DisplayTimedTextToForce(GetPlayersAll(), 6., "今天脸太黑了，什么都没偷到，捡个石头当了算了!")
-    call AdjustPlayerStateBJ(100 * GetUnitAbilityLevel(Iv, $41623074), GetOwningPlayer(Iv), PLAYER_STATE_RESOURCE_GOLD)
+    call DisplayTimedTextToForce(GetPlayersAll(), 6., "今天脸太黑了，什么都没偷到，捡个石头换" + I2S(200 * GetUnitAbilityLevel(Iv, $41623074)) +"两黄金算了！")
+    call AdjustPlayerStateBJ(200 * GetUnitAbilityLevel(Iv, $41623074), GetOwningPlayer(Iv), PLAYER_STATE_RESOURCE_GOLD)
     endif
     else
         // 如果有专属  
@@ -26507,8 +26524,8 @@ if GetSpellAbilityId()==$41623074  then
     endif
 
     if success !=true then
-    call DisplayTimedTextToForce(GetPlayersAll(), 6., "今天脸太黑了，什么都没偷到，捡个石头当了算了!")
-    call AdjustPlayerStateBJ(10000 * GetUnitAbilityLevel(Iv, $41623074), GetOwningPlayer(Iv), PLAYER_STATE_RESOURCE_GOLD)
+    call DisplayTimedTextToForce(GetPlayersAll(), 6., "今天脸太黑了，什么都没偷到，捡个璞玉也能当!" + I2S(2000 * GetUnitAbilityLevel(Iv, $41623074)) +"两黄金了")
+    call AdjustPlayerStateBJ(2000 * GetUnitAbilityLevel(Iv, $41623074), GetOwningPlayer(Iv), PLAYER_STATE_RESOURCE_GOLD)
     endif
         
     endif
@@ -29981,12 +29998,20 @@ endfunction
 // 仙人赐宝
 function we takes nothing returns nothing
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"大仙，看在我辛苦守卫剑阁的份上，赐我几件宝物吧。")
+// 孙乾的专属
+if GetTriggerUnit() == Tg and GetTriggerUnit() == sunQian and bC(GetTriggerUnit(), $69743067) == true and giveTongQian ==false then
+    set giveTongQian=true
+    set Tg=null
+    call DisplayTextToForce(GetPlayersAll(),"这是上古人族铸造的第一枚铸币，希望它能助你大业所成。")
+    call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了落宝铜钱！")
+    call UnitAddItemByIdSwapped($69743065,GetTriggerUnit())
+endif
 if GetTriggerUnit()==Tg and GetRandomInt(1,150)<=GetUnitLevel(GetTriggerUnit()) and givePaper==false then
 // call DisableTrigger(GetTriggeringTrigger())
 call UnitAddItemByIdSwapped($72656A32,GetTriggerUnit())
 set NL[1]=bj_lastCreatedItem
 call SetItemUserData(NL[1],277)
-call DisplayTextToForce(GetPlayersAll(),"拿去拿去，不要再来烦我了。")
+call DisplayTextToForce(GetPlayersAll(),"奥妙藏匿真无字，不要再来烦我了。")
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了无字天书！")
 set givePaper=true
 set Tg=null
@@ -29995,7 +30020,7 @@ call SetUnitUserData(Db,277)
 elseif GetTriggerUnit()==Tg and GetRandomInt(1,250)<=GetUnitLevel(GetTriggerUnit()) and giveShield==false then
 //玄光盾 
 call UnitAddItemByIdSwapped($69743039,GetTriggerUnit())
-call DisplayTextToForce(GetPlayersAll(),"拿去拿去，不要再来烦我了。")
+call DisplayTextToForce(GetPlayersAll(),"铁壁如山神威重，不要再来烦我了。")
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了玄光盾！")
 set Tg=null
 set giveShield=true
@@ -30003,7 +30028,7 @@ elseif GetTriggerUnit()==Tg and GetUnitTypeId(GetTriggerUnit())==$48584842 or Ge
 // 混元霹雳手
 set giveGlove=true
 call UnitAddItemByIdSwapped($69743061,GetTriggerUnit())
-call DisplayTextToForce(GetPlayersAll(),"拿去拿去，不要再来烦我了。")
+call DisplayTextToForce(GetPlayersAll(),"雷鸣霹雳映天光，不要再来烦我了。")
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了混元霹雳手！")
 set Tg=null
 else
