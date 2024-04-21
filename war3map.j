@@ -8,6 +8,7 @@ boolean L0=true
 // 心之钢
 trigger XinZhiGangTrigger=null
 boolean xinZhiGangReady =false
+item gangmen =null
 // 新boss
 unit she =null
 trigger she_trg=null
@@ -1259,6 +1260,9 @@ native EXPauseUnit takes unit u,boolean flag returns nothing
 native EXSetUnitCollisionType takes boolean enable,unit u,integer t returns nothing
 native EXSetUnitMoveType takes unit u,integer t returns nothing
 
+
+
+
 function ForcedAttack takes nothing returns nothing
 local unit CE
 local timer CS=GetExpiredTimer()
@@ -1285,7 +1289,7 @@ endif
 
 endloop
 
-call SaveReal(FS,GetHandleId(Iv),$130B62E1,LoadReal(FS,GetHandleId(Iv),$130B62E1)-.6)
+call SaveReal(FS,GetHandleId(Iv),$130B62E1,LoadReal(FS,GetHandleId(Iv),$130B62E1)-.4)
 endif
 endfunction
 
@@ -1297,7 +1301,7 @@ function taughtAttack takes unit Iv,real time returns nothing
     set Ix=GetHandleId(CS)
     call SaveUnitHandle(Ia,Ix,0,Iv)
     call SaveReal(FS,GetHandleId(Iv),$130B62E1,time)
-    call TimerStart(CS,.6,true,function ForcedAttack)
+    call TimerStart(CS,.4,true,function ForcedAttack)
 endfunction
 
 
@@ -2361,6 +2365,66 @@ endloop
 endif
 return false
 endfunction
+
+    // 心之钢对应事件
+function XinzhigangAttack takes nothing returns nothing
+local unit CE
+local timer CS=GetExpiredTimer()
+local integer Ix=GetHandleId(CS)
+local unit Iv=LoadUnitHandle(Ia,Ix,0)
+// 如果角色没带心之钢，则直接销毁计时器
+if bC(Iv,$69743069)==false then
+    // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00销毁定时器！" )
+    call DestroyTimer(CS)
+
+endif
+// 如果倒计时时间已经就绪
+if LoadReal(FS,GetHandleId(Iv),$130B62E2)<=0. then
+    // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00心之钢已准备就绪！" )
+    // 如果心之钢已经冷却好
+    if xinZhiGangReady ==true then
+        //  call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00心之钢已准备就绪2！" )
+    else
+     // 如果心之钢还没冷却好  
+     set xinZhiGangReady = true
+    call SetUnitState(Iv,ConvertUnitState(22),600)
+    call SaveReal(FS,GetHandleId(Iv),$130B62E2,0.)
+    endif
+
+else
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00心之钢冷却中！" )
+  set xinZhiGangReady = false
+  call SetUnitState(Iv,ConvertUnitState(22),128)
+  call XV(Iv,$41623167,1,LoadReal(FS,GetHandleId(Iv),$130B62E2))
+ call SaveReal(FS,GetHandleId(Iv),$130B62E2,LoadReal(FS,GetHandleId(Iv),$130B62E2)-.1)   
+endif
+
+//  call SaveReal(FS,GetHandleId(Iv),$130B62E2,LoadReal(FS,GetHandleId(Iv),$130B62E2)-.1) 
+endfunction
+
+function conditionXinzhigang takes nothing returns boolean
+return bC(GetTriggerUnit(),$69743069)==true
+endfunction
+
+function computeXinzhigang takes nothing returns nothing
+local timer CS
+local integer Ix=0
+set CS=CreateTimer()
+set Ix=GetHandleId(CS)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00捡起心之钢：" )
+call SaveUnitHandle(Ia, Ix, 0, GetTriggerUnit())
+call SaveReal(FS,GetHandleId(GetTriggerUnit()),$130B62E2,50.)
+call TimerStart(CS,.1,true,function XinzhigangAttack)
+endfunction
+
+function registerXinzhigang takes nothing returns nothing
+set XinZhiGangTrigger=CreateTrigger()
+call TriggerRegisterAnyUnitEventBJ(XinZhiGangTrigger,EVENT_PLAYER_UNIT_PICKUP_ITEM)
+call TriggerAddCondition(XinZhiGangTrigger,Condition(function conditionXinzhigang))
+call TriggerAddAction(XinZhiGangTrigger,function computeXinzhigang)
+endfunction
+
+
 function bH takes real Px,real Py,real JP,real JQ returns real
 return bj_RADTODEG*Atan2(JQ-Py,JP-Px)
 endfunction
@@ -3507,6 +3571,10 @@ local unit Iv=LoadUnitHandle(Ia,Ix,$6865726F)
 if GetUnitAbilityLevel(Iv,$4230334F)>0 then
 call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280.,GetUnitState(Iv,ConvertUnitState(21))*.3*I2R(GetUnitAbilityLevel(Iv,$41444433)),5,0)
 endif
+if GetUnitAbilityLevel(Iv,$42303255)>0 then
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00日炎护体！" )
+call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280.,GetUnitState(Iv,ConvertUnitState(1))*.01*I2R(GetUnitAbilityLevel(Iv,$41623163)),5,0)
+endif
 set Iv=null
 endfunction
 function cP takes unit Iv returns nothing
@@ -3519,28 +3587,32 @@ endfunction
 function cQ takes unit JW,unit Ig returns nothing
 local integer Je=0
 // 心之钢
-if bW(JW, $69743069) != null and xinZhiGangReady ==true then
+if bW(JW, $69743069) != null and xinZhiGangReady == true  then
 call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00心之钢攻击！" )
 call UnitDamageTarget(JW, Ig, GetUnitState(JW, UNIT_STATE_MAX_LIFE) * .5, false, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
 call SetUnitState(JW,ConvertUnitState(22),128)
-call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.01)
+call SetItemCharges(aj(JW,$69743069), GetItemCharges(aj(JW,$69743069)) + R2I(GetUnitState(JW, UNIT_STATE_MAX_LIFE) * 0.003))
+call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.003)
 set xinZhiGangReady =false
-call XinzhigangAttack()
+call SaveReal(FS,GetHandleId(JW),$130B62E2,50.)
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$41623071,1,GetUnitX(JW),GetUnitY(JW),bj_UNIT_FACING,3),852095,Ig)
+//  call SaveReal(FS,GetHandleId(JW),$130B62E2,LoadReal(FS,GetHandleId(JW),$130B62E2)-.1)   
+// call XinzhigangAttack()
 endif
 // 高翔反伤
 if Ig == gaoxiang and IsUnitAlly(JW, Player(8)) == false and GetUnitAbilityLevel(Ig, $41623163) >0 then 
 call DisplayTextToPlayer(GetOwningPlayer(Ig), 0, 0, "|Cff00ff00反伤！")
-call UnitDamageTarget(Ig, JW, GetUnitState(Ig, UNIT_STATE_MAX_LIFE) * .01 *GetUnitAbilityLevel(Ig, $41623163), false, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ig, JW, GetUnitState(Ig, UNIT_STATE_MAX_LIFE) * .005 *GetUnitAbilityLevel(Ig, $41623163), false, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
 
 endif
 // 天使被动-登神长阶伤害
 if JW == juFu and GetUnitAbilityLevel(JW, $41623132) > 11 then
-call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330, GetEventDamage() *0.1 + bk(JW, 2, GetUnitAbilityLevel(JW, $41623132)) * .008* GetHeroLevel(juFu), 5, 2)
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330, GetEventDamage() *0.1 + bk(JW, 2, GetUnitAbilityLevel(JW, $41623132)) * .005* GetHeroLevel(juFu), 5, 2)
 endif
 
 if JW == juFu and GetUnitAbilityLevel(JW, $41623132) == 18 and GetRandomInt(1, 6) ==6 then
 call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00制裁八方！造成伤害：" + R2S(GetEventDamage() * 0.6 + bk(JW, 2, GetUnitAbilityLevel(JW, $41623132)) * .04 * GetHeroLevel(juFu)))
-call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330, GetEventDamage() * 0.6 + bk(JW, 2, GetUnitAbilityLevel(JW, $41623132)) * .04 * GetHeroLevel(juFu), 5, 2)
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330, GetEventDamage() * 0.6 + bk(JW, 2, GetUnitAbilityLevel(JW, $41623132)) * .03 * GetHeroLevel(juFu), 5, 2)
 endif
 
 // 张苞触发丈八效果
@@ -6846,7 +6918,7 @@ call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00当前护盾：" 
 if LoadReal(FS,GetHandleId(Iv),$130B62EC)<=0. or LoadReal(Ia,GetHandleId(Iv),$30304844)<=0. then
 // 如果时间小于0且护盾大于0，则造成伤害
 if LoadReal(FS, GetHandleId(Iv), $130B62EC) <= 0. and LoadReal(Ia, GetHandleId(Iv), $30304844) >= 0. then
-call bs(Iv, GetUnitX(Iv), GetUnitY(Iv), 1000, bk(Iv, 1, GetUnitAbilityLevel(gaoxiang, $41623162)) , 5, 0)
+call bs(Iv, GetUnitX(Iv), GetUnitY(Iv), 1000, bk(Iv, 1, GetUnitAbilityLevel(gaoxiang, $41623162)) *0.5, 5, 0)
 endif
 
 // 如果时间大于0且护盾小于0，则造成眩晕
@@ -13939,11 +14011,13 @@ call UnitAddItemToSlotById(juFu,$6576746C,0)
 call UnitAddItemToSlotById(juFu,$6C676468,1)
 call UnitAddItemToSlotById(juFu,$72616731,2)
 // 高翔
-set gaoxiang=CreateUnit(CC,$48303037,-3563.4,-7527.6,273.26)
+set gaoxiang=CreateUnit(CC,$48303037,-3563.4,-7119.5,273.26)
 call SetUnitState(gaoxiang,UNIT_STATE_MANA,220)
 call UnitAddItemToSlotById(gaoxiang,$6576746C,0)
 call UnitAddItemToSlotById(gaoxiang,$6C676468,1)
-call UnitAddItemToSlotById(gaoxiang,$69743069,2)
+// call UnitAddItemToSlotById(juFu,$72616731,2)
+// call UnitAddItemToSlotById(gaoxiang,$69743069,2)
+// set gangmen = GetLastCreatedItem()
 // call UnitAddItemToSlotById(juFu,$69743068,3)
 // call ShowUnitHide(gaoxiang)
 // 诸葛果
@@ -13973,6 +14047,7 @@ call SetUnitState(Cz,UNIT_STATE_MANA,170)
 call UnitAddItemToSlotById(Cz,$636C7364,0)
 call UnitAddItemToSlotById(Cz,$636C666D,1)
 call UnitAddItemToSlotById(Cz,$70656E72,2)
+// 刘湛
 set C0=CreateUnit(CC,$4861706D,-3400.,-7119.5,273.25)
 call SetUnitState(C0,UNIT_STATE_MANA,150)
 call UnitAddItemToSlotById(C0,$72646531,0)
@@ -16016,6 +16091,10 @@ if IK[GetConvertedPlayerId(GetTriggerPlayer())]==false then
 call cw(Iv)
 if DzAPI_Map_HasMallItem(GetOwningPlayer(Iv),"XBTZ")==true or RequestExtraBooleanData(50,GetOwningPlayer(Iv),null,null,false,0,0,0)==true or DzAPI_Map_IsBlueVIP(GetOwningPlayer(Iv))==true then
 call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+if GetTriggerUnit() ==gaoxiang then
+call UnitAddItem(Iv,CreateItem($69743069,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+set gangmen = GetLastCreatedItem()
+endif
 if potholingButton==choosedButton then
 call CreateItem($746C756D,-1220.,-5240.)
 call CreateItem($746C756D,-1220.,-5240.)
@@ -23658,49 +23737,7 @@ call TriggerRegisterAnyUnitEventBJ(Pg,EVENT_PLAYER_UNIT_DROP_ITEM)
 call TriggerAddCondition(Pg,Condition(function pX))
 call TriggerAddAction(Pg,function pY)
 endfunction
-// 心之钢对应事件
-function XinzhigangAttack takes nothing returns nothing
-local unit CE
-local timer CS=GetExpiredTimer()
-local integer Ix=GetHandleId(CS)
-local unit Iv=LoadUnitHandle(Ia,Ix,0)
 
-if LoadReal(FS,GetHandleId(Iv),$130B62E2)<=0. then
-
-    call SaveReal(FS,GetHandleId(Iv),$130B62E2,0.)
-    call DestroyTimer(CS)
-    set xinZhiGangReady = true
-    call SetUnitState(Iv,ConvertUnitState(22),600)
-else
- call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00心之钢冷却中：" )
-  set xinZhiGangReady = false
- call SaveReal(FS,GetHandleId(Iv),$130B62E2,LoadReal(FS,GetHandleId(Iv),$130B62E2)-.1)   
-endif
-
-//  call SaveReal(FS,GetHandleId(Iv),$130B62E2,LoadReal(FS,GetHandleId(Iv),$130B62E2)-.1) 
-endfunction
-
-function conditionXinzhigang takes nothing returns boolean
-return bC(GetTriggerUnit(),$69743069)==true
-endfunction
-
-function computeXinzhigang takes nothing returns nothing
-local timer CS
-local integer Ix=0
-set CS=CreateTimer()
-set Ix=GetHandleId(CS)
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00捡起心之钢：" )
-call SaveUnitHandle(Ia, Ix, 0, GetTriggerUnit())
-call SaveReal(FS,GetHandleId(GetTriggerUnit()),$130B62E2,20.)
-call TimerStart(CS,.1,true,function XinzhigangAttack)
-endfunction
-
-function registerXinzhigang takes nothing returns nothing
-set XinZhiGangTrigger=CreateTrigger()
-call TriggerRegisterAnyUnitEventBJ(XinZhiGangTrigger,EVENT_PLAYER_UNIT_PICKUP_ITEM)
-call TriggerAddCondition(XinZhiGangTrigger,Condition(function conditionXinzhigang))
-call TriggerAddAction(XinZhiGangTrigger,function computeXinzhigang)
-endfunction
 
 function pa takes nothing returns boolean
     // 如果带了无字天书、落宝铜钱、混元霹雳手
@@ -24245,6 +24282,12 @@ if GetLearnedSkillBJ()==$41303846 then
 call SetPlayerTechResearchedSwap($52756766,GetUnitAbilityLevelSwapped($41303846,GetTriggerUnit()),GetOwningPlayer(GetTriggerUnit()))
 else
 endif
+// 高翔E
+if GetLearnedSkillBJ() == $41623163 and GetUnitAbilityLevel(GetTriggerUnit(), $41623163) == 1 then
+call cP(GetTriggerUnit())
+else
+endif
+// 烈焰护体
 if GetLearnedSkillBJ()==$41444433 and GetUnitAbilityLevel(GetTriggerUnit(),$41444433)==1 then
 call cP(GetTriggerUnit())
 else
@@ -27202,7 +27245,7 @@ endif
 // 高翔W护盾
 if GetSpellAbilityId()==$41623162 then
     // call rk(Iv,JS)
-call SaveReal(Ia,GetHandleId(Iv),$30304844,GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41623162))*I2R(GetUnitAbilityLevel(Iv,$41623162))*.02)
+call SaveReal(Ia,GetHandleId(Iv),$30304844,GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41623162)))
 call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00获得护盾！" + R2S(GetUnitState(Iv,ConvertUnitState(1))*I2R(GetUnitAbilityLevel(Iv,$41623162))*I2R(GetUnitAbilityLevel(Iv,$41623162))*.02))
 call UnitAddAbility(Iv,$41304844)
 if HaveSavedInteger(FS,GetHandleId(Iv),$130B62EC)==true then
