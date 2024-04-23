@@ -22684,7 +22684,7 @@ else
 endif
 call SetItemPlayer(GetManipulatedItem(),GetOwningPlayer(GetTriggerUnit()),false)
 // and VU!=3去掉3的等级限制，让3类物品也只能带一件
-if VU!=0 and VU!=1 and VU!=2  then
+if VU!=0 and VU!=1 and VU!=2 and VU!=3 then
 set Fd=1
 loop
 exitwhen Fd>6
