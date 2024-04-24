@@ -2692,8 +2692,8 @@ set JT=I2R((GetHeroStr(Ij,true)+GetHeroAgi(Ij,true)+GetHeroInt(Ij,true))*JS)*.75
 elseif Ik==1 then
 set JT=I2R(GetHeroStr(Ij,true)*(JS+1))+JT
 // 力量英雄每级防御科技增加0.04法强系数
-set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.03)+JT
-
+// set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.03)+JT
+set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.04
 // 敏捷伤害技能系数
 elseif Ik==2 then
 set JT=I2R(GetHeroAgi(Ij,true)*(JS+1))+JT
@@ -2706,7 +2706,8 @@ endif
 // 五虎每级+5%的技能伤害
 set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$526F7374,true))*.05)+JT
 // 攻击科技每级+5%的技能伤害(修改为7%)
-set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.03)+JT
+// set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.05)+JT
+set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.06
 // 伏羲琴伤害系数1.1，即10点法强(修改为1.25)
 if GetUnitAbilityLevel(Ij,$41303552)>0 then
 // set JT=JT*1.15
@@ -2725,7 +2726,7 @@ endif
 //如果带了极八蛇矛
 if GetUnitAbilityLevel(Ij,$41303042)>0 then
 // set JT=JT*1.5
-set extra = extra +0.5
+set extra = extra +0.8
 endif
 //如果带了青钢
 if GetUnitAbilityLevel(Ij,$41303735)>0 then
@@ -2734,15 +2735,15 @@ set extra = extra +0.3
 endif
 // 镇魂套伤害系数1.3
 if GetUnitAbilityLevel(Ij,$41303149)>0 then
-set JT=JT*1.3
+set JT=JT*1.5
 endif
 // 自然套伤害1.45
 if GetUnitAbilityLevel(Ij,$4130444D)>0 then
-set JT=JT*1.45
+set JT=JT*1.6
 endif
 // 蚩尤套伤害系数1.5
 if GetUnitAbilityLevel(Ij,$4130444B)>0 then
-set JT=JT*1.5
+set JT=JT*1.7
 endif
 // 朱雀修真1.35
 if GetUnitAbilityLevel(Ij,$41303458)>0 then 
@@ -2754,9 +2755,9 @@ if GetUnitAbilityLevel(Ij,$41304238)>0 then
 // set JT=JT*1.15
 set extra = extra +0.3
 endif
-// 霸王套伤害系数1.8
+// 霸王套伤害系数2
 if GetUnitAbilityLevel(Ij,$41304730)>0 then
-set JT=JT*1.8
+set JT=JT*2
 endif
 // 青龙套伤害系数1.45（存疑，可能被删除）
 if GetUnitAbilityLevel(Ij,$4130464E)>0 or GetUnitAbilityLevel(Ij,$41304657)>0 then
@@ -6707,12 +6708,14 @@ local real T8=LoadReal(Ia,GetHandleId(Iv),$6D793030)
 local real It=GetUnitX(Iv)
 local real Iu=GetUnitY(Iv)
 local real In=SquareRoot((GetOrderPointX()-It)*(GetOrderPointX()-It)+(GetOrderPointY()-Iu)*(GetOrderPointY()-Iu))
+
 if IO then
 call IssuePointOrderById(Iv,851971,GetRandomReal(-5000,5000),GetRandomReal(-5000,5000))
 call CreateNUnitsAtLoc(9,$65303145,Player(13),GetRandomLocInRect(GetPlayableMapRect()),bj_UNIT_FACING)
 endif
 if IsTerrainPathable(GetOrderPointX(),GetOrderPointY(),PATHING_TYPE_WALKABILITY)==false and IsUnitType(Iv,UNIT_TYPE_HERO)==true then
-if GetUnitAbilityLevel(Iv,$41445335)>0 or GetItemUserData(bW(Iv,$49303030))==288 and In>=1000. and GetIssuedOrderId()==851971 then
+    // 加入追日靴判定
+if bC(GetTriggerUnit(),$49303030)==true or GetUnitAbilityLevel(Iv,$41445335)>0 or GetItemUserData(bW(Iv,$49303030))==288 and In>=1000. and GetIssuedOrderId()==851971 then
 if LoadInteger(Ia,GetHandleId(Iv),$6D6F7665)<1 then
 set CS=CreateTimer()
 set Ix=GetHandleId(CS)
@@ -14050,10 +14053,11 @@ call UnitAddItemToSlotById(juFu,$72616731,2)
 // 高翔
 set gaoxiang=CreateUnit(CC,$48303037,-3563.4,-7119.5,273.26)
 call SetUnitState(gaoxiang,UNIT_STATE_MANA,220)
-// call UnitAddItemToSlotById(gaoxiang,$6576746C,0)
-call UnitAddItemToSlotById(gaoxiang,$69743069,0)
+call UnitAddItemToSlotById(gaoxiang,$6576746C,0)
+// call UnitAddItemToSlotById(gaoxiang,$69743069,0)
 call UnitAddItemToSlotById(gaoxiang,$6C676468,1)
-call UnitAddItemToSlotById(gaoxiang,$72616731,2)
+// call UnitAddItemToSlotById(gaoxiang,$49303030,2)
+// call UnitAddItemToSlotById(gaoxiang,$72616731,2)
 
 // set gangmen = GetLastCreatedItem()
 // call UnitAddItemToSlotById(juFu,$69743068,3)
@@ -16129,6 +16133,9 @@ if IK[GetConvertedPlayerId(GetTriggerPlayer())]==false then
 call cw(Iv)
 if DzAPI_Map_HasMallItem(GetOwningPlayer(Iv),"XBTZ")==true or RequestExtraBooleanData(50,GetOwningPlayer(Iv),null,null,false,0,0,0)==true or DzAPI_Map_IsBlueVIP(GetOwningPlayer(Iv))==true then
 call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+if Iv == gaoxiang then 
+call UnitAddItem(Iv,CreateItem($69743069,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+endif
 
 if potholingButton==choosedButton then
 call CreateItem($746C756D,-1220.,-5240.)
@@ -18493,6 +18500,13 @@ endfunction
 function jB takes nothing returns nothing
 set KR=CreateTrigger()
 call TriggerRegisterPlayerChatEvent(KR,Player(0),"-Q",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(1),"-Q",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(2),"-Q",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(3),"-Q",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(4),"-Q",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(5),"-Q",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(6),"-Q",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(7),"-Q",true)
 call TriggerAddAction(KR,function i9)
 endfunction
 function jC takes nothing returns boolean
@@ -19610,19 +19624,24 @@ call CreateItemLoc($73656872,Jd[66])
 else
 endif
 endif
-if GetRandomInt(1,5)==3 then
-if GetRandomInt(1,20)==19 then
-call SetItemInvulnerable(CreateItem($4930324E,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-elseif GetRandomInt(1,20)==11 then
-call SetItemInvulnerable(CreateItem($4930324D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-elseif GetRandomInt(1,20)==11 then
-call SetItemInvulnerable(CreateItem($4930324A,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-elseif GetRandomInt(1,20)==11 then
-call SetItemInvulnerable(CreateItem($4930324C,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-elseif GetRandomInt(1,20)==11 then
-call SetItemInvulnerable(CreateItem($4930324B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-else
-endif
+// if GetRandomInt(1,5)==3 then
+// if GetRandomInt(1,20)==19 then
+// call SetItemInvulnerable(CreateItem($4930324E,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+// elseif GetRandomInt(1,20)==11 then
+// call SetItemInvulnerable(CreateItem($4930324D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+// elseif GetRandomInt(1,20)==11 then
+// call SetItemInvulnerable(CreateItem($4930324A,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+// elseif GetRandomInt(1,20)==11 then
+// call SetItemInvulnerable(CreateItem($4930324C,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+// elseif GetRandomInt(1,20)==11 then
+// call SetItemInvulnerable(CreateItem($4930324B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+// else
+// endif
+// endif
+
+// 20%概率掉落幸运币
+if GetRandomInt(1, 100) > 80 then
+call SetItemInvulnerable(CreateItem($69743067,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
 endif
 
 call RemoveLocation(Jd[66])
@@ -20215,6 +20234,13 @@ endfunction
 function kU takes nothing returns nothing
 set KP=CreateTrigger()
 call TriggerRegisterPlayerChatEvent(KP,Player(0),"QB",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(1),"QB",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(2),"QB",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(3),"QB",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(4),"QB",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(5),"QB",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(6),"QB",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(7),"QB",true)
 call TriggerAddAction(KP,function kT)
 endfunction
 function kV takes nothing returns nothing
@@ -20230,6 +20256,13 @@ endfunction
 function kW takes nothing returns nothing
 set KQ=CreateTrigger()
 call TriggerRegisterPlayerChatEvent(KQ,Player(0),"MDQB",true)
+call TriggerRegisterPlayerChatEvent(KQ,Player(1),"MDQB",true)
+call TriggerRegisterPlayerChatEvent(KQ,Player(2),"MDQB",true)
+call TriggerRegisterPlayerChatEvent(KQ,Player(3),"MDQB",true)
+call TriggerRegisterPlayerChatEvent(KQ,Player(4),"MDQB",true)
+call TriggerRegisterPlayerChatEvent(KQ,Player(5),"MDQB",true)
+call TriggerRegisterPlayerChatEvent(KQ,Player(6),"MDQB",true)
+call TriggerRegisterPlayerChatEvent(KQ,Player(7),"MDQB",true)
 call TriggerAddAction(KQ,function kV)
 endfunction
 function kX takes nothing returns boolean
@@ -27788,6 +27821,19 @@ endif
 if GetRandomInt(0,100)>FZ then
     // 成功和提示
 call SetItemCharges(GetSpellTargetItem(),GetItemCharges(GetSpellTargetItem())+1)
+// 如果有幸运币，则将幸运币的次数+1
+if bC(Iv,$69743067) then
+call SetItemCharges(aj(Iv, $69743067), GetItemCharges(aj(Iv, $69743067)) +1)
+// 如果幸运币次数大于4，则摧毁幸运币
+if GetItemCharges(aj(Iv, $69743067)) >=4 then
+
+    call RemoveItem(aj(GetTriggerUnit(),$69743067))
+    //    call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00枪出如龙！造成伤害：" + "物品次数--" + I2S(GetItemCharges(bW(Ih, $676F626D))) + "实际伤害--" + R2S(bk(Ih, 2, 2) * (1. + GetItemCharges(bW(Ih, $676F626D)) * .4) ))
+
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cff808000幸运币承受不住这份因果，碎裂了")
+
+endif
+endif
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
 if GetItemTypeId(GetSpellTargetItem())!=$7372746C then
     // 如果被强化的物品不是七星灯，则基础攻击+100
@@ -28225,6 +28271,7 @@ call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"|cffffcc00修改背包数量为
 endfunction
 function th takes nothing returns nothing
 set Jo=CreateTrigger()
+call TriggerRegisterPlayerChatEvent(Jo, Player(0), "-pb", false)
 call TriggerAddAction(Jo,function tg)
 endfunction
 function ti takes nothing returns nothing
@@ -28269,14 +28316,27 @@ call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED,"专署介绍","姜维：可用�
 马谡，陆逊，黄月英，蒋琬：可用扇，杖类武器
 木鹿大王：可用弓类，斧类武器
 夏�","ReplaceableTextures\\CommandButtons\\BTNNecromancerMaster.blp")
-call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED,"历史","|cffffcc00历史|n|cffffcc00|n后羿射日：相传，远古时候有一年，天上出现了十个太阳，直烤得大地冒烟，海水枯干，老百姓眼看无法再生活去。这件事惊动了一个名叫后羿的英雄，他登上昆仑山顶，运足神力，拉开神弓，一气射下�","ReplaceableTextures\\CommandButtons\\BTNSpellBookBLS.blp")
-call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED,"上古十神器","|cffffcc00上古十大神器分别为：轩辕剑、东皇钟、盘古斧、炼妖壶、昊天塔、伏羲琴、神农鼎、崆峒印、昆仑镜和女娲石|n失却之阵：以伏羲琴为核心，就能操纵人心；以神农鼎为核心，就能炼化仙药；以崆峒印为核心，就能不�","ReplaceableTextures\\CommandButtons\\BTNSpellBookBLS.blp")
+// call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED,"历史","|cffffcc00历史|n|cffffcc00","ReplaceableTextures\\CommandButtons\\BTNSpellBookBLS.blp")
+call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED,"上古十神器","|cffffcc00上古十大神器分别为：轩辕剑、东皇钟、盘古斧、炼妖壶、昊天塔、伏羲琴、神农鼎、崆峒印、昆仑镜和女娲石|n在难度八以上不会掉落","ReplaceableTextures\\CommandButtons\\BTNSpellBookBLS.blp")
+call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED, "装备打造", "牛神处能造的装备有：后羿射日弓、方天鬼戟、极八蛇矛、鸩魔龙刀、玄龙偃月刀、苍龙偃月刀、盘龙偃月刀、烛龙偃月刀、霸龙偃月刀、器魂（青龙）、自然之力、神鬼天惊","ReplaceableTextures\\CommandButtons\\BTNSpellBookBLS.blp")
+call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED, "精怪横行", "在剑阁外有项羽之魂、刑天魔神、红黑夔牛、祝融之魂、蜘蛛罔象、八岐化蛇、魑魅魍魉、黑水玄蛇、蚩尤魔神、霸王项羽等鬼怪妖魔肆虐人间","ReplaceableTextures\\CommandButtons\\BTNSpellBookBLS.blp")
+call CreateQuestBJ(bj_QUESTTYPE_OPT_DISCOVERED, "组成套装", "青龙套：青龙铠甲+青龙战靴
+白 虎 套 ： 白 虎 头 巾 + 白 虎 铠 甲 + 白 虎 护 手
+朱 雀 套 ： 朱 雀 护 腕 + 朱 雀 羽 衣 + 朱 雀 头 冠
+玄 武 套 ： 玄 武 大 盾 + 玄 武 战 甲 + 玄 武 头 盔
+魔 神 套 ： 魔 神 之 翼 + 魔 魂 盔 +魔神甲
+自 然 套 ： 水 神 戟 + 火 神 盾 + 风 神 衣 +雷神冠
+鬼 神 套 ： 方 天 鬼 戟 + 雁 翎 金 甲 + 幽 冥 赤 兔 
+
+玄铁套：玄铁手戟 +玄铁腰带
+", " ReplaceableTextures \ \ CommandButtons \ \ BTNSpellBookBLS.blp")
+// 主要任务
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"奋勇杀敌！","郭淮死后，任务才出现。玩家中最先杀死1000个敌人（敌将算10个），会获得30属性+3万金钱奖励。","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"假传圣旨！","张辽波以后，任务出现。因为天气的原因，大雨骤降，栈道断绝，蜀国的粮草供应不及。李严假传圣旨召孔明回师。","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"修真","击杀圣兽以后，会得到兽魂。再到复活点找大男人（牛神）完成任务。修真技能伤害跟使用次数有关，需要经常使用才能提升。","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"五虎将","杀死BOOS后会爆虎符，拿虎符走到孔明就能得到五虎官职(跟交玉玺一样)。徐晃必爆。（五虎将特点：增加一被动回复技能，增加50%生命、魔法、攻击和移动速度）切记不可以在得到五虎将技能时再去找孔明，否则后果自负。","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"孔明清包","需难度四以上,任意玩家输入QB,可清孔明身上装备。","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
-call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"游戏命令","红色玩家输入:-Q  即可清除地上物品,慎用!!!
+call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED, "游戏命令","所有玩家输入:-Q  即可清除地上物品,慎用!!!每清除一个物品可以获得100*游戏波数的金钱奖励
 红色玩家输入:-TR+玩家编号  即可踢除玩家,慎用!!!
 任意玩家输入:-JHYX+玩家编号  即可与对方交换英雄","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"新增佣兵","*增加诸葛弩,攻击强劲,射程远,能够搭乘单位,当搭乘南蛮苦工操作时,将会提升战斗能力.(诸葛瞻及黄月英搭乘战斗力提升的更多)
@@ -32070,7 +32130,7 @@ function Trig_XHCDXzb2Func001Func003002002 takes nothing returns boolean
 return((IsUnitType(GetFilterUnit(),UNIT_TYPE_HERO)==true) )
 endfunction
 function Trig_XHCDXzb2Actions takes nothing returns nothing
-if(((GetEventPlayerChatString()=="魔解网")and(tglbzs[GetPlayerId(GetTriggerPlayer())]>0)))then
+if(((GetEventPlayerChatString() == "-libao") and(tglbzs[GetPlayerId(GetTriggerPlayer())] > 0))) then
 set udg_LBcd[GetPlayerId(GetTriggerPlayer())]=DialogCreate()
 call DialogSetMessage(udg_LBcd[GetPlayerId(GetTriggerPlayer())],"|cffffff00礼包选择|r")
 set udg_LBan[0]=DialogAddButton(udg_LBcd[GetPlayerId(GetTriggerPlayer())],"|cFF00CCFF礼包①|r",0)
@@ -32080,7 +32140,7 @@ set udg_LBan[3]=DialogAddButton(udg_LBcd[GetPlayerId(GetTriggerPlayer())],"|cFFF
 call DialogDisplay(GetTriggerPlayer(),udg_LBcd[GetPlayerId(GetTriggerPlayer())],true)
 call TriggerRegisterDialogEvent(gg_trg_HKYJ19,udg_LBcd[GetPlayerId(GetTriggerPlayer())])
 else
-if(((GetEventPlayerChatString()=="魔解网")and(tglbzs[GetPlayerId(GetTriggerPlayer())]==0)))then
+if(((GetEventPlayerChatString()=="-libao")and(tglbzs[GetPlayerId(GetTriggerPlayer())]==0)))then
 call DisplayTimedTextToPlayer(GetTriggerPlayer(),0,0,20.00,"|cFF66FF00已经不能再获得礼包了|r")
 else
 endif
