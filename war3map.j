@@ -14323,7 +14323,7 @@ set DY=CreateUnit(CC,$6F73686D,6511.5,9660.9,200.)
 set DZ=CreateUnit(CC,$48584330,-2733.3,-6902.4,268.16)
 call SetUnitState(DZ,UNIT_STATE_MANA,540)
 call UnitAddItemToSlotById(DZ,$61666163,0)
-call UnitAddItemToSlotById(DZ,$6974306B,1)
+// call UnitAddItemToSlotById(DZ,$6974306B,1)
 // 亚索
 set Da=CreateUnit(CC,$48415330,13520.3,-7121.8,259.82)
 call UnitAddItemToSlotById(Da,$6C676468,0)
