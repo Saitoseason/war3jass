@@ -1,10 +1,78 @@
 //W3x2lni Data: 2022-05-27 14:24:28.022
 globals
+    //globals from YDWETimerSystem:
+constant boolean LIBRARY_YDWETimerSystem=true
+integer YDWETimerSystem__CurrentTime
+integer YDWETimerSystem__CurrentIndex
+integer YDWETimerSystem__TaskListHead
+integer YDWETimerSystem__TaskListIdleHead
+integer YDWETimerSystem__TaskListIdleMax
+integer array YDWETimerSystem__TaskListIdle
+integer array YDWETimerSystem__TaskListNext
+integer array YDWETimerSystem__TaskListTime
+trigger array YDWETimerSystem__TaskListProc
+trigger YDWETimerSystem__fnRemoveUnit
+trigger YDWETimerSystem__fnDestroyTimer
+trigger YDWETimerSystem__fnRemoveItem
+trigger YDWETimerSystem__fnDestroyEffect
+trigger YDWETimerSystem__fnDestroyLightning
+trigger YDWETimerSystem__fnRunTrigger
+timer YDWETimerSystem__Timer
+integer YDWETimerSystem__TimerHandle
+integer YDWETimerSystem__TimerSystem_RunIndex= 0
+//endglobals from YDWETimerSystem
+integer MoveMoreLevel_JumpTimer=3
+unit bj_lastAbilityCastingUnit=null
+trigger array YDWEBase__AbilityCastingOverEventQueue
+integer array YDWEBase__AbilityCastingOverEventType
+integer YDWEBase__AbilityCastingOverEventNumber= 0
+//globals from YDWETriggerEvent:
+constant boolean LIBRARY_YDWETriggerEvent=true
+trigger yd_DamageEventTrigger= null
+trigger array YDWETriggerEvent__DamageEventQueue
+integer YDWETriggerEvent__DamageEventNumber= 0
+	
+item bj_lastMovedItemInItemSlot= null
+	
+trigger YDWETriggerEvent__MoveItemEventTrigger= null
+trigger array YDWETriggerEvent__MoveItemEventQueue
+integer YDWETriggerEvent__MoveItemEventNumber= 0
+//endglobals from YDWETriggerEvent
+
+real yd_MapMaxX= 0
+real yd_MapMinX= 0
+real yd_MapMaxY= 0
+real yd_MapMinY= 0
+
+hashtable YDHT
+hashtable YDLOC
+
 real Lx=1000
 real Ly=1
 boolean L1=false
 boolean Lz=true
 boolean L0=true
+// 宗预
+trigger zongyu_trg_Q =null
+trigger zongyu_trg_W =null
+trigger zongyu_trg_X =null
+unit udg_xx= null
+// chendao
+unit udg_hy= null
+integer udg_CS= 0
+boolean udg_lr= false
+trigger gg_trg____________________001= null
+trigger gg_trg_Xuyi1= null
+trigger gg_trg_ll= null
+trigger gg_trg_hy= null
+trigger gg_trg_qr= null
+trigger gg_trg_mm= null
+trigger gg_trg_lllfff= null
+trigger gg_trg_tiao= null
+// 洛河图书
+trigger found_trig
+trigger found_resgister
+integer found_time =0
 // 心之钢
 trigger XinZhiGangTrigger=null
 // boolean xinZhiGangReady =false
@@ -21,6 +89,8 @@ unit zhuiSuiZhe=null
 unit sunQian=null
 unit juFu=null
 unit gaoxiang=null
+unit chendao =null
+unit zongyu=null
 trigger beAttacked =null
 // 眩晕效果
 trigger StunTrigger = null
@@ -1263,6 +1333,414 @@ native EXPauseUnit takes unit u,boolean flag returns nothing
 native EXSetUnitCollisionType takes boolean enable,unit u,integer t returns nothing
 native EXSetUnitMoveType takes unit u,integer t returns nothing
 
+    //两个单位之间的角度
+function YDWEAngleBetweenUnits takes unit fromUnit,unit toUnit returns real
+    return bj_RADTODEG * Atan2(GetUnitY(toUnit) - GetUnitY(fromUnit), GetUnitX(toUnit) - GetUnitX(fromUnit))
+endfunction
+
+    function YDWEAnyUnitDamagedTriggerAction takes nothing returns nothing
+    local integer loc_num= 0
+    
+    loop
+        exitwhen loc_num >= YDWETriggerEvent__DamageEventNumber
+        if YDWETriggerEvent__DamageEventQueue[loc_num] != null and IsTriggerEnabled(YDWETriggerEvent__DamageEventQueue[loc_num]) and TriggerEvaluate(YDWETriggerEvent__DamageEventQueue[loc_num]) then
+            call TriggerExecute(YDWETriggerEvent__DamageEventQueue[loc_num])
+        endif
+        set loc_num=loc_num + 1
+    endloop
+endfunction
+
+function YDWEAnyUnitDamagedFilter takes nothing returns boolean
+    if GetUnitAbilityLevel(GetFilterUnit(), 'Aloc') <= 0 then
+        call TriggerRegisterUnitEvent(yd_DamageEventTrigger, GetFilterUnit(), EVENT_UNIT_DAMAGED)
+    endif
+    return false
+endfunction
+
+function YDWEAnyUnitDamagedEnumUnit takes nothing returns nothing
+    local trigger loc_trig= CreateTrigger()
+    local region loc_reg= CreateRegion()
+    local group loc_g= CreateGroup()
+    call RegionAddRect(loc_reg, GetWorldBounds())
+    call TriggerRegisterEnterRegion(loc_trig, loc_reg, Condition(function YDWEAnyUnitDamagedFilter))
+    call GroupEnumUnitsInRect(loc_g, GetWorldBounds(), Condition(function YDWEAnyUnitDamagedFilter))
+    call DestroyGroup(loc_g)
+    set loc_reg=null
+    set loc_trig=null
+    set loc_g=null
+endfunction
+
+
+    function YDWESyStemAnyUnitDamagedRegistTrigger takes trigger trg returns nothing
+    if trg == null then
+        return
+    endif
+        
+    if YDWETriggerEvent__DamageEventNumber == 0 then
+        set yd_DamageEventTrigger=CreateTrigger()
+        call TriggerAddAction(yd_DamageEventTrigger, function YDWEAnyUnitDamagedTriggerAction)
+        call YDWEAnyUnitDamagedEnumUnit()
+    endif
+    
+    set YDWETriggerEvent__DamageEventQueue[YDWETriggerEvent__DamageEventNumber]=trg
+    set YDWETriggerEvent__DamageEventNumber=YDWETriggerEvent__DamageEventNumber + 1
+endfunction
+
+//设置单位可以飞行
+    function YDWEFlyEnable takes unit u returns nothing
+    call UnitAddAbility(u, 'Amrf')
+    call UnitRemoveAbility(u, 'Amrf')
+endfunction
+
+function YDWEDistanceBetweenUnits takes unit a,unit b returns real
+    return SquareRoot((GetUnitX(a) -GetUnitX(b)) * (GetUnitX(a) -GetUnitX(b)) + (GetUnitY(a) -GetUnitY(b)) * (GetUnitY(a) -GetUnitY(b)))
+    // return SquareRoot(( GetUnitX(a) - GetUnitX(b) ) * ( GetUnitX(a) - GetUnitX(b) ) + ( GetUnitY(a) - GetUnitY(b) ) * ( GetUnitY(a) - GetUnitY(b) ))
+endfunction
+
+//YDWE特殊技能结束事件 
+function YDWESyStemAbilityCastingOverTriggerAction takes unit hero,integer index returns nothing
+ local integer loc_num= 0
+    loop
+        exitwhen loc_num >= YDWEBase__AbilityCastingOverEventNumber
+        if YDWEBase__AbilityCastingOverEventType[loc_num] == index then
+            set bj_lastAbilityCastingUnit=hero
+			if YDWEBase__AbilityCastingOverEventQueue[loc_num] != null and TriggerEvaluate(YDWEBase__AbilityCastingOverEventQueue[loc_num]) and IsTriggerEnabled(YDWEBase__AbilityCastingOverEventQueue[loc_num]) then
+				call TriggerExecute(YDWEBase__AbilityCastingOverEventQueue[loc_num])
+			endif
+		endif
+        set loc_num=loc_num + 1
+    endloop
+endfunction
+
+//YDWE技能捕捉事件 
+//===========================================================================  
+function YDWESyStemAbilityCastingOverRegistTrigger takes trigger trg,integer index returns nothing
+	set YDWEBase__AbilityCastingOverEventQueue[YDWEBase__AbilityCastingOverEventNumber]=trg
+	set YDWEBase__AbilityCastingOverEventType[YDWEBase__AbilityCastingOverEventNumber]=index
+	set YDWEBase__AbilityCastingOverEventNumber=YDWEBase__AbilityCastingOverEventNumber + 1
+endfunction 
+//===============
+
+//library YDWEJumpTimer:
+function YDWEJumpTimerLoop takes nothing returns nothing
+    local timer loc_timer=GetExpiredTimer()
+    local unit hero=( (LoadUnitHandle(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "Hero")))) ) // INLINED!!
+    local real angle=(LoadReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "Angle")))) // INLINED!!
+    local integer steeps=(LoadInteger(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "steeps")))) // INLINED!!
+    local integer steepsMax=(LoadInteger(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "steepsMax")))) // INLINED!!
+    local real heightMax=(LoadReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "heightMax")))) // INLINED!!
+    local real dist=(LoadReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "dist")))) // INLINED!!
+    local real dheig=(LoadReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "dheig")))) // INLINED!!
+    local real OriginHeight=(LoadReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "OriginHeight")))) // INLINED!!
+    local real loc_x=(LoadReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "X")))) // INLINED!!
+    local real loc_y=(LoadReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "Y")))) // INLINED!!
+    local real x1=0
+    local real y1=0
+    local real height=0
+    local integer lvJumpTimer=MoveMoreLevel_JumpTimer
+    local integer lvUnitMove=(LoadInteger(YDHT, StringHash((I2S((GetHandleId((hero)))) )), StringHash(( "lvUnitMove")))) // INLINED!!
+    if steeps < steepsMax and lvJumpTimer >= lvUnitMove then
+        set x1=loc_x + steeps * dist * Cos(angle * 3.14159 / 180.0)
+        set y1=loc_y + steeps * dist * Sin(angle * 3.14159 / 180.0)
+        set x1=(RMinBJ(RMaxBJ(((x1)*1.0), yd_MapMinX), yd_MapMaxX)) // INLINED!!
+        set y1=(RMinBJ(RMaxBJ(((y1)*1.0), yd_MapMinY), yd_MapMaxY)) // INLINED!!
+        call SetUnitX(hero, x1)
+        call SetUnitY(hero, y1)
+        set steeps=steeps + 1
+        call SaveInteger(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "steeps" )), ( steeps)) // INLINED!!
+        set height=( - ( 2 * I2R(steeps) * dheig - 1 ) * ( 2 * I2R(steeps) * dheig - 1 ) + 1 ) * heightMax + OriginHeight
+        call SetUnitFlyHeight(hero, height, 99999)
+        call SetUnitFacing(hero, angle)
+      else
+        call SetUnitFlyHeight(hero, OriginHeight, 99999)
+        call SetUnitPathing(hero, true)
+        call DestroyTimer(loc_timer)
+        call FlushChildHashtable(YDHT, StringHash((I2S((GetHandleId((loc_timer))))))) // INLINED!!
+        call SaveInteger(YDHT, StringHash((I2S((GetHandleId((hero)))) )), StringHash(( "lvUnitMove" )), ( 0)) // INLINED!!
+        call YDWESyStemAbilityCastingOverTriggerAction(hero , 2)
+    endif
+    set loc_timer=null
+    set hero=null
+endfunction
+                            
+function YDWEJumpTimer takes unit hero,real angle,real distance,real lasttime,real timeout,real heightMax returns nothing
+    local timer loc_timer=null
+    local real loc_x=GetUnitX(hero)
+    local real loc_y=GetUnitY(hero)
+    local integer steepsMax=R2I(lasttime / timeout)
+    local integer steeps=0
+    local real dist=distance / steepsMax
+    local real dheig=1.0 / steepsMax
+    local real OriginHeight=GetUnitFlyHeight(hero)
+    local integer lvUnitMove=(LoadInteger(YDHT, StringHash((I2S((GetHandleId((hero)))) )), StringHash(( "lvUnitMove")))) // INLINED!!
+    if MoveMoreLevel_JumpTimer <= lvUnitMove then
+        return
+    endif
+    set loc_timer=CreateTimer()
+    call SaveInteger(YDHT, StringHash((I2S((GetHandleId((hero)))) )), StringHash(( "lvUnitMove" )), ( MoveMoreLevel_JumpTimer)) // INLINED!!
+    call YDWEFlyEnable(hero)
+    call SetUnitPathing(hero, false)
+    call SaveUnitHandle(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "Hero" )), ( hero)) // INLINED!!
+    call SaveReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "OriginHeight" )), (( OriginHeight)*1.0)) // INLINED!!
+    call SaveReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "Angle" )), (( angle)*1.0)) // INLINED!!
+    call SaveReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "dist" )), (( dist)*1.0)) // INLINED!!
+    call SaveReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "heightMax" )), (( heightMax)*1.0)) // INLINED!!
+    call SaveReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "dheig" )), (( dheig)*1.0)) // INLINED!!
+    call SaveReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "X" )), (( loc_x)*1.0)) // INLINED!!
+    call SaveReal(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "Y" )), (( loc_y)*1.0)) // INLINED!!
+    call SaveInteger(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "steeps" )), ( steeps)) // INLINED!!
+    call SaveInteger(YDHT, StringHash((I2S((GetHandleId((loc_timer)))) )), StringHash(( "steepsMax" )), ( steepsMax)) // INLINED!!
+    call TimerStart(loc_timer, timeout, true, function YDWEJumpTimerLoop)
+    set loc_timer=null
+endfunction
+
+//library YDWEJumpTimer ends
+
+//library YDWETimerSystem:
+
+function YDWETimerSystem__NewTaskIndex takes nothing returns integer
+ local integer head= YDWETimerSystem__TaskListIdleHead
+	if YDWETimerSystem__TaskListIdleHead < 0 then
+		if YDWETimerSystem__TaskListIdleMax >= 8000 then
+			return 8100
+		else
+			set YDWETimerSystem__TaskListIdleMax=YDWETimerSystem__TaskListIdleMax + 1
+			return YDWETimerSystem__TaskListIdleMax
+		endif
+	endif
+	set YDWETimerSystem__TaskListIdleHead=YDWETimerSystem__TaskListIdle[head]
+	return head
+endfunction
+
+
+function YDWETimerSystem__DeleteTaskIndex takes integer index returns nothing
+	set YDWETimerSystem__TaskListIdle[index]=YDWETimerSystem__TaskListIdleHead
+	set YDWETimerSystem__TaskListIdleHead=index
+endfunction
+
+//�ú������д���
+
+function YDWETimerSystem__NewTask takes real time,trigger proc returns integer
+ local integer index_number= YDWETimerSystem__NewTaskIndex()
+ local integer head= YDWETimerSystem__TaskListHead
+ local integer current_number= R2I(100. * time) + YDWETimerSystem__CurrentTime
+ local integer result_number
+	set YDWETimerSystem__TaskListProc[index_number]=proc
+	set YDWETimerSystem__TaskListTime[index_number]=current_number
+	loop
+		set result_number=YDWETimerSystem__TaskListNext[head]
+		if result_number < 0 or YDWETimerSystem__TaskListTime[result_number] >= current_number then
+		//	call BJDebugMsg("NewTask:"+I2S(index))
+			set YDWETimerSystem__TaskListNext[head]=index_number
+			set YDWETimerSystem__TaskListNext[index_number]=result_number
+			return index_number
+		endif
+		set head=result_number
+	endloop
+	return index_number
+endfunction
+
+function YDWETimerSystemNewTask takes real time,trigger proc returns integer
+	return YDWETimerSystem__NewTask(time , proc)
+endfunction
+
+function YDWETimerSystemGetCurrentTask takes nothing returns integer
+	return YDWETimerSystem__CurrentIndex
+endfunction
+
+//ɾ����λ
+function YDWETimerSystem__RemoveUnit_CallBack takes nothing returns nothing
+    call RemoveUnit(LoadUnitHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex))
+    call RemoveSavedHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex)
+endfunction
+
+function YDWETimerRemoveUnit takes real time,unit loc_unit returns nothing
+    call SaveUnitHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__NewTask(time , YDWETimerSystem__fnRemoveUnit), loc_unit)
+endfunction
+
+//�ݻټ�ʱ��
+function YDWETimerSystem__DestroyTimer_CallBack takes nothing returns nothing
+    call DestroyTimer(LoadTimerHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex))
+    call RemoveSavedHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex)
+endfunction
+
+function YDWETimerDestroyTimer takes real time,timer loc_time returns nothing
+    call SaveTimerHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__NewTask(time , YDWETimerSystem__fnDestroyTimer), loc_time)
+endfunction
+
+//ɾ����Ʒ
+function YDWETimerSystem__RemoveItem_CallBack takes nothing returns nothing
+    call RemoveItem(LoadItemHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex))
+    call RemoveSavedHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex)
+endfunction
+
+
+function YDWETimerRemoveItem takes real time,item loc_item returns nothing
+    call SaveItemHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__NewTask(time , YDWETimerSystem__fnRemoveItem), loc_item)
+endfunction
+
+//ɾ����Ч
+function YDWETimerSystem__DestroyEffect_CallBack takes nothing returns nothing
+    call DestroyEffect(LoadEffectHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex))
+    call RemoveSavedHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex)
+endfunction
+
+function YDWETimerDestroyEffect takes real time,effect loc_effect returns nothing
+    call SaveEffectHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__NewTask(time , YDWETimerSystem__fnDestroyEffect), loc_effect)
+endfunction
+
+//ɾ��������Ч
+function YDWETimerSystem__DestroyLightning_CallBack takes nothing returns nothing
+    call DestroyLightning(LoadLightningHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex))
+    call RemoveSavedHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex)
+endfunction
+
+function YDWETimerDestroyLightning takes real time,lightning loc_light returns nothing
+ local integer loc_number= YDWETimerSystem__NewTask(time , YDWETimerSystem__fnDestroyLightning)
+    call SaveLightningHandle(YDHT, YDWETimerSystem__TimerHandle, loc_number, loc_light)
+endfunction
+//���д�����
+function YDWETimerSystem__RunTrigger_CallBack takes nothing returns nothing
+    call TriggerExecute(LoadTriggerHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex))
+    call RemoveSavedHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__CurrentIndex)
+endfunction
+
+function YDWETimerRunTrigger takes real time,trigger trg returns nothing
+    call SaveTriggerHandle(YDHT, YDWETimerSystem__TimerHandle, YDWETimerSystem__NewTask(time , YDWETimerSystem__fnRunTrigger), trg)
+endfunction
+
+//ɾ��Ư������
+
+function YDWETimerDestroyTextTag takes real time,texttag loc_text_tag returns nothing
+    // local integer N=0
+    // local integer i=0
+    if time <= 0 then
+        set time=0.01
+    endif
+    call SetTextTagPermanent(loc_text_tag, false)
+    call SetTextTagLifespan(loc_text_tag, time)
+    call SetTextTagFadepoint(loc_text_tag, time)
+endfunction
+//���ļ�ʱ��������
+
+function YDWETimerSystem__Main takes nothing returns nothing
+ local integer head= YDWETimerSystem__TaskListHead
+//  local integer p
+	loop
+		set YDWETimerSystem__CurrentIndex=YDWETimerSystem__TaskListNext[head]
+		exitwhen YDWETimerSystem__CurrentIndex < 0 or YDWETimerSystem__CurrentTime < YDWETimerSystem__TaskListTime[YDWETimerSystem__CurrentIndex]
+		//call BJDebugMsg("Task:"+I2S(CurrentIndex))
+		call TriggerEvaluate(YDWETimerSystem__TaskListProc[YDWETimerSystem__CurrentIndex])
+		call YDWETimerSystem__DeleteTaskIndex(YDWETimerSystem__CurrentIndex)
+		set YDWETimerSystem__TaskListNext[head]=YDWETimerSystem__TaskListNext[YDWETimerSystem__CurrentIndex]
+	endloop
+	set YDWETimerSystem__CurrentTime=YDWETimerSystem__CurrentTime + 1
+endfunction
+
+//��ʼ������
+function YDWETimerSystem__Init takes nothing returns nothing
+    set YDWETimerSystem__Timer=CreateTimer()
+	set YDWETimerSystem__TimerHandle=GetHandleId(YDWETimerSystem__Timer)
+	set YDWETimerSystem__CurrentTime=0
+	set YDWETimerSystem__TaskListHead=0
+	set YDWETimerSystem__TaskListNext[0]=-1
+	set YDWETimerSystem__TaskListIdleHead=1
+	set YDWETimerSystem__TaskListIdleMax=1
+	set YDWETimerSystem__TaskListIdle[1]=-1
+	
+	set YDWETimerSystem__fnRemoveUnit=CreateTrigger()
+	set YDWETimerSystem__fnDestroyTimer=CreateTrigger()
+	set YDWETimerSystem__fnRemoveItem=CreateTrigger()
+	set YDWETimerSystem__fnDestroyEffect=CreateTrigger()
+	set YDWETimerSystem__fnDestroyLightning=CreateTrigger()
+	set YDWETimerSystem__fnRunTrigger=CreateTrigger()
+	call TriggerAddCondition(YDWETimerSystem__fnRemoveUnit, Condition(function YDWETimerSystem__RemoveUnit_CallBack))
+	call TriggerAddCondition(YDWETimerSystem__fnDestroyTimer, Condition(function YDWETimerSystem__DestroyTimer_CallBack))
+	call TriggerAddCondition(YDWETimerSystem__fnRemoveItem, Condition(function YDWETimerSystem__RemoveItem_CallBack))
+	call TriggerAddCondition(YDWETimerSystem__fnDestroyEffect, Condition(function YDWETimerSystem__DestroyEffect_CallBack))
+	call TriggerAddCondition(YDWETimerSystem__fnDestroyLightning, Condition(function YDWETimerSystem__DestroyLightning_CallBack))
+	call TriggerAddCondition(YDWETimerSystem__fnRunTrigger, Condition(function YDWETimerSystem__RunTrigger_CallBack))
+	
+    call TimerStart(YDWETimerSystem__Timer, 10, true, function YDWETimerSystem__Main)
+endfunction
+
+//ѭ�������ö�����ʱ��
+function YDWETimerSystemGetRunIndex takes nothing returns integer
+    return YDWETimerSystem__TimerSystem_RunIndex
+endfunction
+
+function YDWETimerSystem__RunPeriodicTriggerFunction takes nothing returns nothing
+    local integer tid= GetHandleId(GetExpiredTimer())
+    local trigger trg= LoadTriggerHandle(YDHT, tid, $D0001)
+	call SaveInteger(YDHT, StringHash(I2S(GetHandleId(trg))), StringHash("RunIndex"), LoadInteger(YDHT, tid, $D0002))
+    if TriggerEvaluate(trg) then
+        call TriggerExecute(trg)
+    endif
+    set trg=null
+endfunction
+
+function YDWETimerSystem__RunPeriodicTriggerFunctionByTimes takes nothing returns nothing
+    local integer tid= GetHandleId(GetExpiredTimer())
+    local trigger trg= LoadTriggerHandle(YDHT, tid, $D0001)
+    local integer times= LoadInteger(YDHT, tid, $D0003)
+	call SaveInteger(YDHT, StringHash(I2S(GetHandleId(trg))), StringHash("RunIndex"), LoadInteger(YDHT, tid, $D0002))
+    if TriggerEvaluate(trg) then
+        call TriggerExecute(trg)
+    endif
+    set times=times - 1
+    if times > 0 then
+		call SaveInteger(YDHT, tid, $D0003, times)
+      else
+        call DestroyTimer(GetExpiredTimer())
+        call FlushChildHashtable(YDHT, tid)
+    endif
+    set trg=null
+endfunction
+
+function YDWETimerRunPeriodicTrigger takes real timeout,trigger trg,boolean b,integer times,integer data returns nothing
+    local timer loc_timer
+    local integer tid
+    local integer index= 0
+    if timeout < 0 then
+        return
+      else
+        set loc_timer=CreateTimer()
+		set tid=GetHandleId(loc_timer)
+    endif
+    set YDWETimerSystem__TimerSystem_RunIndex=YDWETimerSystem__TimerSystem_RunIndex + 1
+	call SaveTriggerHandle(YDHT, tid, $D0001, trg)
+	call SaveInteger(YDHT, tid, $D0002, YDWETimerSystem__TimerSystem_RunIndex)
+	set index=LoadInteger(YDHT, GetHandleId(trg), 'YDTS' + data)
+    set index=index + 1
+	call SaveInteger(YDHT, GetHandleId(trg), 'YDTS' + data, index)
+	call SaveTimerHandle(YDHT, GetHandleId(trg), ( 'YDTS' + data ) * index, loc_timer)
+	
+    if b == false then
+		call SaveInteger(YDHT, tid, $D0003, times)
+        call TimerStart(loc_timer, timeout, true, function YDWETimerSystem__RunPeriodicTriggerFunctionByTimes)
+      else
+        call TimerStart(loc_timer, timeout, true, function YDWETimerSystem__RunPeriodicTriggerFunction)
+    endif
+    set loc_timer=null
+endfunction
+
+function YDWETimerRunPeriodicTriggerOver takes trigger trg,integer data returns nothing
+ local integer trgid= GetHandleId(trg)
+    local integer index= LoadInteger(YDHT, trgid, 'YDTS' + data)
+    local timer loc_timer
+    loop
+        exitwhen index <= 0
+        set loc_timer=LoadTimerHandle(YDHT, trgid, ( 'YDTS' + data ) * index)
+        call DestroyTimer(loc_timer)
+        call FlushChildHashtable(YDHT, GetHandleId(loc_timer))
+		call RemoveSavedHandle(YDHT, trgid, ( 'YDTS' + data ) * index)
+        set index=index - 1
+    endloop
+	
+    call RemoveSavedInteger(YDHT, trgid, 'YDTS' + data)
+    set loc_timer=null
+endfunction
+//library YDWETimerSystem ends
 
 
 
@@ -2392,6 +2870,17 @@ endif
 return false
 endfunction
 
+
+
+
+
+
+
+
+
+
+
+
     // 心之钢对应事件
 function XinzhigangAttack takes nothing returns nothing
 local unit CE
@@ -2727,6 +3216,7 @@ set JT=I2R(GetHeroInt(Ij,true)*(JS+1))*.9+I2R(JS+1)*.03*GetUnitState(Ij,ConvertU
 elseif Ik==4 then
 set JT=I2R(GetHeroStr(Ij,true))+I2R(GetHeroAgi(Ij,true))+I2R(GetHeroInt(Ij,true)*(JS+1))*.5+I2R(JS)*.02*GetUnitState(Ij,ConvertUnitState(3))+JT
 endif
+// call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00基础技能伤害：" + R2S(JT))
 // 五虎每级+5%的技能伤害
 set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$526F7374,true))*.05)+JT
 // 攻击科技每级+5%的技能伤害(修改为7%)
@@ -2761,7 +3251,7 @@ endif
 if GetUnitAbilityLevel(Ij,$41303149)>0 then
 set JT=JT*1.5
 endif
-// 自然套伤害1.45
+// 自然套伤害1.6
 if GetUnitAbilityLevel(Ij,$4130444D)>0 then
 set JT=JT*1.6
 endif
@@ -2796,14 +3286,14 @@ if GetUnitAbilityLevel(Ij,$41497365)>0 then
 set JT=JT*1.2
 endif
 // 七星灯效果增伤 基础1.05 + 每级灯0.05
-if GetUnitAbilityLevel(Ij, $41303231) > 0 and bC(Ij, $6974306B) == false then
+if GetUnitAbilityLevel(Ij, $41303231) > 0  then
 set Ix=GetItemCharges(bW(Ij,$7372746C))
 set JT=JT*(1.15+I2R(Ix)*.07)
 endif
 // 
 if bC(Ij, $6974306B) == true then
-call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00自然之怒")
-set Ix=GetItemCharges(bW(Ij,$6974306B))
+// call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00自然之怒")
+set Ix = LoadInteger(Ia, GetHandleId(Ij), $130B62E6)
 set JT=JT*(1.5+I2R(Ix)*.05)
 endif
 // 入魔系数1.1
@@ -3014,6 +3504,1033 @@ call DestroyGroup(I2)
 set I2=null
 set CE=null
 endfunction
+
+// 宗预技能开始
+// 找宝结果
+function compute_found_result takes integer res, unit Iv,integer loc_level returns nothing 
+// 三个入参分别是，随机结果，触发单位，奖池等级
+if res <10 then
+call ModifyHeroStat(bj_HEROSTAT_STR, Iv, bj_MODIFYMETHOD_ADD, 10 *loc_level)
+call ModifyHeroStat(bj_HEROSTAT_AGI,Iv,bj_MODIFYMETHOD_ADD,10*loc_level)
+call ModifyHeroStat(bj_HEROSTAT_INT,Iv,bj_MODIFYMETHOD_ADD,10*loc_level)
+call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, GetPlayerName(GetOwningPlayer(Iv)) + "使用藏宝图找到了：增强体能的方法，全属性增加:" + I2S(10*loc_level))
+elseif res <20 then
+call AddHeroXP(Iv, 200 * loc_level *found_time, true)
+call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, GetPlayerName(GetOwningPlayer(Iv)) + "使用藏宝图找到了：兵法残页，战斗经验增加:" +I2S(200 * loc_level *found_time))
+
+elseif res <30 then
+call AdjustPlayerStateBJ(1*loc_level*found_time,GetOwningPlayer(Iv),PLAYER_STATE_RESOURCE_LUMBER)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(Iv))+"使用藏宝图找到了：稀有物资，木材增加:"+I2S(1 * loc_level *found_time))
+elseif res <40 then
+call AdjustPlayerStateBJ(500*loc_level*found_time,GetOwningPlayer(Iv),PLAYER_STATE_RESOURCE_GOLD)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(Iv))+"使用藏宝图找到了："+I2S(500 * loc_level *found_time))
+
+elseif res <50 then
+call ModifyHeroStat(bj_HEROSTAT_STR, Iv, bj_MODIFYMETHOD_ADD, 5 *loc_level)
+call ModifyHeroStat(bj_HEROSTAT_AGI,Iv,bj_MODIFYMETHOD_ADD,5*loc_level)
+call ModifyHeroStat(bj_HEROSTAT_INT,Iv,bj_MODIFYMETHOD_ADD,5*loc_level)
+call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, GetPlayerName(GetOwningPlayer(Iv)) + "使用藏宝图找到了：增强体能的方法，全属性增加:" + I2S(5*loc_level))
+
+elseif res <60 then
+call AddHeroXP(Iv, 500 * loc_level *found_time, true)
+call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, GetPlayerName(GetOwningPlayer(Iv)) + "使用藏宝图找到了：兵法残页，战斗经验增加:" +I2S(500 * loc_level *found_time))
+
+elseif res <70 then
+call AdjustPlayerStateBJ(2*loc_level*found_time,GetOwningPlayer(Iv),PLAYER_STATE_RESOURCE_LUMBER)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(Iv))+"使用藏宝图找到了：稀有物资，木材增加:"+I2S(2 * loc_level *found_time))
+
+elseif res <80 then
+call AdjustPlayerStateBJ(700*loc_level*found_time,GetOwningPlayer(Iv),PLAYER_STATE_RESOURCE_GOLD)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(Iv))+"使用藏宝图找到了："+I2S(700 * loc_level *found_time))
+
+elseif res <90 then
+   if loc_level == 5 then
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,126)],Iv)
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
+    else
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(1,84)],Iv)
+    call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"恭喜你找到了"+GetItemName(GetLastCreatedItem()))
+
+    endif
+elseif res <100 then
+    if loc_level > 3 then
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,126)],Iv)
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
+    else
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(1,84)],Iv)
+    call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"恭喜你找到了"+GetItemName(GetLastCreatedItem()))
+
+    endif
+
+endif 
+
+
+endfunction
+
+function found_result takes unit Iv returns nothing
+    local integer loc_num = GetRandomInt(1,100)
+    set found_time = found_time +1
+    // 结果判定
+    // 挖掘次数1
+   if ModuloInteger(found_time,4)==1 then
+    // 小概率变更高一阶的
+    if loc_num <95 then
+      call  compute_found_result(loc_num, Iv,1)
+    else
+      call  compute_found_result(loc_num, Iv,2)
+    endif
+   endif
+   if ModuloInteger(found_time,4)==2 then
+// 小概率变更高一阶的
+    if loc_num <95 then
+      call  compute_found_result(loc_num, Iv,2)
+    else
+      call  compute_found_result(loc_num, Iv,3)
+    endif
+   endif
+   if ModuloInteger(found_time,4)==3 then
+// 小概率变更高一阶的
+    if loc_num <95 then
+      call  compute_found_result(loc_num, Iv,3)
+    else
+      call  compute_found_result(loc_num, Iv,4)
+    endif
+   endif
+   if ModuloInteger(found_time,4)==0 then
+// 小概率变更高一阶的
+    if loc_num <95 then
+      call  compute_found_result(loc_num, Iv,4)
+    else
+      call  compute_found_result(loc_num, Iv,5)
+    endif
+   endif
+endfunction
+
+function found_conditions takes nothing returns boolean
+return GetSpellAbilityId()=='Ab23'
+endfunction
+function found_actions takes nothing returns nothing
+    // 判断是否开始挖宝了
+    if IG[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]==false then
+         set IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-7480.,7200.)
+         set II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-8000.,14250.)
+        loop
+            exitwhen IsTerrainPathable(IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],PATHING_TYPE_WALKABILITY)==false
+            set IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-7480.,7200.)
+            set II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-8000.,14250.)
+            call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"搜索墓穴中") 
+
+        endloop
+        // 获取两个随机坐标点
+        
+        // 判断两个点是否是可通行的
+        if IsTerrainPathable(IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],PATHING_TYPE_WALKABILITY)==false then
+        call PingMinimapForForce(ai(GetOwningPlayer(GetTriggerUnit())),IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],3.)
+        set IG[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=true
+        call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00宝物所在坐标：X "+(I2S(R2I(IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))+("/ Y "+I2S(R2I(II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))))+(" |cffFF0000你当前所在坐标：X "+(I2S(R2I(GetUnitX(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))+("/ Y "+I2S(R2I(GetUnitY(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))))))
+        call XV(GetTriggerUnit(),GetSpellAbilityId(),1,1)   
+        else
+        call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"图纸模糊不清,请看仔细2") 
+        endif
+        // 如果已经开始挖宝了
+        else
+            // 如果当前单位所在坐标满足要求
+            if IG[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]==true and GetUnitX(GetTriggerUnit())+300.>=IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] and GetUnitX(GetTriggerUnit())-300.<=IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] and GetUnitY(GetTriggerUnit())+300.>=II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] and GetUnitY(GetTriggerUnit())-300.<=II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] then
+                
+                if LoadBoolean(FS,GetHandleId(GetTriggerUnit()),$140B62E4) ==true  then
+                set IG[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] = false
+                call found_result(GetTriggerUnit())
+                call SaveBoolean(FS,GetHandleId(GetTriggerUnit()),$140B62E4,false) 
+                call SaveReal(FS,GetHandleId(GetTriggerUnit()),$140B62E2,240.)
+                else
+
+                endif
+           
+                
+                //  call XV(GetTriggerUnit(),GetSpellAbilityId(),1,240.0)
+            else
+               
+               call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00宝物所在坐标：X "+(I2S(R2I(IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))+("/ Y "+I2S(R2I(II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))))+(" |cffFF0000你当前所在坐标：X "+(I2S(R2I(GetUnitX(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))+("/ Y "+I2S(R2I(GetUnitY(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))))))
+                call TriggerSleepAction(0.5)
+               call XV(GetTriggerUnit(),GetSpellAbilityId(),1,1)
+            endif
+    endif
+   
+endfunction
+
+// 挖宝事件
+function Trig_found takes nothing returns nothing
+set found_trig=CreateTrigger()
+call TriggerRegisterAnyUnitEventBJ(found_trig,EVENT_PLAYER_UNIT_SPELL_FINISH)
+call TriggerAddCondition(found_trig,Condition(function found_conditions))
+call TriggerAddAction(found_trig,function found_actions)
+endfunction
+
+function Trig_listen_map_action takes nothing returns nothing
+    if( bC(Ib[GetConvertedPlayerId(GetTriggerPlayer())], 'it0o') == true) then
+    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "累计已掘墓:" + I2S(found_time) +" 次") 
+    else
+    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0,"你没有洛河图书！")
+    endif
+endfunction
+function Trig_listen_map takes nothing returns nothing
+set KR=CreateTrigger()
+call TriggerRegisterPlayerChatEvent(KR,Player(0),"-map",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(1),"-map",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(2),"-map",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(3),"-map",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(4),"-map",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(5),"-map",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(6),"-map",true)
+call TriggerRegisterPlayerChatEvent(KR,Player(7),"-map",true)
+call TriggerAddAction(KR,function Trig_listen_map_action)
+endfunction
+// 
+    // 掘墓对应事件
+function found_event takes nothing returns nothing
+local unit CE
+local timer CS=GetExpiredTimer()
+local integer Ix=GetHandleId(CS)
+local unit Iv=LoadUnitHandle(Ia,Ix,0)
+// 如果角色没带心之钢，则直接销毁计时器
+if bC(Iv,'it0o')==false then
+    // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00销毁定时器！" )
+    call DestroyTimer(CS)
+    // call SaveReal(FS,GetHandleId(Iv),$130B62E2,0.)
+    // 重新设置射程
+    call SaveReal(FS,GetHandleId(Iv),$140B62E5,0.)
+    return
+endif
+// 如果倒计时时间已经就绪
+if LoadReal(FS,GetHandleId(Iv),$140B62E2)<=0. then
+    // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00心之钢已准备就绪！" )
+    // 如果心之钢已经冷却好
+    if LoadBoolean(FS,GetHandleId(Iv),$140B62E4) ==true then
+    
+    else
+     // 如果心之钢还没冷却好 
+     call SaveBoolean(FS,GetHandleId(Iv),$140B62E4,true) 
+
+
+    call SaveReal(FS,GetHandleId(Iv),$140B62E2,0.)
+    endif
+
+else
+
+  call SaveBoolean(FS,GetHandleId(Iv),$140B62E4,false) 
+//   重新设置冷却
+
+  call XV(Iv,'Ab23',1,LoadReal(FS,GetHandleId(Iv),$140B62E2))
+ call SaveReal(FS,GetHandleId(Iv),$140B62E2,LoadReal(FS,GetHandleId(Iv),$140B62E2)-.1)   
+endif
+
+endfunction
+
+function condition_found takes nothing returns boolean 
+return bC(GetTriggerUnit(), 'it0o') == true 
+endfunction
+
+function computed_found takes nothing returns nothing
+local timer CS
+local integer Ix=0
+set CS=CreateTimer()
+set Ix=GetHandleId(CS)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00捡起洛河图书：" )
+call SaveUnitHandle(Ia, Ix, 0, GetTriggerUnit())
+
+// 重新设置心之钢冷却为未完成
+call SaveBoolean(FS,GetHandleId(GetTriggerUnit()),$140B62E4,false)
+// 重新设置心之钢角色射程
+// call SaveReal(FS, GetHandleId(GetTriggerUnit()), $130B62E5, GetUnitState(GetTriggerUnit(),ConvertUnitState(22)))
+// call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00初始射程！" + R2S(LoadReal(FS, GetHandleId(GetTriggerUnit()), $130B62E5)))
+call TimerStart(CS,.1,true,function found_event)
+endfunction
+
+function registerBook takes nothing returns nothing
+set found_resgister=CreateTrigger()
+call TriggerRegisterAnyUnitEventBJ(found_resgister,EVENT_PLAYER_UNIT_PICKUP_ITEM)
+call TriggerAddCondition(found_resgister,Condition(function condition_found))
+call TriggerAddAction(found_resgister,function computed_found)
+endfunction
+
+
+function Trig_zongyuW_conditions takes nothing returns boolean
+    return ( ( GetSpellAbilityId() == 'Ab25' ) )
+endfunction
+function zongyu_W_Action takes nothing returns nothing
+    local group ydl_group
+    local unit ydl_unit
+    local real loc_distance 
+    local real loc_distance2
+    local unit Iv =LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)
+    local unit CE=LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xE1001B12)
+    set loc_distance = SquareRoot((GetUnitX(Iv) -GetUnitX(CE)) * (GetUnitX(Iv) -GetUnitX(CE)) + (GetUnitY(Iv) -GetUnitY(CE)) * (GetUnitY(Iv) -GetUnitY(CE)))
+    // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "当前实际距离为：" + R2S(loc_distance))
+
+
+    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D, ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D) ) + ( 1.00 ) ))
+    call SetUnitFacing(Iv, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2))
+    if ( ( LoadBoolean(YDLOC, GetHandleId(GetExpiredTimer()), 0xC2781FCF) == false ) and ( loc_distance <= 80.00 ) ) then
+        call SaveBoolean(YDLOC, GetHandleId(GetExpiredTimer()), 0xC2781FCF, true)
+        // 如果跳跃的目标是敌人则造成眩晕
+        if IsUnitEnemy(CE, GetOwningPlayer(Iv)) == true then
+        call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
+        endif
+    else
+    endif
+    if ( ( LoadBoolean(YDLOC, GetHandleId(GetExpiredTimer()), 0xC2781FCF) == true ) ) then
+        if ( ( LoadInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x9FDB62AC) < 6 ) ) then
+        else
+            if ( ( LoadInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x9FDB62AC) == 6 ) ) then
+                call DisableTrigger(zongyu_trg_X)
+                call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2FC9F415, 20.00)
+                if ( ( udg_xx == null ) ) then
+                    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2))
+                    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E, 8.00)
+                    set udg_xx=CreateUnit(Player(0), 'u00j', ( ( GetUnitX(CE) ) + ( ( ( CosBJ(LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2)) ) * ( 300.00 ) ) ) ), ( ( GetUnitY(CE) ) + ( ( ( SinBJ(LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2)) ) * ( 300.00 ) ) ) ), 0)
+                else
+                    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2, YDWEAngleBetweenUnits(Iv , udg_xx))
+                    set loc_distance2 = SquareRoot((GetUnitX(Iv) -GetUnitX(udg_xx)) * (GetUnitX(Iv) -GetUnitX(udg_xx)) + (GetUnitY(Iv) -GetUnitY(udg_xx)) * (GetUnitY(Iv) -GetUnitY(udg_xx)))
+                    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E, ( ( RMinBJ(loc_distance2, 1000.00) ) / ( 40.00 ) ))
+                endif
+                call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Weapons\\FaerieDragonMissile\\FaerieDragonMissile.mdl", Iv, "weapon"))
+                call SetUnitAnimation(Iv, "attack slam")
+            else
+                call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA99320FA, ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA99320FA) ) + ( 1.00 ) ))
+                call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x9E4D0A0D, SquareRoot(( ( Pow(LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2FC9F415), 2.00) ) - ( Pow(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA99320FA) ) - ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2FC9F415) ) ), 2.00) ) )))
+                call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x9F0C6E00, ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x9E4D0A0D) ) * ( 9.00 ) ))
+                call SetUnitFlyHeight(Iv, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x9F0C6E00), 0.00)
+                call SetUnitX(Iv, ( ( GetUnitX(Iv) ) + ( ( ( CosBJ(LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2)) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+                call SetUnitY(Iv, ( ( GetUnitY(Iv) ) + ( ( ( SinBJ(LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2)) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+                if ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x9E4D0A0D) < 1.00 ) ) then
+                    call RemoveUnit(udg_xx)
+                    call SetUnitFlyHeight(Iv, 0.00, 0.00)
+                    call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Abilities\\Spells\\Orc\\WarStomp\\WarStompCaster.mdl", GetUnitX(Iv), GetUnitY(Iv)))
+                    call SaveUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86, CreateUnit(ConvertedPlayer(LoadInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x32A9E4C8)), 'u00i', GetUnitX(Iv), GetUnitY(Iv), 0))
+                    // call UnitAddAbility(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86), 'A003')
+                    // 减速
+                    call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41314C54,1,GetUnitX(Iv),GetUnitY(Iv),bj_UNIT_FACING,1),852096)
+
+                    set ydl_group=CreateGroup()
+                    call GroupEnumUnitsInRange(ydl_group, GetUnitX(Iv), GetUnitY(Iv), 300.00, null)
+                    loop
+                        set ydl_unit=FirstOfGroup(ydl_group)
+                        exitwhen ydl_unit == null
+                        call GroupRemoveUnit(ydl_group, ydl_unit)
+                        if IsUnitEnemy(ydl_unit, GetOwningPlayer(Iv)) == true and ydl_unit !=Iv then
+                            // call IssueTargetOrder(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86), "slow", ydl_unit)
+                        call UnitDamageTarget(Iv, ydl_unit, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25')), true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+                        else
+                        endif
+                    endloop
+                    call DestroyGroup(ydl_group)
+                    call YDWETimerRemoveUnit(0.10 , LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86))
+                    // call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+                    call DestroyTimer(GetExpiredTimer())
+                else
+                endif
+            endif
+        endif
+        call SaveInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x9FDB62AC, ( ( LoadInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x9FDB62AC) ) + ( 1 ) ))
+    else
+        call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38344552, YDWEAngleBetweenUnits(Iv , CE))
+        call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E, ( ( 25.00 ) * ( ( ( 1.00 ) - ( ( ( ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D) ) * ( 0.03 ) ) ) / ( ( ( 3.00 ) + ( ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D) ) * ( 0.03 ) ) ) ) ) ) ) ) ) ))
+        call SetUnitX(Iv, ( ( GetUnitX(Iv) ) + ( ( ( CosBJ(LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38344552)) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+        call SetUnitY(Iv, ( ( GetUnitY(Iv) ) + ( ( ( SinBJ(LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38344552)) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+    endif
+    set ydl_group=null
+    set ydl_unit=null
+endfunction
+function Trig_zongyu_w takes nothing returns nothing
+    local timer ydl_timer
+    local integer ydl_localvar_step= LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+    set ydl_localvar_step=ydl_localvar_step + 3
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xE1001B12, GetSpellTargetUnit())
+    call SaveReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2970F80D, 0.00)
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9FDB62AC, 0)
+    call SaveReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2, YDWEAngleBetweenUnits(GetTriggerUnit() , GetSpellTargetUnit()))
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8, GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())))
+    call SaveBoolean(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC2781FCF, false)
+    call UnitAddAbility(GetTriggerUnit(), 'Arav')
+    call UnitRemoveAbility(GetTriggerUnit(), 'Arav')
+    set udg_xx=null
+    call EnableTrigger(zongyu_trg_X)
+    set ydl_timer=CreateTimer()
+    call SaveTriggerHandle(YDLOC, GetHandleId(ydl_timer), 0x0FEDE78C, LoadTriggerHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x0FEDE78C))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x2E1BF0CA, GetSpellTargetUnit())
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
+    call SaveInteger(YDLOC, GetHandleId(ydl_timer), 0x9FDB62AC, LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9FDB62AC))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0xA3098AE2, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x9F0C6E00, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00))
+    call SaveBoolean(YDLOC, GetHandleId(ydl_timer), 0xC2781FCF, LoadBoolean(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC2781FCF))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0xE1001B12, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xE1001B12))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x384C9D86, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x384C9D86))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x2970F80D, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2970F80D))
+    call SaveInteger(YDLOC, GetHandleId(ydl_timer), 0x32A9E4C8, LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x2FC9F415, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2FC9F415))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x34D6230E, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x34D6230E))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x38344552, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x38344552))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0xA99320FA, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA99320FA))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x9E4D0A0D, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9E4D0A0D))
+    call TimerStart(ydl_timer, 0.01, true, function zongyu_W_Action)
+    // call FlushChildHashtable(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step)
+    set ydl_timer=null
+endfunction
+//===========================================================================
+function InitTrig_zongyuW takes nothing returns nothing
+    set zongyu_trg_W=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(zongyu_trg_W, EVENT_PLAYER_UNIT_SPELL_EFFECT)
+    call TriggerAddCondition(zongyu_trg_W, Condition(function Trig_zongyuW_conditions))
+    call TriggerAddAction(zongyu_trg_W, function Trig_zongyu_w)
+endfunction
+
+function Trig_zongyuX_Conditions takes nothing returns boolean
+    return ( ( GetIssuedOrderIdBJ() == String2OrderIdBJ("smart") ) and ( GetTriggerUnit() == zongyu ) )
+endfunction
+function Trig_zongyuX_Actions takes nothing returns nothing
+    call RemoveUnit(udg_xx)
+    set udg_xx=CreateUnit(Player(0), 'u00j', GetOrderPointX(), GetOrderPointY(), 0)
+endfunction
+//===========================================================================
+function InitTrig_zongyuX takes nothing returns nothing
+    set zongyu_trg_X=CreateTrigger()
+    call DisableTrigger(zongyu_trg_X)
+    call TriggerRegisterAnyUnitEventBJ(zongyu_trg_X, EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
+    call TriggerAddCondition(zongyu_trg_X, Condition(function Trig_zongyuX_Conditions))
+    call TriggerAddAction(zongyu_trg_X, function Trig_zongyuX_Actions)
+endfunction
+
+// 宗预Q
+function Trig_qConditions takes nothing returns boolean
+    return ( ( GetSpellAbilityId() == 'Ab24' ) )
+endfunction
+function zongyu_Q_Action takes nothing returns nothing
+    local group ydl_group
+    // 目标
+    local unit CE
+    // 自己
+    local unit Iv = LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)
+ 
+    call YDWETimerDestroyEffect(2 , AddSpecialEffect("Abilities\\Spells\\Orc\\WarStomp\\WarStompCaster.mdl", GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2B0A6845))))
+    set ydl_group=CreateGroup()
+    call GroupEnumUnitsInRange(ydl_group, GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 250.00, null)
+    loop
+        set CE=FirstOfGroup(ydl_group)
+        exitwhen CE == null
+        call GroupRemoveUnit(ydl_group, CE)
+        if IsUnitEnemy(CE, GetOwningPlayer(Iv)) == true and CE !=Iv then
+             call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
+            call UnitDamageTarget(Iv, CE,  bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24')), true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+
+        else
+        endif
+    endloop
+    call DestroyGroup(ydl_group)
+
+    // call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+    call DestroyTimer(GetExpiredTimer())
+    set ydl_group=null
+    set CE=null
+endfunction
+function Trig_zongyu_Q takes nothing returns nothing
+    local timer ydl_timer
+    local integer ydl_localvar_step= LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+ set ydl_localvar_step=ydl_localvar_step + 3
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+    call SaveReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2, YDWEAngleBetweenUnits(GetSpellTargetUnit() , GetTriggerUnit()))
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2B0A6845, GetSpellTargetUnit())
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8, GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())))
+    call YDWEJumpTimer(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2B0A6845) , LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) , 600.00 , 0.40 , 0.01 , 300.00)
+    call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("abilities\\weapons\\DemolisherMissile\\DemolisherMissile.mdl", LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2B0A6845), "origin"))
+    set ydl_timer=CreateTimer()
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x2B0A6845, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2B0A6845))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x384C9D86, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x384C9D86))
+    call SaveInteger(YDLOC, GetHandleId(ydl_timer), 0x32A9E4C8, LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8))
+    call TimerStart(ydl_timer, 0.38, false, function zongyu_Q_Action)
+    // call FlushChildHashtable(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step)
+    set ydl_timer=null
+endfunction
+//===========================================================================
+function InitTrig_ZongyuQ takes nothing returns nothing
+    set zongyu_trg_Q=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(zongyu_trg_Q, EVENT_PLAYER_UNIT_SPELL_EFFECT)
+    call TriggerAddCondition(zongyu_trg_Q, Condition(function Trig_qConditions))
+    call TriggerAddAction(zongyu_trg_Q, function Trig_zongyu_Q)
+endfunction
+
+
+// 宗预技能结束
+
+// 陈到技能触发开始
+function Trig_Xuyi1Conditions takes nothing returns boolean
+    //  call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"开始释放技能")
+    //  call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "技能是id：" + I2S(GetSpellAbilityId()))
+    return GetSpellAbilityId() == $41623174
+endfunction
+function Trig_Xuyi1Func014Func003A takes nothing returns nothing
+    call SetUnitX(GetEnumUnit(), ( ( GetUnitX(GetEnumUnit()) ) + ( ( ( CosBJ(GetUnitFacing(GetEnumUnit())) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+    call SetUnitY(GetEnumUnit(), ( ( GetUnitY(GetEnumUnit()) ) + ( ( ( SinBJ(GetUnitFacing(GetEnumUnit())) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+endfunction
+function Trig_Xuyi1Func014Func004Func001A takes nothing returns nothing
+    call KillUnit(GetEnumUnit())
+endfunction
+function Trig_Xuyi1Func014T takes nothing returns nothing
+    local group ydl_group
+    local unit ydl_unit
+    call SaveInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x2B0A6845, ( ( LoadInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x2B0A6845) ) + ( 1 ) ))
+    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E, 13.00)
+    call ForGroupBJ(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xCD6688F9), function Trig_Xuyi1Func014Func003A)
+    if ( ( LoadInteger(YDLOC, GetHandleId(GetExpiredTimer()), 0x2B0A6845) == 60 ) ) then
+        call ForGroupBJ(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xCD6688F9), function Trig_Xuyi1Func014Func004Func001A)
+        call SetUnitTimeScale(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9), 1.00)
+        call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+        call DestroyTimer(GetExpiredTimer())
+    else
+    endif
+    set ydl_group=null
+    set ydl_unit=null
+endfunction
+function Trig_Xuyi1Func015Func011Func004A takes nothing returns nothing
+    local group ydl_group
+    local unit ydl_unit
+    call SaveUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x1ADEDE7B, GetEnumUnit())
+    call SetUnitX(GetEnumUnit(), ( ( GetUnitX(GetEnumUnit()) ) + ( ( ( CosBJ(GetUnitFacing(GetEnumUnit())) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+    call SetUnitY(GetEnumUnit(), ( ( GetUnitY(GetEnumUnit()) ) + ( ( ( SinBJ(GetUnitFacing(GetEnumUnit())) ) * ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E) ) ) ) ))
+    call SetUnitScale(GetEnumUnit(), LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x1FB8CFB5), LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x1FB8CFB5), LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x1FB8CFB5))
+    set ydl_group=CreateGroup()
+    call GroupEnumUnitsInRange(ydl_group, GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x1ADEDE7B)), GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x1ADEDE7B)), 180.00, null)
+    loop
+        set ydl_unit=FirstOfGroup(ydl_group)
+        exitwhen ydl_unit == null
+        call GroupRemoveUnit(ydl_group, ydl_unit)
+        if((IsUnitEnemy(ydl_unit, GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9))) == true) and(IsUnitInGroup(ydl_unit, LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460)) == false)) and ydl_unit != chendao then
+            call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460), ydl_unit)
+            call UnitDamageTarget(chendao, ydl_unit, bk(chendao, 1, GetUnitAbilityLevel(chendao, 'Ab1t')) * GetUnitState(chendao, UNIT_STATE_MAX_LIFE) * 0.0001 *0.7, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+            call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1t') * 300 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+            call YDWETimerDestroyEffect(2 , AddSpecialEffectTarget("Abilities\\Spells\\Items\\StaffOfPurification\\PurificationTarget.mdl", ydl_unit, "origin"))
+        else
+        endif
+    endloop
+    call DestroyGroup(ydl_group)
+    set ydl_group=null
+    set ydl_unit=null
+endfunction
+function Trig_Xuyi1Func015Func011Func005Func001A takes nothing returns nothing
+    call KillUnit(GetEnumUnit())
+endfunction
+function Trig_Xuyi1Func015Func011T takes nothing returns nothing
+    local group ydl_group
+    local unit ydl_unit
+    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D, ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D) ) + ( 1.00 ) ))
+    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E, ( ( 100.00 ) * ( Pow(0.89, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D)) ) ))
+    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x1FB8CFB5, ( ( 0.50 ) + ( ( ( 1.40 ) - ( Pow(0.40, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D)) ) ) ) ))
+    call ForGroupBJ(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), function Trig_Xuyi1Func015Func011Func004A)
+    if ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D) >= 22.00 ) ) then
+        call ForGroupBJ(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), function Trig_Xuyi1Func015Func011Func005Func001A)
+        call DestroyGroup(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7))
+        call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+        call DestroyTimer(GetExpiredTimer())
+    else
+    endif
+    set ydl_group=null
+    set ydl_unit=null
+endfunction
+function Trig_Xuyi1Func015T takes nothing returns nothing
+    local timer ydl_timer
+    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2))
+    call SaveGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7, CreateGroup())
+    call SaveUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x9CD60476, CreateUnit(GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)), $75303065, ( ( GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 100.00 ) ) ) ), ( ( GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 100.00 ) ) ) ), LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2)))
+    call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x9CD60476))
+    call SaveUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2F128C38, CreateUnit(GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)), $75303065, ( ( GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( - 90.00 ) )) ) * ( 100.00 ) ) ) ), ( ( GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( - 90.00 ) )) ) * ( 100.00 ) ) ) ), LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2)))
+    call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2F128C38))
+    call SaveUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x9CD60476, CreateUnit(GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)), $75303065, ( ( GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 100.00 ) ) ) ), ( ( GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 100.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 10.00 ) )))
+    call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x9CD60476))
+    call SaveUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2F128C38, CreateUnit(GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)), $75303065, ( ( GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( - 90.00 ) )) ) * ( 100.00 ) ) ) ), ( ( GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( - 90.00 ) )) ) * ( 100.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( - 10.00 ) )))
+    call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x2F128C38))
+    set ydl_timer=CreateTimer()
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x1FB8CFB5, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x1FB8CFB5))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x2970F80D, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0xD13A3460, LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x34D6230E, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x34D6230E))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0x20CD7CD7, LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x1ADEDE7B, LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x1ADEDE7B))
+    call TimerStart(ydl_timer, 0.01, true, function Trig_Xuyi1Func015Func011T)
+    call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+    call DestroyTimer(GetExpiredTimer())
+    set ydl_timer=null
+endfunction
+function Trig_Xuyi1Actions takes nothing returns nothing
+   
+
+    local timer ydl_timer
+    local integer ydl_localvar_step= LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+    
+    set ydl_localvar_step=ydl_localvar_step + 3
+//   call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"开始释放蓄意轰拳2")
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+    call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Orc\\Disenchant\\DisenchantSpecialArt.mdl", GetTriggerUnit(), "hand left"))
+    call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Orc\\Disenchant\\DisenchantSpecialArt.mdl", GetTriggerUnit(), "hand right"))
+    call YDWETimerDestroyEffect(0.70 , AddSpecialEffectTarget("Abilities\\Spells\\Other\\HealingSpray\\HealBottleMissile.mdl", GetTriggerUnit(), "hand left"))
+    call YDWETimerDestroyEffect(0.70 , AddSpecialEffectTarget("Abilities\\Spells\\Other\\HealingSpray\\HealBottleMissile.mdl", GetTriggerUnit(), "hand right"))
+    call SetUnitTimeScale(GetTriggerUnit(), 0.45)
+    call SaveReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2, AngleBetweenPoints(GetUnitLoc(GetTriggerUnit()), GetSpellTargetLoc()))
+    call SaveGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xCD6688F9, CreateGroup())
+    call SaveGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xD13A3460, CreateGroup())
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9CD60476, CreateUnit(GetOwningPlayer(GetTriggerUnit()), $65303031, ( ( GetUnitX(GetTriggerUnit()) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 110.00 ) ) ) ), ( ( GetUnitY(GetTriggerUnit()) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 110.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 12.00 ) )))
+    call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xCD6688F9), LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9CD60476))
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2F128C38, CreateUnit(GetOwningPlayer(GetTriggerUnit()), $65303031, ( ( GetUnitX(GetTriggerUnit()) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( - 90.00 ) )) ) * ( 110.00 ) ) ) ), ( ( GetUnitY(GetTriggerUnit()) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( - 90.00 ) )) ) * ( 110.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( - 12.00 ) )))
+    call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xCD6688F9), LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2F128C38))
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2B0A6845, 0)
+    set ydl_timer=CreateTimer()
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
+    call SaveInteger(YDLOC, GetHandleId(ydl_timer), 0x2B0A6845, LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2B0A6845))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x34D6230E, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x34D6230E))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0xCD6688F9, LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xCD6688F9))
+    call TimerStart(ydl_timer, 0.01, true, function Trig_Xuyi1Func014T)
+    set ydl_timer=CreateTimer()
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0xA3098AE2, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x9CD60476, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9CD60476))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x1FB8CFB5, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x1FB8CFB5))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x2F128C38, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2F128C38))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x2970F80D, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2970F80D))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0xD13A3460, LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xD13A3460))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x34D6230E, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x34D6230E))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0x20CD7CD7, LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x20CD7CD7))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x1ADEDE7B, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x1ADEDE7B))
+    call TimerStart(ydl_timer, 1.10, false, function Trig_Xuyi1Func015T)
+    call FlushChildHashtable(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step)
+    set ydl_timer=null
+endfunction
+//===========================================================================
+function InitTrig_Xuyi1 takes nothing returns nothing
+    set gg_trg_Xuyi1=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(gg_trg_Xuyi1, EVENT_PLAYER_UNIT_SPELL_CAST)
+    call TriggerAddCondition(gg_trg_Xuyi1, Condition(function Trig_Xuyi1Conditions))
+    call TriggerAddAction(gg_trg_Xuyi1, function Trig_Xuyi1Actions)
+endfunction
+
+// 强手裂颅事件
+function Trig_llConditions takes nothing returns boolean
+    return GetSpellAbilityId() == $41623172
+endfunction
+
+function Trig_llFunc004T takes nothing returns nothing
+    call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9), "hand left"))
+    call SetUnitAnimationByIndex(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9), 4)
+    set udg_hy=LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)
+    call TriggerExecute(gg_trg_hy)
+    call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+    call DestroyTimer(GetExpiredTimer())
+endfunction
+
+function Trig_llFunc005Func007Func003A takes nothing returns nothing
+    // 减速事件
+    call IssueTargetOrder(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86), "slow", GetEnumUnit())
+endfunction
+
+function Trig_llFunc005Func007Func004A takes nothing returns nothing
+    // 眩晕事件
+    call IssueTargetOrder(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86), "thunderbolt", GetEnumUnit())
+endfunction
+// 强手裂颅判定
+function Trig_llFunc005T takes nothing returns nothing
+    local group ydl_group
+    local unit ydl_unit
+    call SaveGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x898E1EC5, CreateGroup())
+    call SaveGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x113DF22B, CreateGroup())
+    call SaveGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7, CreateGroup())
+    call SaveUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86, CreateUnit(GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)), $65303939, 0, 0, 0))
+    set ydl_group=CreateGroup()
+    call GroupEnumUnitsInRange(ydl_group, ( ( GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 200.00 ) ) ) ), ( ( GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 200.00 ) ) ) ), 300.00, null)
+    loop
+        set ydl_unit=FirstOfGroup(ydl_group)
+        exitwhen ydl_unit == null
+        call GroupRemoveUnit(ydl_group, ydl_unit)
+        if((IsUnitEnemy(ydl_unit, GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9))) == true and ydl_unit != chendao)) then
+            call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x898E1EC5), ydl_unit)
+            call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), ydl_unit)
+            call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38AB9941, RMaxBJ(1.00, ( ( YDWEDistanceBetweenUnits(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9) , ydl_unit) ) - ( 100.00 ) )))
+            call YDWEJumpTimer(ydl_unit , ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) - ( 90.00 ) ) , LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38AB9941) , 0.15 , 0.01 , 100.00)
+            call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Abilities\\Spells\\Orc\\FeralSpirit\\feralspiritdone.mdl", GetUnitX(ydl_unit), GetUnitY(ydl_unit)))
+            // 强手裂颅伤害
+            call UnitDamageTarget(chendao, ydl_unit,bk(chendao,1,GetUnitAbilityLevel(chendao,'Ab1r')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+                   call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1r') * 200 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        else
+        endif
+    endloop
+    call DestroyGroup(ydl_group)
+
+    set ydl_group=CreateGroup()
+    call GroupEnumUnitsInRange(ydl_group, ( ( GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) - ( 90.00 ) )) ) * ( 200.00 ) ) ) ), ( ( GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9)) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) - ( 90.00 ) )) ) * ( 200.00 ) ) ) ), 300.00, null)
+    loop
+        set ydl_unit=FirstOfGroup(ydl_group)
+        exitwhen ydl_unit == null
+        call GroupRemoveUnit(ydl_group, ydl_unit)
+        if ( ( IsUnitEnemy(ydl_unit, GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9))) == true and ydl_unit != chendao ) ) then
+            call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x113DF22B), ydl_unit)
+            call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), ydl_unit)
+            call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38AB9941, RMaxBJ(1.00, ( ( YDWEDistanceBetweenUnits(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9) , ydl_unit) ) - ( 100.00 ) )))
+            call YDWEJumpTimer(ydl_unit , ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) ) , LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38AB9941) , 0.15 , 0.01 , 100.00)
+            call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Abilities\\Spells\\Orc\\FeralSpirit\\feralspiritdone.mdl", GetUnitX(ydl_unit), GetUnitY(ydl_unit)))
+            // 强手裂颅伤害
+            call UnitDamageTarget(chendao, ydl_unit,  bk(chendao, 1, GetUnitAbilityLevel(chendao, 'Ab1r')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+            call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1r') * 200 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+        else
+        endif
+    endloop
+    call DestroyGroup(ydl_group)
+    if ( ( ( CountUnitsInGroup(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x898E1EC5)) == 0 ) or ( CountUnitsInGroup(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x113DF22B)) == 0 ) ) ) then
+        // call ForGroupBJ(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), function Trig_llFunc005Func007Func003A)
+        call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(chendao)),$65303939,$41314C54,1,GetUnitX(chendao),GetUnitY(chendao),bj_UNIT_FACING,1),852096)
+
+    else
+        call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Orc\\WarStomp\\WarStompCaster.mdl", LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9), "hand right"))
+        call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Orc\\WarStomp\\WarStompCaster.mdl", LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9), "hand left"))
+        // call ForGroupBJ(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7), function Trig_llFunc005Func007Func004A)
+        call range_stunEffect(chendao, GetUnitX(chendao), GetUnitY(chendao), 500, 3,true)
+
+    endif
+    call DestroyGroup(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x20CD7CD7))
+    call DestroyGroup(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x898E1EC5))
+    call DestroyGroup(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x113DF22B))
+    call KillUnit(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86))
+    call KillUnit(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x1E9E05F9))
+    call KillUnit(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xE5067F58))
+    call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+    call DestroyTimer(GetExpiredTimer())
+    set ydl_group=null
+    set ydl_unit=null
+endfunction
+
+function Trig_llActions takes nothing returns nothing
+    local timer ydl_timer
+    local integer ydl_localvar_step= LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+ set ydl_localvar_step=ydl_localvar_step + 3
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+    call SaveReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2, GetUnitFacing(GetTriggerUnit()))
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x1E9E05F9, CreateUnit(GetOwningPlayer(GetTriggerUnit()), $75303068, ( ( GetUnitX(GetTriggerUnit()) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( GetUnitY(GetTriggerUnit()) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) - ( 90.00 ) )))
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xE5067F58, CreateUnit(GetOwningPlayer(GetTriggerUnit()), $75303068, ( ( GetUnitX(GetTriggerUnit()) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) - ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( GetUnitY(GetTriggerUnit()) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) - ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )))
+    set ydl_timer=CreateTimer()
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
+    call TimerStart(ydl_timer, 0.00, false, function Trig_llFunc004T)
+    set ydl_timer=CreateTimer()
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0xA3098AE2, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x38AB9941, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x38AB9941))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0x898E1EC5, LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x898E1EC5))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x1E9E05F9, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x1E9E05F9))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x384C9D86, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x384C9D86))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0x113DF22B, LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x113DF22B))
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0xE5067F58, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xE5067F58))
+    call SaveGroupHandle(YDLOC, GetHandleId(ydl_timer), 0x20CD7CD7, LoadGroupHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x20CD7CD7))
+    call TimerStart(ydl_timer, 0.30, false, function Trig_llFunc005T)
+    call FlushChildHashtable(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step)
+    set ydl_timer=null
+endfunction
+//===========================================================================
+function InitTrig_ll takes nothing returns nothing
+    set gg_trg_ll=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(gg_trg_ll, EVENT_PLAYER_UNIT_SPELL_EFFECT)
+    call TriggerAddCondition(gg_trg_ll, Condition(function Trig_llConditions))
+    call TriggerAddAction(gg_trg_ll, function Trig_llActions)
+endfunction
+
+
+function Trig_hyFunc011T takes nothing returns nothing
+    call SaveReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D, ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D) ) + ( 2.00 ) ))
+    call SetUnitVertexColorBJ(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x9F0C6E00), 100, 100, 100, LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D))
+    if ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x2970F80D) == 100.00 ) ) then
+        call RemoveUnit(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x9F0C6E00))
+        call FlushChildHashtable(YDLOC, GetHandleId(GetExpiredTimer()))
+        call DestroyTimer(GetExpiredTimer())
+    else
+    endif
+endfunction
+
+
+function Trig_hyActions takes nothing returns nothing
+    local timer ydl_timer
+    local integer ydl_localvar_step= LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+ set ydl_localvar_step=ydl_localvar_step + 3
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D, udg_hy)
+    call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00, CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), GetUnitTypeId(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D)), GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D)), GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D)), GetUnitFacing(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D))))
+    call UnitAddAbility(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00), 'Aloc')
+    call UnitAddAbility(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00), 'Abun')
+    call SetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00), GetUnitX(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D)))
+    call SetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00), GetUnitY(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D)))
+    call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00), "hand right"))
+    call SetUnitAnimationByIndex(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00), 5)
+    call QueueUnitAnimation(LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xC303079D), "stand")
+    call SaveReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2970F80D, 0.00)
+    set ydl_timer=CreateTimer()
+    call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x9F0C6E00, LoadUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x9F0C6E00))
+    call SaveReal(YDLOC, GetHandleId(ydl_timer), 0x2970F80D, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x2970F80D))
+    call TimerStart(ydl_timer, 0.02, true, function Trig_hyFunc011T)
+    call FlushChildHashtable(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step)
+    set ydl_timer=null
+endfunction
+//===========================================================================
+function InitTrig_hy takes nothing returns nothing
+    set gg_trg_hy=CreateTrigger()
+    call TriggerAddAction(gg_trg_hy, function Trig_hyActions)
+endfunction
+// 
+function Trig_qrConditions takes nothing returns boolean
+    return GetSpellAbilityId() == $41623175
+endfunction
+function Trig_qrActions takes nothing returns nothing
+    set udg_CS=0
+endfunction
+//===========================================================================
+function InitTrig_qr takes nothing returns nothing
+    set gg_trg_qr=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(gg_trg_qr, EVENT_PLAYER_UNIT_SPELL_EFFECT)
+    call TriggerAddCondition(gg_trg_qr, Condition(function Trig_qrConditions))
+    call TriggerAddAction(gg_trg_qr, function Trig_qrActions)
+endfunction
+
+//===========================================================================
+// Trigger: mm
+//===========================================================================
+function Trig_mmConditions takes nothing returns boolean
+    return ( ( UnitHasBuffBJ(GetEventDamageSource(), $42303257) == true ) )
+endfunction
+function Trig_mmActions takes nothing returns nothing
+    // set udg_CS=( ( udg_CS ) + ( 1 ) )
+    // // call UnitDamageTarget(chendao, GetTriggerUnit(),  GetUnitState(chendao, ConvertUnitState(18)) * 3, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+    // // call DisplayTextToPlayer(GetOwningPlayer(chendao), 0, 0, "正在强化攻击：" + I2S(udg_CS))
+    // if ( ( udg_CS == GetUnitAbilityLevel(chendao,'Ab1u') ) ) then
+    //     call UnitRemoveBuffBJ($42303257, GetEventDamageSource())
+    // else
+    // endif
+endfunction
+//===========================================================================
+function InitTrig_mm takes nothing returns nothing
+    set gg_trg_mm=CreateTrigger()
+    call YDWESyStemAnyUnitDamagedRegistTrigger(gg_trg_mm)
+    call TriggerAddCondition(gg_trg_mm, Condition(function Trig_mmConditions))
+    call TriggerAddAction(gg_trg_mm, function Trig_mmActions)
+endfunction
+//===========================================================================
+// Trigger: lllfff
+//===========================================================================
+function Trig_lllfffConditions takes nothing returns boolean
+    return ( ( GetAttacker() == chendao ) )
+endfunction
+function Trig_lllfffActions takes nothing returns nothing
+    if ( ( udg_lr == false ) ) then
+        // call UnitAddAbility(chendao, 'A005')
+        // call UnitRemoveAbility(chendao, 'A008')
+        call SetUnitAnimationByIndex(chendao, 5)
+        call QueueUnitAnimation(GetAttacker(), "stand")
+        // 
+        call SetUnitState(chendao, ConvertUnitState(37), GetUnitState(chendao, ConvertUnitState(37)) -0.5)
+        set udg_lr=true
+    else
+        // call UnitAddAbility(chendao, 'A008')
+        // call UnitRemoveAbility(chendao, 'A005')
+       
+        call SetUnitState(chendao, ConvertUnitState(37), GetUnitState(chendao, ConvertUnitState(37)) + 0.5)
+
+        call SetUnitAnimationByIndex(chendao, 4)
+        call QueueUnitAnimation(GetAttacker(), "stand")
+        set udg_lr=false
+        set udg_hy=GetTriggerUnit()
+        call TriggerExecute(gg_trg_hy)
+        call TriggerSleepAction(0.5)
+        // 右勾拳伤害
+        // call UnitDamageTarget(chendao, GetTriggerUnit(), GetUnitAbilityLevel(chendao, 'Ab1u') * 200, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call UnitDamageTarget(chendao, GetTriggerUnit(), GetEventDamage() *2, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Items\\AIfb\\AIfbSpecialArt.mdl", GetAttacker(), "hand left"))
+
+    endif
+endfunction
+//===========================================================================
+function InitTrig_lllfff takes nothing returns nothing
+    set gg_trg_lllfff=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(gg_trg_lllfff, EVENT_PLAYER_UNIT_ATTACKED)
+    call TriggerAddCondition(gg_trg_lllfff, Condition(function Trig_lllfffConditions))
+    call TriggerAddAction(gg_trg_lllfff, function Trig_lllfffActions)
+endfunction
+//===========================================================================
+// Trigger: tiao
+//===========================================================================
+function Trig_tiaoConditions takes nothing returns boolean
+    return ( ( GetSpellAbilityId() == $41623173 ) )
+endfunction
+
+function Trig_tiaoFunc014T takes nothing returns nothing
+    local group ydl_group
+    local unit ydl_unit
+    local integer loc_id = GetHandleId(GetExpiredTimer())
+    local unit loc_self = LoadUnitHandle(YDLOC,loc_id, 0x458B7DE9)
+    local unit loc_target = LoadUnitHandle(YDLOC,loc_id, 0xE1001B12)
+    local real loc_distance
+    call SaveReal(YDLOC,loc_id, 0x2970F80D, ( ( LoadReal(YDLOC,loc_id, 0x2970F80D) ) + ( 1.00 ) ))
+    call SetUnitFacing(loc_self, LoadReal(YDLOC,loc_id, 0xA3098AE2))
+    // call DisplayTextToForce(GetPlayersAll(), GetUnitName(loc_self) + "<-->" + GetUnitName(loc_target))
+ set loc_distance = SquareRoot((GetUnitX(loc_self) -GetUnitX(loc_target)) * (GetUnitX(loc_self) -GetUnitX(loc_target)) + (GetUnitY(loc_self) -GetUnitY(loc_target)) * (GetUnitY(loc_self) -GetUnitY(loc_target)))
+    if LoadBoolean(YDLOC,loc_id, 0xC2781FCF) == false then
+
+    else
+
+    endif
+    if  ( LoadBoolean(YDLOC,loc_id, 0xC2781FCF) == false ) and ( loc_distance <= 120.00 )  then
+        call YDWETimerDestroyEffect(1.00 , AddSpecialEffectTarget("Abilities\\Spells\\Human\\Defend\\DefendCaster.mdl", loc_self, "origin"))
+        call SaveUnitHandle(YDLOC,loc_id, 0x384C9D86, CreateUnit(GetOwningPlayer(loc_self), $65303939, 0, 0, 0))
+        call IssueTargetOrder(LoadUnitHandle(YDLOC,loc_id, 0x384C9D86), "thunderbolt", loc_target)
+        call SetUnitAnimation(loc_self, "attack")
+     
+        call SaveBoolean(YDLOC,loc_id, 0xC2781FCF, true)
+    else
+    endif
+    if ( ( LoadBoolean(YDLOC,loc_id, 0xC2781FCF) == true ) ) then
+        if ( ( LoadInteger(YDLOC,loc_id, 0x9FDB62AC) < 3 ) ) then
+            call SaveInteger(YDLOC,loc_id, 0x9FDB62AC, ( ( LoadInteger(YDLOC,loc_id, 0x9FDB62AC) ) + ( 1 ) ))
+            call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget(LoadStr(YDLOC,loc_id, 0x62C50DE6), loc_self, "handright"))
+            call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget(LoadStr(YDLOC,loc_id, 0x62C50DE6), loc_self, "handleft"))
+            call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget(LoadStr(YDLOC,loc_id, 0x62C50DE6), loc_self, "head"))
+        else
+            call SaveReal(YDLOC,loc_id, 0xA99320FA, ( ( LoadReal(YDLOC,loc_id, 0xA99320FA) ) + ( ( ( 1.80 ) - ( Pow(0.94, LoadReal(YDLOC,loc_id, 0x9E4D0A0D)) ) ) ) ))
+            call SaveReal(YDLOC,loc_id, 0x9E4D0A0D, SquareRoot(( ( Pow(LoadReal(YDLOC,loc_id, 0x2FC9F415), 2.00) ) - ( Pow(( ( LoadReal(YDLOC,loc_id, 0xA99320FA) ) - ( LoadReal(YDLOC,loc_id, 0x2FC9F415) ) ), 2.00) ) )))
+            call SaveReal(YDLOC,loc_id, 0x9F0C6E00, ( ( LoadReal(YDLOC,loc_id, 0x9E4D0A0D) ) * ( 9.50 ) ))
+            call SetUnitFlyHeight(loc_self, LoadReal(YDLOC,loc_id, 0x9F0C6E00), 0.00)
+            call SaveReal(YDLOC,loc_id, 0x34D6230E, 12.00)
+            call SetUnitX(loc_self, ( ( GetUnitX(loc_self) ) + ( ( ( CosBJ(LoadReal(YDLOC,loc_id, 0xA3098AE2)) ) * ( LoadReal(YDLOC,loc_id, 0x34D6230E) ) ) ) ))
+            call SetUnitY(loc_self, ( ( GetUnitY(loc_self) ) + ( ( ( SinBJ(LoadReal(YDLOC,loc_id, 0xA3098AE2)) ) * ( LoadReal(YDLOC,loc_id, 0x34D6230E) ) ) ) ))
+            call SetUnitFlyHeight(loc_target, ( ( GetUnitFlyHeight(loc_self) ) - ( 50.00 ) ), 0.00)
+            call SetUnitX(loc_target, ( ( GetUnitX(loc_self) ) + ( ( ( CosBJ(LoadReal(YDLOC,loc_id, 0xA3098AE2)) ) * ( ( ( LoadReal(YDLOC,loc_id, 0x9E4D0A0D) ) - ( 60.00 ) ) ) ) ) ))
+            call SetUnitY(loc_target, ( ( GetUnitY(loc_self) ) + ( ( ( SinBJ(LoadReal(YDLOC,loc_id, 0xA3098AE2)) ) * ( ( ( LoadReal(YDLOC,loc_id, 0x9E4D0A0D) ) - ( 60.00 ) ) ) ) ) ))
+            if ( ( LoadReal(YDLOC,loc_id, 0x9E4D0A0D) < 1.00 ) ) then
+                call SetUnitFlyHeight(loc_self, 0.00, 0.00)
+                call SetUnitFlyHeight(loc_target, 0.00, 0.00)
+                call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Abilities\\Spells\\Orc\\WarStomp\\WarStompCaster.mdl", GetUnitX(loc_target), GetUnitY(loc_target)))
+                call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Objects\\Spawnmodels\\NightElf\\NECancelDeath\\NECancelDeath.mdl", GetUnitX(loc_target), GetUnitY(loc_target)))
+                call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", GetUnitX(loc_self), GetUnitY(loc_self)))
+                set ydl_group=CreateGroup()
+                call GroupEnumUnitsInRange(ydl_group, GetUnitX(loc_target), GetUnitY(loc_target), 450.00, null)
+                loop
+                    set ydl_unit=FirstOfGroup(ydl_group)
+                    exitwhen ydl_unit == null
+                    call GroupRemoveUnit(ydl_group, ydl_unit)
+                    if ( ( IsUnitEnemy(ydl_unit, GetOwningPlayer(loc_self)) == true ) ) then
+                        // 叹为观止伤害
+                        call IssueTargetOrder(LoadUnitHandle(YDLOC,loc_id, 0x384C9D86), "thunderbolt", ydl_unit)
+                        call UnitDamageTarget(loc_self, ydl_unit, bk(loc_self, 1, GetUnitAbilityLevel(loc_self, 'Ab1s') + 2) * GetUnitState(loc_self, UNIT_STATE_MAX_LIFE) * 0.0001 *0.5 + GetUnitState(loc_target, UNIT_STATE_MAX_LIFE) * 0.10, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+                        call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Objects\\Spawnmodels\\Orc\\OrcLargeDeathExplode\\OrcLargeDeathExplode.mdl", GetUnitX(ydl_unit), GetUnitY(ydl_unit)))
+                         call range_stunEffect(chendao, GetUnitX(chendao), GetUnitY(chendao), 500, 3,true)
+                    else
+                    endif
+                endloop
+                call DestroyGroup(ydl_group)
+                call KillUnit(LoadUnitHandle(YDLOC,loc_id, 0x384C9D86))
+                // call FlushChildHashtable(YDLOC,loc_id)
+                call DestroyTimer(GetExpiredTimer())
+            else
+            endif
+        endif
+    else
+        // call DisplayTextToPlayer(GetOwningPlayer(loc_self), 0, 0, "|Cff00ff00技能目标")
+        // call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(loc_self))+"正在计算坐标")
+
+        call SaveReal(YDLOC,loc_id, 0x38344552, YDWEAngleBetweenUnits(loc_self , loc_target))
+        call SaveReal(YDLOC,loc_id, 0x34D6230E, ( ( 25.00 ) * ( ( ( 1.00 ) - ( ( ( ( ( LoadReal(YDLOC,loc_id, 0x2970F80D) ) * ( 0.03 ) ) ) / ( ( ( 3.00 ) + ( ( ( LoadReal(YDLOC,loc_id, 0x2970F80D) ) * ( 0.03 ) ) ) ) ) ) ) ) ) ))
+        call SetUnitX(loc_self, ( ( GetUnitX(loc_self) ) + ( ( ( CosBJ(LoadReal(YDLOC,loc_id, 0x38344552)) ) * ( LoadReal(YDLOC,loc_id, 0x34D6230E) ) ) ) ))
+        call SetUnitY(loc_self, ( ( GetUnitY(loc_self) ) + ( ( ( SinBJ(LoadReal(YDLOC,loc_id, 0x38344552)) ) * ( LoadReal(YDLOC,loc_id, 0x34D6230E) ) ) ) ))
+    endif
+    set ydl_group=null
+    set ydl_unit=null
+endfunction
+
+function Trig_tiaoActions takes nothing returns nothing
+    local timer CS
+    
+    local integer ydl_localvar_step= LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+    local  integer loc_num
+ set ydl_localvar_step=ydl_localvar_step + 3
+ set loc_num =GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+ call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+    //  这个是技能目标
+    call SaveUnitHandle(YDLOC, loc_num, 0xE1001B12, GetSpellTargetUnit())
+    // 移除无敌
+    if UnitHasBuffBJ(GetSpellTargetUnit(), 'BHds') == true then
+        call UnitRemoveBuffBJ('BHds', GetSpellTargetUnit())
+    endif
+    call SaveReal(YDLOC, loc_num, 0x2970F80D, 0.00)
+    call SaveInteger(YDLOC, loc_num, 0x9FDB62AC, 0)
+    call SaveReal(YDLOC, loc_num, 0xA3098AE2, YDWEAngleBetweenUnits(GetTriggerUnit() , GetSpellTargetUnit()))
+    call SaveBoolean(YDLOC, loc_num, 0xC2781FCF, false)
+    call UnitAddAbility(GetTriggerUnit(), $41726176)
+    call UnitAddAbility(LoadUnitHandle(YDLOC, loc_num, 0xE1001B12), $41726176)
+    call UnitRemoveAbility(GetTriggerUnit(), $41726176)
+    call UnitRemoveAbility(LoadUnitHandle(YDLOC, loc_num, 0xE1001B12), $41726176)
+    call SaveStr(YDLOC, loc_num, 0x62C50DE6, "Abilities\\Spells\\Undead\\DarkSummoning\\DarkSummonMissile.mdl")
+    // call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget(LoadStr(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x62C50DE6), GetTriggerUnit(), "handright"))
+    call SaveReal(YDLOC, loc_num, 0x2FC9F415, 35.00)
+    set CS=CreateTimer()
+    // 
+    // call SaveUnitHandle(YDLOC, GetHandleId(CS), 0x2E1BF0CA, GetSpellTargetUnit())
+    // 自身
+    call SaveUnitHandle(YDLOC, GetHandleId(CS), 0x458B7DE9, GetTriggerUnit())
+    call SaveInteger(YDLOC, GetHandleId(CS), 0x9FDB62AC, LoadInteger(YDLOC, loc_num, 0x9FDB62AC))
+    call SaveReal(YDLOC, GetHandleId(CS), 0xA3098AE2, LoadReal(YDLOC, loc_num, 0xA3098AE2))
+    call SaveReal(YDLOC, GetHandleId(CS), 0x9F0C6E00, LoadReal(YDLOC, loc_num, 0x9F0C6E00))
+    call SaveBoolean(YDLOC, GetHandleId(CS), 0xC2781FCF, LoadBoolean(YDLOC, loc_num, 0xC2781FCF))
+    call SaveUnitHandle(YDLOC, GetHandleId(CS), 0xE1001B12, LoadUnitHandle(YDLOC, loc_num, 0xE1001B12))
+    call SaveUnitHandle(YDLOC, GetHandleId(CS), 0x384C9D86, LoadUnitHandle(YDLOC, loc_num, 0x384C9D86))
+    call SaveReal(YDLOC, GetHandleId(CS), 0x2970F80D, LoadReal(YDLOC, loc_num, 0x2970F80D))
+    call SaveReal(YDLOC, GetHandleId(CS), 0x2FC9F415, LoadReal(YDLOC, loc_num, 0x2FC9F415))
+    call SaveReal(YDLOC, GetHandleId(CS), 0x34D6230E, LoadReal(YDLOC, loc_num, 0x34D6230E))
+    // call SaveStr(YDLOC, GetHandleId(CS), 0x62C50DE6, LoadStr(YDLOC, loc_num, 0x62C50DE6))
+    call SaveReal(YDLOC, GetHandleId(CS), 0x38344552, LoadReal(YDLOC, loc_num, 0x38344552))
+    call SaveReal(YDLOC, GetHandleId(CS), 0xA99320FA, LoadReal(YDLOC, loc_num, 0xA99320FA))
+    call SaveReal(YDLOC, GetHandleId(CS), 0x9E4D0A0D, LoadReal(YDLOC, loc_num, 0x9E4D0A0D))
+    call TimerStart(CS, 0.01, true, function Trig_tiaoFunc014T)
+    // call FlushChildHashtable(YDLOC, loc_num)
+    set CS=null
+endfunction
+//===========================================================================
+function InitTrig_tiao takes nothing returns nothing
+    set gg_trg_tiao=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(gg_trg_tiao, EVENT_PLAYER_UNIT_SPELL_EFFECT)
+    call TriggerAddCondition(gg_trg_tiao, Condition(function Trig_tiaoConditions))
+    call TriggerAddAction(gg_trg_tiao, function Trig_tiaoActions)
+endfunction
+// 陈到技能结束
+
+
+function InitCustomTriggers takes nothing returns nothing
+    call InitTrig_Xuyi1()
+    call InitTrig_ll()
+    call InitTrig_hy()
+    call InitTrig_qr()
+    call InitTrig_mm()
+    call InitTrig_lllfff()
+    call InitTrig_tiao()
+    // 
+    call InitTrig_ZongyuQ()
+    call InitTrig_zongyuW()
+    call InitTrig_zongyuX()
+    call Trig_found()
+    call Trig_listen_map()
+endfunction
+
+
+// 陈到技能事件结束
+
 // 增加了范围变量的击飞计算
 function computeStrike takes unit Iv, real Ii, real Im, real In, real JM, integer VC, real VD, real VE,real factRange returns nothing
     // VE是击飞时间
@@ -3150,9 +4667,9 @@ set zhuiSuiZhe=CreateUnit(GetOwningPlayer(Iv),LD,GetUnitX(Iv),GetUnitY(Iv),0.)
 call UnitRemoveType(zhuiSuiZhe,UNIT_TYPE_HERO)
 call SetHeroLevel(zhuiSuiZhe,200,false)
 call AddHeroXP(zhuiSuiZhe,$895440,false)
-call TriggerRegisterUnitEvent(Jv,Iv,EVENT_UNIT_ISSUED_POINT_ORDER)
-call TriggerRegisterUnitEvent(Jv,Iv,EVENT_UNIT_ISSUED_TARGET_ORDER)
-call TriggerAddAction(Jv,function registerZhuisuiMove)
+// call TriggerRegisterUnitEvent(Jv,Iv,EVENT_UNIT_ISSUED_POINT_ORDER)
+// call TriggerRegisterUnitEvent(Jv,Iv,EVENT_UNIT_ISSUED_TARGET_ORDER)
+// call TriggerAddAction(Jv,function registerZhuisuiMove)
 call SaveUnitHandle(Ia,GetHandleId(CS),$6865726F,Iv)
 call SaveTriggerHandle(Ia,GetHandleId(CS),$74726730,Jv)
 call TimerStart(CS,1.,true,function registerZhuisuiBody)
@@ -3649,6 +5166,60 @@ endfunction
 // 攻击时触发函数
 function cQ takes unit JW,unit Ig returns nothing
 local integer Je=0
+local real attackTime =0
+// if JW == zongyu then 
+//     call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "技能等级:" + I2S( GetUnitAbilityLevel(JW, 'Ab27')))
+// endif
+if  GetUnitAbilityLevel(JW, 'Ab26') >0 then
+  
+    //如果当前攻击的单位不是
+    if Ig != LoadUnitHandle(Ia, GetHandleId(JW), $30304846) then
+        // call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "" )
+
+        call SaveUnitHandle(Ia, GetHandleId(JW), $30304846,Ig)
+        call SaveReal(Ia, GetHandleId(JW), $30304847,0)
+    else
+        // 让攻击次数+1
+         call SaveReal(Ia, GetHandleId(JW), $30304847, LoadReal(Ia, GetHandleId(JW), $30304847) +1)
+         
+         set attackTime = LoadReal(Ia, GetHandleId(JW), $30304847) 
+        //   call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "累计攻击:" + R2S(attackTime))
+        call UnitDamageTarget(JW, Ig, 40 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        if bC(JW, $69743061) ==true then
+        call SaveReal(Ia, GetHandleId(JW), $30304847, LoadReal(Ia, GetHandleId(JW), $30304847) +1)
+        set attackTime = LoadReal(Ia, GetHandleId(JW), $30304847)  
+        call UnitDamageTarget(JW, Ig, 20 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        endif
+    endif
+endif
+// 宗预F攻速
+if JW == zongyu and UnitHasBuffBJ(JW, 'B02Y') == true then
+// call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "怒拳破攻击！" )
+call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,0.1),852096)
+
+else
+    // 
+if JW == zongyu and UnitHasBuffBJ(JW, 'B02Y') == false and LoadReal(Ia, GetHandleId(JW), $30304845) > 1 and LoadReal(Ia, GetHandleId(JW), $30304845) !=GetUnitState(JW, ConvertUnitState(37)) then
+// call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "怒拳破结束！" )
+call SetUnitState(JW, ConvertUnitState(37),LoadReal(Ia, GetHandleId(JW), $30304845))  
+endif
+endif
+// 宗预E回血
+if JW == zongyu and GetUnitAbilityLevel(JW, 'Ab26') >0 then
+call SetUnitState(JW,UNIT_STATE_LIFE,GetUnitState(JW,UNIT_STATE_LIFE)+200*(I2R(GetUnitAbilityLevel(JW, 'Ab26'))))
+    
+endif
+// 陈到Q伤害
+if UnitHasBuffBJ(JW, $42303257) == true then
+// call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "过来挨打：" )
+call UnitDamageTarget(JW, Ig, GetUnitAbilityLevel(chendao, 'Ab1u') * 200 + GetUnitState(JW, ConvertUnitState(18)) * 3, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+set udg_CS=( ( udg_CS ) + ( 1 ) )
+if ( ( udg_CS == GetUnitAbilityLevel(chendao,'Ab1u') ) ) then
+call UnitRemoveBuffBJ($42303257, GetEventDamageSource())
+else
+endif
+endif
+
 // 心之钢
 if bW(JW, $69743069) != null and LoadBoolean(FS,GetHandleId(JW),$130B62E4) == true  then
 call PlaySoundOnUnitBJ(gang,150,JW)
@@ -14068,6 +15639,20 @@ call SetUnitState(Cv,UNIT_STATE_MANA,160)
 call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
+// 宗预
+set zongyu=CreateUnit(CC,$48303038,-3763.4,-7527.6,273.26)
+call SetUnitState(zongyu,UNIT_STATE_MANA,220)
+call UnitAddItemToSlotById(zongyu,$72646531,0)
+call UnitAddItemToSlotById(zongyu,'it0o',1)
+
+// call UnitAddItemToSlotById(zongyu,$636C666D,1)
+// call UnitAddItemToSlotById(zongyu,$70656E72,2)
+// 陈到
+set chendao=CreateUnit(CC,$48303033,-3763.4,-7327.1,273.26)
+call SetUnitState(chendao,UNIT_STATE_MANA,220)
+call UnitAddItemToSlotById(chendao,$72646531,0)
+call UnitAddItemToSlotById(chendao,$636C666D,1)
+call UnitAddItemToSlotById(chendao,$736F7231,2)
 // 孙乾
 set sunQian=CreateUnit(CC,$48303032,-3563.4,-7327.1,273.26)
 call SetUnitState(sunQian,UNIT_STATE_MANA,220)
@@ -14077,9 +15662,9 @@ call UnitAddItemToSlotById(sunQian,$62656C76,2)
 // 句扶
 set juFu=CreateUnit(CC,$48303035,-3563.4,-7527.6,273.26)
 call SetUnitState(juFu,UNIT_STATE_MANA,220)
-call UnitAddItemToSlotById(juFu,$6576746C,0)
-call UnitAddItemToSlotById(juFu,$6C676468,1)
-call UnitAddItemToSlotById(juFu,$72616731,2)
+call UnitAddItemToSlotById(juFu,$72646531,0)
+call UnitAddItemToSlotById(juFu,$636C666D,1)
+call UnitAddItemToSlotById(juFu,$70656E72,2)
 // 高翔
 set gaoxiang=CreateUnit(CC,$48303037,-3563.4,-7119.5,273.26)
 call SetUnitState(gaoxiang,UNIT_STATE_MANA,220)
@@ -14324,6 +15909,13 @@ set DZ=CreateUnit(CC,$48584330,-2733.3,-6902.4,268.16)
 call SetUnitState(DZ,UNIT_STATE_MANA,540)
 call UnitAddItemToSlotById(DZ,$61666163,0)
 // call UnitAddItemToSlotById(DZ,$6974306B,1)
+// call UnitAddItemToSlotById(DZ,'I003',0)
+// call UnitAddItemToSlotById(DZ,'pspd',1)
+// call UnitAddItemToSlotById(DZ,'I006',2)
+// call UnitAddItemToSlotById(DZ,'gsou',3)
+// call UnitAddItemToSlotById(DZ,'I00B',4)
+// call UnitAddItemToSlotById(DZ,'cosl',5)
+
 // 亚索
 set Da=CreateUnit(CC,$48415330,13520.3,-7121.8,259.82)
 call UnitAddItemToSlotById(Da,$6C676468,0)
@@ -14700,8 +16292,17 @@ function gU takes nothing returns nothing
 local group KB
 local unit KC
 call ff()
+// 初始化YDWE哈希表
+set YDHT=InitHashtable()
+set YDLOC=InitHashtable()
+	set yd_MapMinX=GetCameraBoundMinX() - GetCameraMargin(CAMERA_MARGIN_LEFT)
+	set yd_MapMinY=GetCameraBoundMinY() - GetCameraMargin(CAMERA_MARGIN_BOTTOM)
+	set yd_MapMaxX=GetCameraBoundMaxX() + GetCameraMargin(CAMERA_MARGIN_RIGHT)
+	set yd_MapMaxY=GetCameraBoundMaxY() + GetCameraMargin(CAMERA_MARGIN_TOP)
+
 set Ia=InitHashtable()
 set bj_lastCreatedHashtable=Ia
+
 set GF[8100]="游戏积分"
 set GF[8101]="拥有英雄"
 set Hz=GetUnitX(Dz)
@@ -15449,7 +17050,7 @@ if GetUnitAbilityLevel(Ih,$4130364C)>=1 and bC(Ig,$69743039)==false then
 
 if IsUnitAlly(Ih,Player(8))==true then
 //    call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00枪出如龙！造成伤害：" + "物品次数--" + I2S(GetItemCharges(bW(Ih, $676F626D))) + "实际伤害--" + R2S(bk(Ih, 2, 2) * (1. + GetItemCharges(bW(Ih, $676F626D)) * .4) ))
-    call bs(Ih, GetUnitX(Ig), GetUnitY(Ig), 330., bk(Ih, 2, 6) * (1. + GetItemCharges(bW(Ih, $676F626D)) * .5) , 4, 0)
+    call bs(Ih, GetUnitX(Ig), GetUnitY(Ig), 330., GetEventDamage() + bk(Ih, 2, 6) * (1. + GetItemCharges(bW(Ih, $676F626D)) * .3), 1, 0)
 // call EXSetEventDamage(GetEventDamage()+(GetHeroAgi(Ih,true))*(6.+GetItemCharges(aj(GetTriggerUnit(),$676F626D))*.5))
 else
 call UnitDamageTarget(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
@@ -15463,7 +17064,7 @@ else
 endif
 // 血刃吸血效果
 if GetUnitAbilityLevel(Ih,$41303648)>0 and IsUnitAlly(Ih,Player(8))==true then
-call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00吸血！造成伤害")
+// call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00吸血！造成伤害")
 // call SetUnitState(Ih,UNIT_STATE_LIFE,GetUnitState(Ih,UNIT_STATE_LIFE)+GetEventDamage()*(.1*I2R(GetUnitAbilityLevel(Ih,$41303648))))
 call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41303648))))
 if Ih == zhuiSuiZhe then
@@ -18219,6 +19820,16 @@ elseif bC(GetTriggerUnit(),$49303245)==true or bC(GetTriggerUnit(),$49303341)==t
    call RemoveItem(aj(GetTriggerUnit(),$49303237))
    call UnitAddItem(GetTriggerUnit(),CreateItem($69743068,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了鸩魔龙刀")
+elseif bC(GetTriggerUnit(),'I003')==true or bC(GetTriggerUnit(),'I01E')==true and bC(GetTriggerUnit(),'pspd')==true and bC(GetTriggerUnit(),'I006')==true and bC(GetTriggerUnit(),'gsou')==true and bC(GetTriggerUnit(),'cosl')==true and bC(GetTriggerUnit(),'I00B')==true then
+ call RemoveItem(aj(GetTriggerUnit(),'I003'))
+   call RemoveItem(aj(GetTriggerUnit(),'I01E'))
+   call RemoveItem(aj(GetTriggerUnit(),'pspd'))
+   call RemoveItem(aj(GetTriggerUnit(),'I006'))
+   call RemoveItem(aj(GetTriggerUnit(),'gsou'))
+    call RemoveItem(aj(GetTriggerUnit(),'I00B'))
+   call RemoveItem(aj(GetTriggerUnit(),'cosl'))
+   call UnitAddItem(GetTriggerUnit(),CreateItem('it0n',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了神鬼天惊")
     // 打造极八蛇矛
 elseif bC(GetTriggerUnit(),$726E7370)==true  and GetItemCharges(aj(GetTriggerUnit(),$646B6677))>=5 then
 if GetItemCharges(aj(GetTriggerUnit(),$646B6677))>5 then
@@ -18521,12 +20132,26 @@ endfunction
 function i8 takes nothing returns nothing
 if RequestExtraBooleanData(50,GetTriggerPlayer(),null,null,false,0,0,0)==true and IsItemHiddenBJ(GetEnumItem())==false then
 if GetItemTypeId(GetEnumItem())==$706F6D6E then
-// call RemoveItem(GetEnumItem())
-// call AdjustPlayerStateBJ(3000,Player(0),PLAYER_STATE_RESOURCE_GOLD)
+call RemoveItem(GetEnumItem())
+call AdjustPlayerStateBJ(500,Player(1),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(500,Player(2),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(500,Player(3),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(500,Player(4),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(500,Player(5),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(500,Player(6),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(500,Player(7),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(500,Player(8),PLAYER_STATE_RESOURCE_GOLD)
 else
 if GetItemTypeId(GetEnumItem())==$73727263 then
-// call RemoveItem(GetEnumItem())
-// call AdjustPlayerStateBJ(8000,Player(0),PLAYER_STATE_RESOURCE_GOLD)
+call RemoveItem(GetEnumItem())
+call AdjustPlayerStateBJ(1000,Player(1),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1000,Player(2),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1000,Player(3),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1000,Player(4),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1000,Player(5),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1000,Player(6),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1000,Player(7),PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(1000,Player(8),PLAYER_STATE_RESOURCE_GOLD)
 else
 endif
 endif
@@ -18535,14 +20160,14 @@ endif
 if CheckItemStatus(GetEnumItem(),bj_ITEM_STATUS_SELLABLE)==true and IsItemHiddenBJ(GetEnumItem())==false then
 call SetWidgetLife(GetEnumItem(),50)
 call RemoveItem(GetEnumItem())
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(1), PLAYER_STATE_RESOURCE_GOLD)
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(2), PLAYER_STATE_RESOURCE_GOLD)
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(3), PLAYER_STATE_RESOURCE_GOLD)
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(4), PLAYER_STATE_RESOURCE_GOLD)
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(5), PLAYER_STATE_RESOURCE_GOLD)
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(6), PLAYER_STATE_RESOURCE_GOLD)
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(7), PLAYER_STATE_RESOURCE_GOLD)
-call AdjustPlayerStateBJ(2000, ConvertedPlayer(8), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(1), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(2), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(3), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(4), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(5), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(6), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(7), PLAYER_STATE_RESOURCE_GOLD)
+call AdjustPlayerStateBJ(100 *GetUnitLevel(C5), ConvertedPlayer(8), PLAYER_STATE_RESOURCE_GOLD)
 else
 endif
 endfunction
@@ -18685,8 +20310,10 @@ set LJ[12]=$6F666C67
 set LJ[13]=$72617433
 // 天空盔
 set LJ[14]=$7370726E
-// 大宛马
-set LJ[15]=$626C6261
+// 大宛马-
+// set LJ[15]=$626C6261
+// 日月啸霜
+set LJ[15]='it0l'
 // 风神衣
 set LJ[16]=$62747374
 // 神宇盔
@@ -18724,7 +20351,9 @@ set LJ[32]=$73707265
 // 青囊书
 set LJ[33]=$7363686C
 // 爪黄飞电
-set LJ[34]=$736F7232
+// set LJ[34]=$736F7232
+// 踏雪乌骓
+set LJ[34]='it0m'
 // 巨象
 set LJ[35]=$49303037
 // 玄铁手机
@@ -18861,7 +20490,10 @@ set LJ[122]=$69743064
 set LJ[123]=$69743066
 // 心之钢
 set LJ[124]=$69743069
-
+//  神鬼天惊
+set LJ[125]='it0n'
+// 自然魂珠
+set LJ[126]='it0k'
 // 刚弓
 set LJ[170]=$6B70696E
 // 钢剑
@@ -18887,9 +20519,12 @@ set LJ[180]=$726C6966
 // 黑鬃马
 set LJ[181]=$6F646566
 // 大宛马
-set LJ[182]=$626C6261
+// set LJ[182]=$626C6261
+set LJ[182]='it0l'
 // 爪黄飞电
-set LJ[183]=$736F7232
+// set LJ[183]=$736F7232
+
+set LJ[183]='it0m'
 // 绝影
 set LJ[184]=$49303039
 // 巨象
@@ -21944,9 +23579,10 @@ call a9(Ow,h)
 call TriggerAddCondition(Ow,Condition(function nS))
 call TriggerAddAction(Ow,function nU)
 endfunction
+// boss房挑战事件
 function nW takes nothing returns nothing
 set G6=ap(i,Player(10))
-if CountUnitsInGroup(G6)<3 then
+if CountUnitsInGroup(G6)<5 then
 set Ox=CreateUnit(Player(10),N7[GetRandomInt(51,56)],1345.,-7225.,90.)
 call SetHeroLevel(Ox,G5*3,false)
 call UnitAddAbility(Ox,M9[GetRandomInt(1,15)])
@@ -24334,6 +25970,10 @@ call TriggerAddAction(QB,function p9)
 endfunction
 function qC takes nothing returns nothing
     // 学习技能监听
+    // 如果学习的是沙场豪情
+    if GetLearnedSkillBJ()== 'Ab1p' then 
+        call SetUnitState(GetTriggerUnit(), ConvertUnitState(32), GetUnitState(GetTriggerUnit(), ConvertUnitState(32)) +10)
+    endif
 // 如果学的是登神长阶
 if GetLearnedSkillBJ()==$41623132 then
      call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00登神长阶！" )
@@ -25799,6 +27439,32 @@ elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped($41623166,Iv)==2 then
 call IncUnitAbilityLevel(Iv,$41623166)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00坚定意志的等级已经提升了！")
 endif
+// 陈到大招
+elseif GetUnitAbilityLevel(Iv,'Ab1p')>0 then
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab1s',Iv)<1 then
+call UnitAddAbilityBJ('Ab1s',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab1s')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00叹为观止！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab1s',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab1s')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00叹为观止的等级已经提升了！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab1s',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab1s')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00叹为观止的等级已经提升了！")
+endif
+// 宗预大招
+elseif GetUnitAbilityLevel(Iv,'Ab26')>0 then
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab28',Iv)<1 then
+call UnitAddAbilityBJ('Ab28',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab28')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00怒拳破！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab28',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab28')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00怒拳破的等级已经提升了！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab28',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab28')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00怒拳破的等级已经提升了！")
+endif
 endif
 set Iv=null
 endfunction
@@ -27066,7 +28732,7 @@ if GetSpellAbilityId()==$41623074  then
     endif
      // 四阶段偷装备
     if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) == 2 then
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,124)],GetTriggerUnit())
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,126)],GetTriggerUnit())
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000从"+GetUnitName(GetSpellTargetUnit())+("|cffff0000身上偷到了极品宝物："+GetItemName(GetLastCreatedItem())))
     // 如果偷到的装备是追日靴
     if GetItemTypeId(GetLastCreatedItem()) == $49303030 then
@@ -27113,8 +28779,8 @@ if GetSpellAbilityId()==$41623074  then
     set success =true
     endif
      // 四阶段偷装备
-    if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) < 4 then
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,124)],GetTriggerUnit())
+    if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) < 5 then
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,126)],GetTriggerUnit())
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000从"+GetUnitName(GetSpellTargetUnit())+("|cffff0000身上偷到了极品宝物："+GetItemName(GetLastCreatedItem())))
     set success =true
     endif
@@ -27326,6 +28992,15 @@ call UnitRemoveAbility(CE,$4253544E)
 call UnitRemoveAbility(CE,$42505345)
 call UnitRemoveAbility(CE,$42303054)
 return
+endif
+// 宗预大招
+if GetSpellAbilityId() == 'Ab28' then
+    call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "怒拳破！" )
+if GetUnitState(Iv, ConvertUnitState(37)) <1 then
+   call SetUnitState(Iv, ConvertUnitState(37),1.8) 
+endif
+call SaveReal(Ia,GetHandleId(Iv),$30304845,GetUnitState(Iv, ConvertUnitState(37)))
+call SetUnitState(Iv, ConvertUnitState(37),0.44)  
 endif
 // 高翔大招
 if GetSpellAbilityId() == $41623166 then
@@ -27848,10 +29523,39 @@ elseif GetItemTypeId(GetSpellTargetItem())==$6C6E726E then
     // 如果物品是雌雄对剑lnrn，移除相应物品 然后添加雌雄I03B
 call RemoveItem(GetSpellTargetItem())
 call UnitAddItem(Iv,CreateItem($49303342,0,0))
+// 自然魂珠
+elseif GetItemTypeId(GetSpellTargetItem())=='it0k' then
+if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
+    // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*2)*100)
+else
+     // 否则，则强化成功概率为装备等级：100- level*500/ ((20 + level)*5)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*5)*100)
+endif
+if GetRandomInt(0,100)>FZ then
 
+// 如果有幸运币，则将幸运币的次数+1
+if bC(Iv,$69743067) then
+call SetItemCharges(aj(Iv, $69743067), GetItemCharges(aj(Iv, $69743067)) +1)
+// 如果幸运币次数大于4，则摧毁幸运币
+if GetItemCharges(aj(Iv, $69743067)) >=4 then
+    call RemoveItem(aj(GetTriggerUnit(),$69743067))
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cff808000幸运币承受不住这份因果，碎裂了")
+endif
+endif
+call SaveInteger(Ia, GetHandleId(Iv), $130B62E6, LoadInteger(Ia, GetHandleId(Iv), $130B62E6) +1)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), $130B62E6)))
+else
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
+
+endif
+
+
+// 自然魂珠强化结束
 elseif GetItemCharges(GetSpellTargetItem())<200 or GetUnitAbilityLevel(Iv,$41304641)>0 or true then
     // 如果被强化的物品等级小于15或者拥有技能瞬间则执行
-if GetItemTypeId(GetSpellTargetItem())==$49303233 or GetItemTypeId(GetSpellTargetItem())==$676F626D or GetItemTypeId(GetSpellTargetItem())==$666C6167 or GetItemTypeId(GetSpellTargetItem())==$49303342 or GetItemTypeId(GetSpellTargetItem())==$7372746C or GetItemTypeId(GetSpellTargetItem())==$6A64726E or GetItemTypeId(GetSpellTargetItem())==$6D6E7366 or GetItemTypeId(GetSpellTargetItem())==$49303251 or GetItemTypeId(GetSpellTargetItem())==$6D6C7374 or GetItemTypeId(GetSpellTargetItem())==$6D67746B or GetItemTypeId(GetSpellTargetItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 or GetItemTypeId(GetSpellTargetItem())==$6974306B then
+if GetItemTypeId(GetSpellTargetItem())==$49303233 or GetItemTypeId(GetSpellTargetItem())==$676F626D or GetItemTypeId(GetSpellTargetItem())==$666C6167 or GetItemTypeId(GetSpellTargetItem())==$49303342 or GetItemTypeId(GetSpellTargetItem())==$7372746C or GetItemTypeId(GetSpellTargetItem())==$6A64726E or GetItemTypeId(GetSpellTargetItem())==$6D6E7366 or GetItemTypeId(GetSpellTargetItem())==$49303251 or GetItemTypeId(GetSpellTargetItem())==$6D6C7374 or GetItemTypeId(GetSpellTargetItem())==$6D67746B or GetItemTypeId(GetSpellTargetItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147  then
 //如果被强化的物品是蚩尤魔刀、亮银强、李广之弓、雌雄、七星灯终级srtl（7372746C）、轻钢、方天画戟、斩蛇、轩辕、金箍棒、后羿射日、水神戟、盘古斧、方天鬼戟
 if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
     // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
@@ -27877,7 +29581,7 @@ if GetItemCharges(aj(Iv, $69743067)) >=4 then
 endif
 endif
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
-if GetItemTypeId(GetSpellTargetItem())!=$7372746C and GetItemTypeId(GetSpellTargetItem())!=$6974306B  then
+if GetItemTypeId(GetSpellTargetItem())!=$7372746C  then
     // 如果被强化的物品不是七星灯，则基础攻击+100
 call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))+120)
 endif
@@ -29939,6 +31643,16 @@ else
 if GetUnitTypeId(GetTriggerUnit())==$48303037 then
 call IncUnitAbilityLevelSwapped($41623166,GetTriggerUnit())
 else
+    // 陈到大招
+if GetUnitTypeId(GetTriggerUnit())==$48303033 then
+call IncUnitAbilityLevelSwapped('Ab1s',GetTriggerUnit())
+else
+    // 宗预大招
+if GetUnitTypeId(GetTriggerUnit())==$48303038 then
+call IncUnitAbilityLevelSwapped('Ab28',GetTriggerUnit())
+else
+endif
+endif
 endif
 endif
 endif
@@ -30748,7 +32462,7 @@ if GetTriggerUnit() == Tg and GetTriggerUnit() == sunQian and giveTongQian ==fal
     // call UnitAddItemByIdSwapped($69743067,GetTriggerUnit())
 endif
 // 孙乾的专属
-if GetTriggerUnit() == Tg and GetTriggerUnit() == gaoxiang and giveGang ==false then
+if GetTriggerUnit() == Tg and giveGang == false and GetRandomInt(1, 10) ==1 then
     // and bC(GetTriggerUnit(), $69743067) == true
     set giveGang=true
     set Tg=null
@@ -30775,7 +32489,7 @@ call DisplayTextToForce(GetPlayersAll(),"铁壁如山神威重，不要再来烦
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了玄光盾！")
 set Tg=null
 set giveShield=true
-elseif GetTriggerUnit()==Tg and GetUnitTypeId(GetTriggerUnit())==$48584842 or GetTriggerUnit()==Cr and GetRandomInt(1,150)<=GetUnitLevel(GetTriggerUnit()) and giveGlove==false then
+elseif GetTriggerUnit()==Tg  and GetRandomInt(1,350)<=GetUnitLevel(GetTriggerUnit()) and giveGlove==false then
 // 混元霹雳手
 set giveGlove=true
 call UnitAddItemByIdSwapped($69743061,GetTriggerUnit())
@@ -30928,6 +32642,7 @@ function ws takes nothing returns nothing
 set Sz=CreateTrigger()
 call TriggerAddAction(Sz,function wr)
 endfunction
+
 function wt takes nothing returns boolean
 return GetSpellAbilityId()==$41304646
 endfunction
@@ -31821,6 +33536,8 @@ call sheEvent()
 call spiderEvent()
 call registerXinzhigang()
 call regisetGaoxiangAttacked()
+
+call InitCustomTriggers()
 endfunction
 function xb takes nothing returns nothing
 call SetPlayerStartLocation(Player(0),0)
@@ -32148,12 +33865,14 @@ call ExecuteFunc("setGambleGroup")
 call fp()
 call xZ()
 call ConditionalTriggerExecute(IT)
+
+//初始化YDWE定时器函数 
+call ExecuteFunc("YDWETimerSystem__Init")
+
 endfunction
 function config takes nothing returns nothing
-call SetMapName("五虎将后传3.0正式版")
-call SetMapDescription("|cffffdead五虎将后传-3.0
-|cffFF66FF游戏QQ群：93060345
-")
+call SetMapName("五虎将后传-群英荟萃")
+call SetMapDescription("|cffffdead五虎将后传-群英荟萃")
 call SetPlayers(11)
 call SetTeams(11)
 call SetGamePlacement(MAP_PLACEMENT_TEAMS_TOGETHER)
@@ -32171,6 +33890,7 @@ call DefineStartLocation(10,-2880.,-7296.)
 call xb()
 call xc()
 call xd()
+
 endfunction
 function Trig_XHCDXzb2Func001Func003002002 takes nothing returns boolean
 return((IsUnitType(GetFilterUnit(),UNIT_TYPE_HERO)==true) )
@@ -35469,8 +37189,5 @@ set huntingBoss[i]=false
 set i = i + 1
 endloop
 endfunction
-
-   
-
 
 
