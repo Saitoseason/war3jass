@@ -3587,7 +3587,7 @@ endif
 if bC(Ij, $6974306B) == true then
 // call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00自然之怒")
 set Ix = LoadInteger(Ia, GetHandleId(Ij), $130B62E6)
-set JT=JT*(1.25+I2R(Ix)*.06)
+set JT=JT*(1.35+I2R(Ix)*.05)
 endif
 // 入魔系数1.1
 if GetUnitAbilityLevel(Ij,$4130354E)>0 then
@@ -17586,7 +17586,7 @@ endif
 // 伏羲琴伤害 Gq
 if GetUnitAbilityLevel(Ih,$41303552)>=1 then
 if Gq >6 then
-call UnitDamageTarget(Ih, Ig, GetHeroInt(Ih, true) *200, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
@@ -17957,7 +17957,7 @@ call TriggerRegisterUnitEvent(Nd,GetTriggerUnit(),EVENT_UNIT_DEATH)
 else
 if GetUnitAbilityLevel(GetTriggerUnit(),$416C6F63)==0 and GetUnitAbilityLevel(GetTriggerUnit(),$4176756C)==0 and GetUnitPointValue(GetTriggerUnit())!=177 then
 if IsUnitEnemy(GetTriggerUnit(),Player(8))==true then
-if Gq > 6 then
+if Gq==7 then
 call EXSetUnitCollisionType(false,GetTriggerUnit(),3)
 call SetUnitState(GetTriggerUnit(),ConvertUnitState(18),GetUnitState(GetTriggerUnit(),ConvertUnitState(18))+I2R(50*G5))
 else
@@ -20195,17 +20195,19 @@ elseif bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$49303045)==
    call UnitAddItem(GetTriggerUnit(),CreateItem($69743035,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了玄龙偃月刀")
 // 打造自然魂珠
-elseif bC(GetTriggerUnit(),$49303142)==true and bC(GetTriggerUnit(),$62747374)==true and bC(GetTriggerUnit(),$73747067)==true and bC(GetTriggerUnit(),$726F7473)==true and bC(GetTriggerUnit(),$7372746C)==true and bC(GetTriggerUnit(),'I00B')==true then
- 
+elseif bC(GetTriggerUnit(),$49303142)==true and bC(GetTriggerUnit(),$62747374)==true and bC(GetTriggerUnit(),$73747067)==true and bC(GetTriggerUnit(),$726F7473)==true and bC(GetTriggerUnit(),$7372746C)==true then
+   if GetRandomInt(1, 5) ==1 then
   call RemoveItem(aj(GetTriggerUnit(),$62747374))
    call RemoveItem(aj(GetTriggerUnit(),$49303142))
    call RemoveItem(aj(GetTriggerUnit(),$73747067))
    call RemoveItem(aj(GetTriggerUnit(),$726F7473))
     call RemoveItem(aj(GetTriggerUnit(),$7372746C))
-    call RemoveItem(aj(GetTriggerUnit(),'I00B'))
     call UnitAddItem(GetTriggerUnit(),CreateItem($6974306B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
     call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了自然魂珠")
-  
+   else
+    call RemoveItem(aj(GetTriggerUnit(),$7372746C))
+    call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"很遗憾，七星灯在打造过程中损坏了")
+   endif
 
 // 蚩尤套+蚩尤披风打造魔龙刀
 // 蚩尤护手、蚩尤魔甲、蚩尤魔头、蚩尤战靴、蚩尤披风
@@ -21447,7 +21449,6 @@ else
     set huntingBoss[0]=false
 endif
 endfunction
-// 项羽击杀事件
 function jl takes nothing returns nothing
 local timer MG
 // 黄忠击杀判定
@@ -21457,24 +21458,25 @@ call archeryEvent(2)
 endif
 
 // call archeryEvent(2)
-set Jd[66]=GetUnitLoc(CN)
 set Mt[8]=GetUnitLoc(GetTriggerUnit())
-if Gq >6 then
-call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
+if Gq==7 then
+if H3==true and GetRandomInt(1,7)==3 then
+set NL[8001]=RandomItemInRectSimpleBJ(Bt)
+if NL[8001]!=null then
+call SetItemVisible(NL[8001],true)
+call SetItemPosition(NL[8001],GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+set NL[8001]=null
 else
-call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+set H3=false
 endif
-
-if GetRandomInt(1,5)==4  then
-if Gq <7 then
-        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
-    else
-        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
-    endif
+else
 endif
-
+else
+if GetRandomInt(1,5)==4 then
+call CreateItemLoc(LJ[GetRandomInt(71,80)],Mt[8])
+else
 endif
-
+endif
 if GetRandomInt(1,10)==5 then
 call CreateItemLoc($636E686E,Mt[8])
 else
@@ -21485,7 +21487,7 @@ endif
 endif
 // 如果触发单位没有追日靴，且骰子的值》95
 // GetUnitAbilityLevel(GetTriggerUnit(),$4130344D)==0 and
-if  GetRandomInt(1,100)>98 then
+if  GetRandomInt(1,100)>97 then
 call UnitAddAbility(GetTriggerUnit(),$4130344D)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$4130344D)
 call SetItemUserData(CreateItem($49303030,GetUnitX(CN),GetUnitY(CN)),288)
@@ -21496,7 +21498,6 @@ set MG=CreateTimer()
 call TimerStart(MG,60.,false,function jk)
 set MG=null
 endfunction
-// 注册项羽事件
 function jm takes nothing returns nothing
 set NK=CreateTrigger()
 call TriggerRegisterUnitEvent(NK,CN,EVENT_UNIT_DEATH)
@@ -21537,7 +21538,7 @@ endif
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00刑天魔神再次出现在神秘山洞！")
 if Gq>=6 then
 call ModifyHeroStat(bj_HEROSTAT_STR,CQ,bj_MODIFYMETHOD_ADD,50)
-call ModifyHeroStat(bj_HEROSTAT_AGI,CQ,bj_MODIFYMETHOD_ADD,20)
+call ModifyHeroStat(bj_HEROSTAT_AGI,CQ,bj_MODIFYMETHOD_ADD,10)
 call ModifyHeroStat(bj_HEROSTAT_INT,CQ,bj_MODIFYMETHOD_ADD,50)
 else
 endif
@@ -21549,7 +21550,6 @@ else
     set huntingBoss[1]=false
 endif
 endfunction
-
 function jo takes nothing returns nothing
 local timer MG
 // 黄忠击杀判定
@@ -21558,16 +21558,22 @@ if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingBoss[1]==true 
 call archeryEvent(2)
 endif
 set Jd[31]=GetUnitLoc(CQ)
-if Gq >6 then
-call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[31])
+if Gq==7 then
+if H3==true and GetRandomInt(1,7)==3 then
+set NL[8001]=RandomItemInRectSimpleBJ(Bt)
+if NL[8001]!=null then
+call SetItemVisible(NL[8001],true)
+call SetItemPosition(NL[8001],GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+set NL[8001]=null
 else
-call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[31])
-if GetRandomInt(1, 8) == 3  then
-if Gq <7 then
-        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[31])
-    else
-        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[31])
-    endif
+set H3=false
+endif
+else
+endif
+else
+if GetRandomInt(1,8)==3 then
+call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[31])
+else
 endif
 endif
 if GetRandomInt(1,3)==1 then
@@ -21579,20 +21585,18 @@ set MG=CreateTimer()
 call TimerStart(MG,60.,false,function jn)
 set MG=null
 endfunction
-// 注册刑天事件
 function jp takes nothing returns nothing
 set NM=CreateTrigger()
 call TriggerRegisterUnitEvent(NM,CQ,EVENT_UNIT_DEATH)
 call TriggerAddAction(NM,function jo)
 endfunction
-
 function jq takes nothing returns nothing
 call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(CO,9840.,13180.,false)
 if Gq>=6 then
 call ModifyHeroStat(bj_HEROSTAT_STR,CO,bj_MODIFYMETHOD_ADD,50)
-call ModifyHeroStat(bj_HEROSTAT_AGI,CO,bj_MODIFYMETHOD_ADD,20)
+call ModifyHeroStat(bj_HEROSTAT_AGI,CO,bj_MODIFYMETHOD_ADD,10)
 call ModifyHeroStat(bj_HEROSTAT_INT,CO,bj_MODIFYMETHOD_ADD,50)
 else
 endif
@@ -21615,7 +21619,7 @@ set Jd[66]=GetUnitLoc(GetTriggerUnit())
 // 测试难7以上掉落
 // call DisplayTextToForce(GetPlayersAll(),"|Cffff0000正在测试物品掉落")
 // call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
-if G >6 then
+if Gq==7 then
 if H3==true and GetRandomInt(1,7)==3 then
 set NL[8001]=RandomItemInRectSimpleBJ(Bt)
 if NL[8001]!=null then
@@ -21629,12 +21633,9 @@ else
 endif
 else
 endif
-if GetRandomInt(1, 5) == 3 then
-if Gq <7 then
-        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
-    else
-        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
-    endif
+if GetRandomInt(1,5)==3 then
+call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
+else
 endif
 if GetRandomInt(1,7)==7 then
 call CreateItemLoc($636E686E,Jd[66])
@@ -21686,25 +21687,28 @@ local timer MG
 // call archeryEvent(4)
 // endif
 set Jd[66]=GetUnitLoc(GetTriggerUnit())
-if Gq >6 then
-call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
+if Gq==7 then
+if H3==true and GetRandomInt(1,7)==3 then
+set NL[8001]=RandomItemInRectSimpleBJ(Bt)
+if NL[8001]!=null then
+call SetItemVisible(NL[8001],true)
+call SetItemPosition(NL[8001],GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+set NL[8001]=null
 else
-call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+set H3=false
 endif
-
+else
+endif
+else
+endif
 if GetRandomInt(1,10)==2 then
 else
 call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 endif
-
 if GetRandomInt(1,5)==3 then
-    if Gq <7 then
-        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
-    else
-        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
-    endif
+call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
+else
 endif
-
 if GetRandomInt(1,7)==7 then
 call CreateItemLoc($636E686E,Jd[66])
 else
@@ -21713,7 +21717,6 @@ call CreateItemLoc($73656872,Jd[66])
 else
 endif
 endif
-
 // if GetRandomInt(1,5)==3 then
 // if GetRandomInt(1,20)==19 then
 // call SetItemInvulnerable(CreateItem($4930324E,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
@@ -21753,9 +21756,9 @@ call ReviveHero(spider,-7535.7,-7173.,false)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00蜘蛛罔象再次出现在丛林深处")
 
 if Gq>=6 then
-call ModifyHeroStat(bj_HEROSTAT_STR,spider,bj_MODIFYMETHOD_ADD,20)
-call ModifyHeroStat(bj_HEROSTAT_AGI,spider,bj_MODIFYMETHOD_ADD,40)
-call ModifyHeroStat(bj_HEROSTAT_INT,spider,bj_MODIFYMETHOD_ADD,20)
+call ModifyHeroStat(bj_HEROSTAT_STR,spider,bj_MODIFYMETHOD_ADD,50)
+call ModifyHeroStat(bj_HEROSTAT_AGI,spider,bj_MODIFYMETHOD_ADD,20)
+call ModifyHeroStat(bj_HEROSTAT_INT,spider,bj_MODIFYMETHOD_ADD,50)
 else
 endif
 
@@ -21775,23 +21778,26 @@ local timer MG
 // call archeryEvent(4)
 // endif
 set Jd[66]=GetUnitLoc(GetTriggerUnit())
-
-if Gq >6 then
-call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
+if Gq==7 then
+if H3==true and GetRandomInt(1,7)==3 then
+set NL[8001]=RandomItemInRectSimpleBJ(Bt)
+if NL[8001]!=null then
+call SetItemVisible(NL[8001],true)
+call SetItemPosition(NL[8001],GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+set NL[8001]=null
 else
-call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+set H3=false
 endif
-
+else
+endif
+else
+endif
 if GetRandomInt(1,10)==2 then
 else
 call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 endif
 if GetRandomInt(1,5)==3 then
-if Gq <7 then
-        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
-    else
-        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
-    endif
+call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
 else
 endif
 if GetRandomInt(1,7)==7 then
@@ -21839,7 +21845,7 @@ call DestroyTimer(GetExpiredTimer())
 call ReviveHero(CP,9350.,13180.,false)
 if Gq>=6 then
 call ModifyHeroStat(bj_HEROSTAT_STR,CP,bj_MODIFYMETHOD_ADD,50)
-call ModifyHeroStat(bj_HEROSTAT_AGI,CP,bj_MODIFYMETHOD_ADD,20)
+call ModifyHeroStat(bj_HEROSTAT_AGI,CP,bj_MODIFYMETHOD_ADD,10)
 call ModifyHeroStat(bj_HEROSTAT_INT,CP,bj_MODIFYMETHOD_ADD,50)
 else
 endif
@@ -21859,7 +21865,7 @@ if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingBoss[3]==true 
 call archeryEvent(4)
 endif
 set Jd[77]=GetUnitLoc(GetTriggerUnit())
-if Gq > 6 then
+if Gq==7 then
 if H3==true and GetRandomInt(1,7)==3 then
 set NL[8001]=RandomItemInRectSimpleBJ(Bt)
 if NL[8001]!=null then
@@ -21874,11 +21880,8 @@ endif
 else
 endif
 if GetRandomInt(1,5)==3 then
-if Gq <7 then
-        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
-    else
-        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
-    endif
+call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[77])
+else
 endif
 if GetRandomInt(1,7)==7 then
 call CreateItemLoc($636E686E,Jd[77])
@@ -30787,7 +30790,7 @@ endif
 if GetClickedButtonBJ()==SP[9]  then
 set Gq=8
 call DisplayTextToForce(GetPlayersAll(),"|Cffff0000玩家1选择了游戏难度：末日挽歌（蜀国已经山穷水尽了）")
-
+call DisplayTextToForce(GetPlayersAll(),"|Cffff0000请等待玩家继续选择游戏模式")
 // call SetHeroLevel(DT,50,false)
 // 难7关闭挑战镜像
 // call DestroyTrigger(SW)
@@ -30882,7 +30885,6 @@ call aw(false)
 call ShowUnitShow(Cm)
 call SetUnitPosition(Cm,-14323.,1800.)
 call TriggerExecute(Sb)
-call DisplayTextToForce(GetPlayersAll(),"|Cffff0000请等待玩家1继续选择游戏模式")
 if DzAPI_Map_HasMallItem(Player(0),"ZGGG")==true then
 call EnableTrigger(Sc)
 call DialogSetMessage(IP,"请选择游戏模式: 
