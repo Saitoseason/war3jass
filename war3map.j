@@ -4109,6 +4109,8 @@ function zongyu_W_Action takes nothing returns nothing
         // 如果跳跃的目标是敌人则造成眩晕
         if IsUnitEnemy(CE, GetOwningPlayer(Iv)) == true then
         call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
+        call UnitDamageTarget(Iv, CE, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+
         endif
     else
     endif
@@ -4153,7 +4155,7 @@ function zongyu_W_Action takes nothing returns nothing
                         call GroupRemoveUnit(ydl_group, ydl_unit)
                         if IsUnitEnemy(ydl_unit, GetOwningPlayer(Iv)) == true and ydl_unit !=Iv then
                             // call IssueTargetOrder(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86), "slow", ydl_unit)
-                        call UnitDamageTarget(Iv, ydl_unit, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25')), true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+                        call UnitDamageTarget(Iv, ydl_unit, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25') +2), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
                         else
                         endif
                     endloop
@@ -4259,10 +4261,10 @@ function zongyu_Q_Action takes nothing returns nothing
           
             if bC(Iv, $69743061) ==true then 
                   call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,'Ab2a',1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
-                  call UnitDamageTarget(Iv, CE, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24') +2), true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+                  call UnitDamageTarget(Iv, CE, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24') +3), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
             else
                   call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
-                  call UnitDamageTarget(Iv, CE,  bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24')), true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+                  call UnitDamageTarget(Iv, CE,  bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
             endif
         else
         endif
@@ -5560,11 +5562,11 @@ if  GetUnitAbilityLevel(JW, 'Ab26') >0 then
          
          set attackTime = LoadReal(Ia, GetHandleId(JW), $30304847) 
         //   call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "累计攻击:" + R2S(attackTime))
-        call UnitDamageTarget(JW, Ig, 50 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call UnitDamageTarget(JW, Ig, 40 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
         if bC(JW, $69743061) ==true then
         call SaveReal(Ia, GetHandleId(JW), $30304847, LoadReal(Ia, GetHandleId(JW), $30304847) +1)
         set attackTime = LoadReal(Ia, GetHandleId(JW), $30304847)  
-        call UnitDamageTarget(JW, Ig, 30 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call UnitDamageTarget(JW, Ig, 20 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
         endif
     endif
 endif
