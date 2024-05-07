@@ -3858,6 +3858,9 @@ elseif res <100 then
 
 endif 
 
+if loc_level == 5 then
+    
+endif
 
 endfunction
 
@@ -3870,7 +3873,7 @@ function found_result takes unit Iv returns nothing
     endif
     // 结果判定
     // 挖掘次数1
-   if ModuloInteger(found_time,4)==1 then
+   if ModuloInteger(found_time,5)==1 then
     // 小概率变更高一阶的
     if loc_num <95 then
       call  compute_found_result(loc_num, Iv,1)
@@ -3878,7 +3881,7 @@ function found_result takes unit Iv returns nothing
       call  compute_found_result(loc_num, Iv,2)
     endif
    endif
-   if ModuloInteger(found_time,4)==2 then
+   if ModuloInteger(found_time,5)==2 then
 // 小概率变更高一阶的
     if loc_num <95 then
       call  compute_found_result(loc_num, Iv,2)
@@ -3886,7 +3889,7 @@ function found_result takes unit Iv returns nothing
       call  compute_found_result(loc_num, Iv,3)
     endif
    endif
-   if ModuloInteger(found_time,4)==3 then
+   if ModuloInteger(found_time,5)==3 then
 // 小概率变更高一阶的
     if loc_num <95 then
       call  compute_found_result(loc_num, Iv,3)
@@ -3894,12 +3897,20 @@ function found_result takes unit Iv returns nothing
       call  compute_found_result(loc_num, Iv,4)
     endif
    endif
-   if ModuloInteger(found_time,4)==0 then
+   if ModuloInteger(found_time,5)==4 then
 // 小概率变更高一阶的
     if loc_num <95 then
       call  compute_found_result(loc_num, Iv,4)
     else
       call  compute_found_result(loc_num, Iv,5)
+    endif
+   endif
+    if ModuloInteger(found_time,5)==0 then
+// 小概率变更高一阶的
+    if loc_num <95 then
+      call  compute_found_result(loc_num, Iv,5)
+    else
+      call  compute_found_result(loc_num, Iv,6)
     endif
    endif
 endfunction
