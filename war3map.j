@@ -52,6 +52,8 @@ real Ly=1
 boolean L1=false
 boolean Lz=true
 boolean L0=true
+// 无敌斩函数
+
 // 移动速度
 trigger speed_listen
 // 宗预
@@ -98,6 +100,7 @@ unit juFu=null
 unit gaoxiang=null
 unit chendao =null
 unit zongyu=null
+unit yanyu =null
 trigger beAttacked =null
 // 眩晕效果
 trigger StunTrigger = null
@@ -2138,18 +2141,86 @@ set StunGroup=null
 endfunction
 
 
+// 无敌斩函数
+function force_huk takes nothing returns nothing
+local timer CS=GetExpiredTimer()
+local integer Ix=GetHandleId(CS)
+local unit Iv=LoadUnitHandle(Ia,Ix,0)
+local unit CE =LoadUnitHandle(Ia,Ix,1)
+local unit loc_unit
+local integer loc_repeat =0
+local group I2=CreateGroup()
+// 随机落点
+if GetRandomInt(1,2)==1 then
+call SetUnitX(Iv,GetUnitX(CE)+1)
+call SetUnitY(Iv,GetUnitY(CE)+1)
+else
+call SetUnitX(Iv,GetUnitX(CE)-1)
+call SetUnitY(Iv, GetUnitY(CE)-1)
+endif
+call UnitDamageTarget(Iv, CE, 8000* GetUnitAbilityLevel(Iv, 'Ab2f'), false, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
-//===========================================================================
-// Trigger: StunEffect
-//===========================================================================
-// 此触发器用于给单位添加眩晕效果
-//===========================================================================
-// function InitTrig_StunEffect takes nothing returns nothing
-//     set StunTrigger = CreateTrigger()
-//     call TriggerRegisterAnyUnit  EventBJ(StunTrigger, EVENT_PLAYER_UNIT_SPELL_EFFECT)
-//     call TriggerAddCondition(StunTrigger, Condition(function Trig_StunEffect_Conditions))
-//     call TriggerAddAction(StunTrigger, function Trig_StunEffect_Actions)
-// endfunction
+call UnitDamageTarget(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab2f')  * 4, false, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+// 选人
+call GroupEnumUnitsInRange(I2, GetUnitX(Iv), GetUnitY(Iv),1000,null)
+loop
+set loc_unit=FirstOfGroup(I2)
+if loc_unit !=CE and loc_unit != Iv and IsUnitEnemy(loc_unit, GetOwningPlayer(Iv)) == true and GetUnitState(loc_unit, ConvertUnitState(0)) > .405 then
+call SaveUnitHandle(Ia,Ix,1,loc_unit)
+endif
+exitwhen loc_unit !=CE and loc_unit != Iv and IsUnitEnemy(loc_unit, GetOwningPlayer(Iv)) == true and GetUnitState(loc_unit, ConvertUnitState(0)) > .405 or loc_unit == null
+call GroupRemoveUnit(I2,loc_unit)
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00进入循环删除" )
+
+// 如果当前选中的单位还是之前的单位，则计数+1，否则将计数清零
+
+// 如果当前单位是个空的且
+if loc_unit != Iv then
+
+if loc_unit == null and GetUnitState(CE, ConvertUnitState(0)) > .405  then
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00保存上一个单位：" + GetUnitName(CE))
+call SaveUnitHandle(Ia,Ix,1,CE)
+else
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00保存当前单位：" + GetUnitName(loc_unit))
+call SaveUnitHandle(Ia,Ix,1,loc_unit)
+endif
+
+
+
+endif
+
+
+
+endloop
+//  call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00无敌斩！：" + GetUnitName(CE))
+call SaveInteger(FS, GetHandleId(Iv), $120B62E2, LoadInteger(FS, GetHandleId(Iv), $120B62E2) -1)
+if LoadInteger(FS, GetHandleId(Iv), $120B62E2) <= 0 or CE == null or(loc_unit == null and GetUnitState(CE, ConvertUnitState(0)) < .405) then
+call SaveInteger(FS, GetHandleId(Iv), $120B62E2, 0)
+call SetUnitState(Iv, ConvertUnitState(37),LoadReal(FS, GetHandleId(Iv), $120B62E1))
+call UnitRemoveAbilityBJ($4176756C,Iv)
+call DestroyTimer(CS)
+endif
+ 
+endfunction
+
+function huk_action takes unit Iv, unit CE,integer time returns nothing
+    // 分别为释放者、目标、释放次数
+    local timer CS
+    local integer Ix=0
+    set CS=CreateTimer()
+    set Ix=GetHandleId(CS)
+    call SaveUnitHandle(Ia,Ix,0,Iv)
+    call SaveUnitHandle(Ia,Ix,1,CE)
+    // GetUnitState(CE,ConvertUnitState(0))
+        // 攻击间隔
+    call SaveReal(FS,GetHandleId(Iv),$120B62E1,GetUnitState(Iv,ConvertUnitState(37)))
+    call SetUnitState(Iv, ConvertUnitState(37),1)
+   
+ // 位移次数
+    call SaveInteger(FS,GetHandleId(Iv),$120B62E2,time)
+    call TimerStart(CS,.5,true,function force_huk)
+endfunction
 
     // 黄忠狩猎印记增加
 function archeryEvent takes integer time returns nothing
@@ -3509,7 +3580,7 @@ endif
 set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$526F7374,true))*.05)+JT
 // 攻击科技每级+5%的技能伤害(修改为7%)
 // set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.05)+JT
-set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.03
+set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.05
 // 伏羲琴伤害系数1.1，即10点法强(修改为1.25)
 if GetUnitAbilityLevel(Ij,$41303552)>0 then
 // set JT=JT*1.15
@@ -3537,17 +3608,17 @@ set extra = extra +0.2
 endif
 // 镇魂套伤害系数1.3
 if GetUnitAbilityLevel(Ij,$41303149)>0 then
-set extra = extra +0.4
+set extra = extra +0.6
 // set JT=JT*1.5
 endif
 // 自然套伤害1.6
 if GetUnitAbilityLevel(Ij,$4130444D)>0 then
-set extra = extra +0.4
+set extra = extra +0.8
 // set JT=JT*1.4
 endif
 // 蚩尤套伤害系数1.5
 if GetUnitAbilityLevel(Ij,$4130444B)>0 then
-    set extra = extra +0.6
+    set extra = extra +0.8
 // set JT=JT*1.7
 endif
 // 朱雀修真1.35
@@ -3563,12 +3634,12 @@ endif
 // 霸王套伤害系数2
 if GetUnitAbilityLevel(Ij,$41304730)>0 then
 // set JT=JT*2
-set extra = extra +0.8
+set extra = extra +1.2
 endif
 // 青龙套伤害系数1.45（存疑，可能被删除）
 if GetUnitAbilityLevel(Ij,$4130464E)>0 or GetUnitAbilityLevel(Ij,$41304657)>0 then
 // set JT=JT*1.45
-set extra = extra +0.4
+set extra = extra +0.8
 endif 
 // 机关车+30法强
 if GetUnitAbilityLevel(Ij,$41303237)>0 then
@@ -3578,7 +3649,7 @@ endif
 // 朱雀套系数1.5
 if GetUnitAbilityLevel(Ij,$41304241)>0 then
 // set JT=JT*1.5
-set extra = extra +0.5
+set extra = extra +0.6
 endif
 // 太极阵（姜维Q）、鼎文杖、末日星陨（星彩大招）、剑意（王越）、昊天塔、效果增伤1.2
 if GetUnitAbilityLevel(Ij,$41497365)>0 then
@@ -3594,7 +3665,7 @@ endif
 if bC(Ij, $6974306B) == true then
 // call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00自然之怒")
 set Ix = LoadInteger(Ia, GetHandleId(Ij), $130B62E6)
-set JT=JT*(1.25+I2R(Ix)*.06)
+set JT=JT*(1.25+I2R(Ix)*.065)
 endif
 // 入魔系数1.1
 if GetUnitAbilityLevel(Ij,$4130354E)>0 then
@@ -5998,6 +6069,7 @@ call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),550,LoadReal(Ia,Ix,$3064616D),1,0)
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Resurrect\\ResurrectTarget.mdl",GetUnitX(Iv)+GetRandomReal(-500.,500.),GetUnitY(Iv)+GetRandomReal(-500.,500.)))
 if LoadInteger(Ia,Ix,1)<=0 then
 call DestroyTimer(CS)
+call DestroyEffect(LoadEffectHandle(Ia, GetHandleId(Iv),$65666666))
 call FlushChildHashtable(Ia,Ix)
 endif
 set CS=null
@@ -16054,6 +16126,11 @@ call SetUnitState(Cv,UNIT_STATE_MANA,160)
 call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
+// 阎宇
+set yanyu=CreateUnit(CC,'H009',-3763.4,-7127.6,273.26)
+call SetUnitState(yanyu,UNIT_STATE_MANA,220)
+call UnitAddItemToSlotById(yanyu,$72646531,0)
+// call ShowUnitHide(yanyu)
 // 宗预
 set zongyu=CreateUnit(CC,$48303038,-3763.4,-7527.6,273.26)
 call SetUnitState(zongyu,UNIT_STATE_MANA,220)
@@ -17287,11 +17364,12 @@ endfunction
 function g3 takes nothing returns boolean
 return IsUnitEnemy(GetTriggerUnit(),GetOwningPlayer(GetEventDamageSource()))==true
 endfunction
+// 攻击触发主函数
 function g4 takes nothing returns nothing
 local unit Ig=GetTriggerUnit()
 local unit Ih=GetEventDamageSource()
 local real Ii=GetEventDamage()
-
+local real loc_dmg =0
 
 if GetUnitTypeId(Ig)==$48616E74 then
 if GetEventDamage()>=GetUnitState(Ig,UNIT_STATE_LIFE) and LoadInteger(bj_lastCreatedHashtable,$6B6D3030,1)>0 then
@@ -17303,6 +17381,16 @@ else
 endif
 else
 endif
+// y阎宇反击
+if Ig == yanyu and GetUnitAbilityLevel(Ig, 'Ab2g') >0 then
+//   call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00收到伤害为：" + R2S(Ii))
+  if Ii ==0. then
+    // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00收到伤害为：" + R2S(Ii))
+    // call EXSetEventDamage( GetUnitState(Ig, ConvertUnitState(18)) * GetUnitAbilityLevel(Ig, 'Ab2g') *3)
+    call UnitDamageTarget(Ig, Ih, GetUnitState(Ig, ConvertUnitState(18)) * GetUnitAbilityLevel(Ig, 'Ab2g') *3, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+  endif
+endif
+
 if Gq>=7 then
 if GetUnitPointValue(Ig)!=9 and IsUnitType(Ig,UNIT_TYPE_HERO)==true and GetOwningPlayer(Ig)==Player(9) or GetOwningPlayer(Ig)==Player(10) then
 call EXSetUnitMoveType(Ig,32)
@@ -17315,6 +17403,7 @@ else
 endif
 else
 endif
+
 if GetUnitTypeId(GetTriggerUnit())==$65303138 then
 call SetUnitX(GetTriggerUnit(),-695.)
 call SetUnitY(GetTriggerUnit(),-8062.)
@@ -17479,7 +17568,7 @@ endif
 else
 endif
 // 增加亮银枪伤害
-if GetUnitAbilityLevel(Ih,$4130364C)>=1 and bC(Ig,$69743039)==false then
+if bC(Ig,'gobm')==true and bC(Ig,$69743039)==false then
 
 if IsUnitAlly(Ih,Player(8))==true then
 //    call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00枪出如龙！造成伤害：" + "物品次数--" + I2S(GetItemCharges(bW(Ih, $676F626D))) + "实际伤害--" + R2S(bk(Ih, 2, 2) * (1. + GetItemCharges(bW(Ih, $676F626D)) * .4) ))
@@ -18205,17 +18294,24 @@ endif
 if IK[GetConvertedPlayerId(GetTriggerPlayer())]==false then
 call cw(Iv)
 if DzAPI_Map_HasMallItem(GetOwningPlayer(Iv),"XBTZ")==true or RequestExtraBooleanData(50,GetOwningPlayer(Iv),null,null,false,0,0,0)==true or DzAPI_Map_IsBlueVIP(GetOwningPlayer(Iv))==true then
-call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+    if potholingButton==choosedButton then
+        call UnitAddItem(Iv,CreateItem('it0o',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+        else
+        call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+        endif
+// call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 if Iv == gaoxiang then 
 call UnitAddItem(Iv,CreateItem($69743069,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 endif
-if Iv == zongyu then 
+if Iv == zongyu and potholingButton !=choosedButton then 
+    
 call UnitAddItem(Iv,CreateItem('it0o',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 endif
 if potholingButton==choosedButton then
-call CreateItem($746C756D,-1220.,-5240.)
-call CreateItem($746C756D,-1220.,-5240.)
-call CreateItem($746C756D,-1220.,-5240.)
+    // set found_time =
+// call CreateItem($746C756D,-1220.,-5240.)
+// call CreateItem($746C756D,-1220.,-5240.)
+// call CreateItem($746C756D,-1220.,-5240.)
 // call UnitAddItem(Iv,CreateItem($746C756D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 
 endif
@@ -21333,7 +21429,7 @@ if GetRandomInt(0,3)==3 then
 call CreateItem($49303057,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
-if GetRandomInt(0,15)==5 then
+if GetRandomInt(0,10)==5 then
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
@@ -26418,6 +26514,14 @@ if GetLearnedSkillBJ()==$41623132 then
         call SetUnitState(GetTriggerUnit(),ConvertUnitState(22),925)
     endif
 endif
+// 阎宇学习W技能
+if GetLearnedSkillBJ()=='Ab2g' then
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"|Cff00ff00愈战愈勇！")
+call SetUnitAbilityLevel(GetTriggerUnit(),$41623061,GetUnitAbilityLevel(GetTriggerUnit(),'Ab2g'))
+call SetUnitAbilityLevel(GetTriggerUnit(),$41623263,GetUnitAbilityLevel(GetTriggerUnit(),'Ab2g'))
+
+endif
+
     // 如果学习的是孤军奋战
 if GetLearnedSkillBJ()==$41623062 then
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"|Cff00ff00孤军奋战！")
@@ -27926,6 +28030,19 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff
 elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab28',Iv)==2 then
 call IncUnitAbilityLevel(Iv,'Ab28')
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00怒拳破的等级已经提升了！")
+endif
+// 阎宇大招
+elseif Iv == yanyu then
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab2f',Iv)<1 then
+call UnitAddAbilityBJ('Ab2f',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab2f')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00心中无剑！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab2f',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab2f')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00心中无剑的等级已经提升了！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab2f',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab2f')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00心中无剑的等级已经提升了！")
 endif
 endif
 set Iv=null
@@ -29455,6 +29572,35 @@ call UnitRemoveAbility(CE,$42505345)
 call UnitRemoveAbility(CE,$42303054)
 return
 endif
+// yanyuR
+if GetSpellAbilityId()=='Ab2b' then
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "实际伤害：" + R2S(bk(Iv,2,GetUnitAbilityLevel(Iv,$Ab2b))))
+call cb(Iv,bk(Iv,2,GetUnitAbilityLevel(Iv,$Ab2b)),30)
+call SaveEffectHandle(Ia,GetHandleId(Iv),$65666666,AddSpecialEffectTarget("war3mapImported\\jsQ.mdx",Iv,"origin"))
+endif
+
+// 无敌斩
+if GetSpellAbilityId()=='Ab2f' then
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000无敌斩！")
+   call UnitAddAbilityBJ($4176756C,Iv)
+// call UnitAddItem(Iv,CreateItem($49303053,GetUnitX(Iv),GetUnitY(Iv)))
+
+call huk_action(Iv, CE, JS * 4 +5)
+endif
+// 阎宇Q
+if GetSpellAbilityId()=='Ab2e' then
+if GetRandomInt(1,2)==1 then
+call SetUnitX(Iv,GetUnitX(CE)+1)
+else
+call SetUnitX(Iv,GetUnitX(CE)-1)
+endif
+call SetUnitY(Iv,GetUnitY(CE))
+set Ii=bk(Iv,2,GetUnitAbilityLevel(Iv,GetSpellAbilityId()))
+if IsUnitAlly(Iv,Player(8))==true then
+call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
+endif
+endif
 // 宗预大招
 if GetSpellAbilityId() == 'Ab28' then
     call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "怒拳破！" )
@@ -29733,6 +29879,7 @@ call UnitDamageTarget(Iv,GetSpellTargetUnit(),bk(Iv,1,JS+3),false,false,ATTACK_T
 else
 call UnitDamageTarget(Iv,GetSpellTargetUnit(),bk(Iv,1,JS),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_COLD,WEAPON_TYPE_WHOKNOWS)
 endif
+// 幻影斩
 elseif GetSpellAbilityId()==$41487462 then
 if GetRandomInt(1,2)==1 then
 call SetUnitX(Iv,GetUnitX(CE)+1)
@@ -29747,6 +29894,8 @@ call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
 else
 call UnitDamageTarget(Iv,GetSpellTargetUnit(),I2R(GetHeroAgi(Iv,true)*GetUnitAbilityLevel(Iv,$41487462)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_COLD,WEAPON_TYPE_WHOKNOWS)
 endif
+
+
 // 地裂脚
 elseif GetSpellAbilityId()==$414F7773 then
 set Ii=bk(Iv,1,JS)
@@ -29985,6 +30134,36 @@ elseif GetItemTypeId(GetSpellTargetItem())==$6C6E726E then
     // 如果物品是雌雄对剑lnrn，移除相应物品 然后添加雌雄I03B
 call RemoveItem(GetSpellTargetItem())
 call UnitAddItem(Iv,CreateItem($49303342,0,0))
+// 神鬼天惊
+elseif GetItemTypeId(GetSpellTargetItem())=='it0n' then
+if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
+    // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*2)*100)
+else
+     // 否则，则强化成功概率为装备等级：100- level*500/ ((20 + level)*5)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*5)*100)
+endif
+if GetRandomInt(0,100)>FZ then
+
+// 如果有幸运币，则将幸运币的次数+1
+if bC(Iv,$69743067) then
+call SetItemCharges(aj(Iv, $69743067), GetItemCharges(aj(Iv, $69743067)) +1)
+// 如果幸运币次数大于4，则摧毁幸运币
+if GetItemCharges(aj(Iv, $69743067)) >=4 then
+    call RemoveItem(aj(GetTriggerUnit(),$69743067))
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cff808000幸运币承受不住这份因果，碎裂了")
+endif
+endif
+call SaveInteger(Ia, GetHandleId(Iv), $130B62E7, LoadInteger(Ia, GetHandleId(Iv), $130B62E7) +1)
+call SetUnitState(Iv,UNIT_STATE_MAX_LIFE,GetUnitState(Iv,UNIT_STATE_MAX_LIFE)+2000)
+call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))+60)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), $130B62E7)))
+else
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
+
+endif
+
 // 自然魂珠
 elseif GetItemTypeId(GetSpellTargetItem())=='it0k' then
 if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
@@ -32182,6 +32361,11 @@ else
 if GetUnitTypeId(GetTriggerUnit())==$48303038 then
 call IncUnitAbilityLevelSwapped('Ab28',GetTriggerUnit())
 else
+    // 
+if GetUnitTypeId(GetTriggerUnit())=='H009' then
+call IncUnitAbilityLevelSwapped('Ab2f',GetTriggerUnit())
+else
+endif
 endif
 endif
 endif
@@ -37694,23 +37878,7 @@ call TriggerRegisterTimerEventSingle(attributeTrigger,1)
 call TriggerAddAction(attributeTrigger,function playerHeroForeach50)
 endfunction
 // 赌博事件
-// function gambleMent takes nothing returns nothing  
-// set gambleTrigger=null
-// set gambleTrigger=CreateTrigger()
-// call TriggerRegisterTimerEventSingle(gambleTrigger,1)
-// call TriggerAddAction(gambleTrigger,function gamblePunishMent)
-// endfunction
 
-// function gamblePunishMent takes nothing returns nothing 
-//     if gambleUnit!==null then
-//         call ModifyHeroStat(bj_HEROSTAT_STR,gambleUnit,bj_MODIFYMETHOD_SUB,10)
-//         call ModifyHeroStat(bj_HEROSTAT_AGI,gambleUnit,bj_MODIFYMETHOD_SUB,10)
-//         call ModifyHeroStat(bj_HEROSTAT_INT,gambleUnit,bj_MODIFYMETHOD_SUB,10)
-//         call KillUnit(gambleUnit)
-//         call DisplayTextToForce(GetPlayersAll(),"|cffff0000"+(GetUnitName(gambleUnit)+"魏国大军来势汹汹，尔等还在沉迷赌博！丞相震怒，下令其处死，并扣除10点全属性！"))
-//     endif
-
-// endfunction
 
 function setGambleGroup takes nothing returns nothing 
 local integer i=0
