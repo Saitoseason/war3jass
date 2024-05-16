@@ -101,6 +101,7 @@ unit gaoxiang=null
 unit chendao =null
 unit zongyu=null
 unit yanyu =null
+unit maliang =null
 trigger beAttacked =null
 // 眩晕效果
 trigger StunTrigger = null
@@ -3877,6 +3878,13 @@ set I2=null
 set CE=null
 endfunction
 
+
+// 马良技能开始
+
+
+// 马良技能结束
+
+
 // 宗预技能开始
 // 找宝结果
 function compute_found_result takes integer res, unit Iv,integer loc_level returns nothing 
@@ -3916,6 +3924,7 @@ call AdjustPlayerStateBJ(700*loc_level*found_time,GetOwningPlayer(Iv),PLAYER_STA
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(Iv))+"使用洛书河图找到了："+I2S(700 * loc_level *found_time)+"两黄金")
 
 elseif res <90 then
+    set zongyu_R_enchance = zongyu_R_enchance +1
    if loc_level == 5 then
     call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,127)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
@@ -3925,7 +3934,8 @@ elseif res <90 then
 
     endif
 elseif res <100 then
-    if loc_level > 3 then
+    set zongyu_R_enchance = zongyu_R_enchance +1
+    if loc_level > 3 then   
     call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,127)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
     else
@@ -3938,12 +3948,15 @@ endif
 
 if loc_level == 6  then
 if  Iv ==zongyu then
-set zongyu_R_enchance = zongyu_R_enchance +2
+set zongyu_R_enchance = zongyu_R_enchance +3
 call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
+call IncUnitAbilityLevel(Iv,'Ab28')
+call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
 call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,127)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 else
+set zongyu_R_enchance = zongyu_R_enchance +1
 call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,127)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 endif
@@ -4076,6 +4089,8 @@ endfunction
 function Trig_listen_map_action takes nothing returns nothing
     if( bC(Ib[GetConvertedPlayerId(GetTriggerPlayer())], 'it0o') == true) then
     call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "累计已掘墓:" + I2S(found_time) +" 次") 
+    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "健体术累计增幅伤害（宗预）:" + I2S(zongyu_R_enchance *50) + " 点") 
+
     else
     call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0,"你没有洛书河图！")
     endif
@@ -16126,6 +16141,10 @@ call SetUnitState(Cv,UNIT_STATE_MANA,160)
 call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
+// 马良
+set maliang=CreateUnit(CC,'H00A',-3763.4,-6927.6,273.26)
+call SetUnitState(maliang,UNIT_STATE_MANA,220)
+call UnitAddItemToSlotById(maliang,$72646531,0)
 // 阎宇
 set yanyu=CreateUnit(CC,'H009',-3763.4,-7127.6,273.26)
 call SetUnitState(yanyu,UNIT_STATE_MANA,220)
@@ -26000,6 +26019,7 @@ call RemoveLocation(Pf)
 set KB=null
 set KC=null
 endfunction
+// 东皇钟事件 7067696E 是东皇钟
 function pW takes nothing returns nothing
 set Pe=CreateTrigger()
 call DisableTrigger(Pe)
@@ -29572,10 +29592,17 @@ call UnitRemoveAbility(CE,$42505345)
 call UnitRemoveAbility(CE,$42303054)
 return
 endif
+// 马良W
+if GetSpellAbilityId()=='Ab2k' then
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "暗影阵法、" )
+
+// call SaveEffectHandle(Ia, GetHandleId(Iv), $65666666, AddSpecialEffectLoc("war3mapImported\\anyingW.mdx", GetUnitLoc(CE)))
+
+endif
 // yanyuR
 if GetSpellAbilityId()=='Ab2b' then
 call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "实际伤害：" + R2S(bk(Iv,2,GetUnitAbilityLevel(Iv,$Ab2b))))
-call cb(Iv,bk(Iv,2,GetUnitAbilityLevel(Iv,$Ab2b)),30)
+call cb(Iv, bk(Iv, 2, GetUnitAbilityLevel(Iv, $Ab2b)) *5, 30)
 call SaveEffectHandle(Ia,GetHandleId(Iv),$65666666,AddSpecialEffectTarget("war3mapImported\\jsQ.mdx",Iv,"origin"))
 endif
 
