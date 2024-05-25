@@ -52,7 +52,7 @@ real Ly=1
 boolean L1=false
 boolean Lz=true
 boolean L0=true
-// 无敌斩函数
+// 
 
 // 移动速度
 trigger speed_listen
