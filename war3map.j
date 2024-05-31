@@ -71,6 +71,8 @@ group udg_AnnihilateABlackHoleGruop2=null
 unit udg_TriggerUnit=null
 location udg_TemporaryCreatedPoint=null
 group udg_GetUnitsInRectAllGroup=null
+// shifa
+trigger trig_shifa =null
 // 奇趣蛋事件
 integer array pet_egg
 // 生命流失事件
@@ -1778,6 +1780,11 @@ endfunction
 //library YDWETimerSystem ends
 function set_pet_pool takes nothing returns nothing
     set pet_egg[1] ='n100'
+    set pet_egg[2] ='n102'
+    set pet_egg[3] ='n104'
+    set pet_egg[4] ='n106'
+    set pet_egg[5] ='n108'
+    set pet_egg[6] ='n110'
     endfunction
 // 高难度物品池
 function set_item_pool takes nothing returns nothing
@@ -2058,6 +2065,8 @@ function game_start_event takes nothing returns nothing
 set trig_game_start=CreateTrigger()
 call TriggerRegisterTimerEventSingle(trig_game_start,1.)
 call TriggerAddAction(trig_game_start,function set_item_pool)
+call TriggerAddAction(trig_game_start,function set_pet_pool)
+
 endfunction
 // 物品池事件结束结束
 
@@ -2230,7 +2239,60 @@ call DestroyTimer(CS)
 endif
  
 endfunction
+function pet_evolution takes unit Iv returns nothing
 
+if GetUnitTypeId(Iv) == 'n100' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'n101',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"乌梢（幼年）已经成长为过山峰（成年）")
+call RemoveUnit(Iv)
+elseif GetUnitTypeId(Iv) == 'n101' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'H00B',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"过山峰（成年）已经成长为吞天蟒")
+elseif GetUnitTypeId(Iv) == 'n102' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'n103',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"虿（幼年）已经成长为虿（成年）")
+elseif GetUnitTypeId(Iv) == 'n103' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'H00C',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"虿（成年）已经成长为虿")
+elseif GetUnitTypeId(Iv) == 'n104' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'n105',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"小熊瞎子已经成长为中熊瞎子")
+elseif GetUnitTypeId(Iv) == 'n105' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'H00D',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"中熊瞎子已经成长为大熊瞎子")
+elseif GetUnitTypeId(Iv) == 'n106' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'n107',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"祸斗（幼年）已经成长为祸斗（成年）")
+elseif GetUnitTypeId(Iv) == 'n107' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'H00E',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"祸斗（成年）已经成长为祸斗")
+elseif GetUnitTypeId(Iv) == 'n108' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'n109',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"青眼白龙（幼年）已经成长为青眼白龙（成年）")
+elseif GetUnitTypeId(Iv) == 'n109' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'H00F',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"青眼白龙（成年）已经成长为骨幽冥龙")
+elseif GetUnitTypeId(Iv) == 'n110' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'n111',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"山岭巨人（小小）已经成长为山岭巨人（中中）")
+elseif GetUnitTypeId(Iv) == 'n111' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv),'H00G',0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+call RemoveUnit(Iv)
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"山岭巨人（中中）已经成长为山岭巨人（大大）")
+
+endif
+  
+endfunction
 function huk_action takes unit Iv, unit CE,integer time returns nothing
     // 分别为释放者、目标、释放次数
     local timer CS
@@ -6201,8 +6263,8 @@ if GetRandomInt(1,10)==5 then
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$41304654,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852111,Ig)
 endif
 endif
-// 青釭剑特效
-if GetUnitAbilityLevel(JW,$41303735)>0 then
+// 青釭剑特效+冰龙被动攻击
+if GetUnitAbilityLevel(JW,$41303735)>0 or GetUnitAbilityLevel(JW,$41667262)>0 then
 if GetRandomInt(1,4)==3 then
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$4143666E,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852226,Ig)
 call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))) *0.6, 4, 0)
@@ -22490,6 +22552,11 @@ call RemoveItem(aj(GetTriggerUnit(),$706F6D6E))
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"猎人：“这些兽皮还不错！”")
 else
 if bC(GetTriggerUnit(),$73727263)==true then
+    // 如果UP数量大于50，则给一个蛋
+if GetItemCharges(bW(GetTriggerUnit(), $73727263)) > 50 then
+call UnitAddItem(GetTriggerUnit(), CreateItem('it0p', GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit())))
+call TransmissionFromUnitWithNameBJ(GetPlayersAll(),DD,"猎人",null,"这就是不知道什么妖兽的蛋，送给你！",bj_TIMETYPE_ADD,0,true)
+endif
 call AdjustPlayerStateBJ(GetItemCharges(aj(GetTriggerUnit(),$73727263))*8000,GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_GOLD)
 call RemoveItem(aj(GetTriggerUnit(),$73727263))
 if GetUnitUserData(DD)==0 then
@@ -22499,7 +22566,7 @@ call TransmissionFromUnitWithNameBJ(GetPlayersAll(),DD,"猎人",null,"你带回�
 else
 endif
 else
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"猎人：“你可以帮我找些兽皮回来吗？我愿意高价收购！”")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"猎人：“你可以帮我找些兽皮回来吗？我愿意高价收购！如果一次性给我50张优质兽皮，我还会送你一枚奇异蛋！”")
 endif
 endif
 // 养由基之弓
@@ -26703,6 +26770,8 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Pw[FN] and IsUnitEnemy(CE,GetOwningPlayer(Pv[FN]))==true then
 call UnitDamageTarget(Pv[FN],CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Pv[FN])),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,3),852095,CE)
+
 endif
 endloop
 call DestroyGroup(I2)
@@ -26716,6 +26785,7 @@ call UnitRemoveType(Pw[FN],UNIT_TYPE_ANCIENT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_FLYING)
 if IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==true then
 call UnitDamageTarget(Pv[FN],Pw[FN],P0*1.5,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Pv[FN])),$65303939,$41623071,1,GetUnitX(Pw[FN]),GetUnitY(Pw[FN]),bj_UNIT_FACING,3),852095,Pw[FN])
 endif
 call bh(FN)
 endif
@@ -26758,6 +26828,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Pw[FN] and IsUnitEnemy(CE,GetOwningPlayer(Pv[FN]))==true then
 call UnitDamageTarget(Pv[FN],CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Pv[FN])),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,3),852095,CE)
 
 endif
 endloop
@@ -28529,7 +28600,7 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff
 endif
 
 // 宗预大招
-elseif GetUnitAbilityLevel(Iv,'Ab26')>0 then
+elseif GetUnitAbilityLevel(Iv,'Ab26')>0  and Iv == zongyu then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab28',Iv)<1 then
 call UnitAddAbilityBJ('Ab28',Iv)
 call UnitMakeAbilityPermanent(Iv,true,'Ab28')
@@ -30073,7 +30144,39 @@ endfunction
 function anying_zhenfa takes nothing returns nothing
 endfunction
 
-// 释放技能时触发函数
+function shifa_finish_action takes nothing returns nothing
+local timer CS
+local integer Ix=0
+local unit Iv=GetTriggerUnit()
+local unit CE=GetSpellTargetUnit()
+local real Ii=0.
+local real UQ=0.
+local real UR=0.
+local real T7=0.
+local real T8=0.
+local location LQ
+local integer FZ=0
+local integer JZ=GetSpellAbilityId()
+local integer JS=GetUnitAbilityLevel(GetTriggerUnit(),JZ)
+local integer touzi=0
+// 蝎子Q
+if  GetSpellAbilityId()=='Ab2u' then
+if GetRandomInt(1,2)==1 then
+call SetUnitX(Iv, LoadReal(FS,GetHandleId(Iv),$140B6201) + 1)
+else
+call SetUnitX(Iv,LoadReal(FS,GetHandleId(Iv),$140B6201) -1)
+endif
+call SetUnitY(Iv,LoadReal(FS,GetHandleId(Iv),$140B6202) )
+set Ii=bk(Iv,2,GetUnitAbilityLevel(Iv,GetSpellAbilityId()))
+if IsUnitAlly(Iv,Player(8))==true then
+call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
+endif
+endif
+
+endfunction
+
+// 释放技能前摇时触发函数
 function tO takes nothing returns nothing
 local timer CS
 local integer Ix=0
@@ -30097,13 +30200,27 @@ call UnitRemoveAbility(CE,$42505345)
 call UnitRemoveAbility(CE,$42303054)
 return
 endif
-// 吞噬升级
-if GetSpellAbilityId()=='Ab2r' then
+
+if GetSpellAbilityId()=='Ab2u' then
+   call SaveReal(FS,GetHandleId(Iv),$140B6201,GetLocationX(GetSpellTargetLoc()))
+   call SaveReal(FS,GetHandleId(Iv),$140B6202,GetLocationY(GetSpellTargetLoc()))
 
 endif
+
+
+// 吞噬升级
+if GetSpellAbilityId()=='Ab2r' then
+call SaveInteger(FS, GetHandleId(Iv), $130B62E3, LoadInteger(FS, GetHandleId(Iv), $130B62E3) +1)
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000成长进度：" + I2S(LoadInteger(FS, GetHandleId(Iv), $130B62E3)) + "/20")
+if LoadInteger(FS, GetHandleId(Iv), $130B62E3) == 20 then
+call pet_evolution(Iv)
+endif
+endif
 // 奇趣蛋
-if GetSpellAbilityId()=='Ab2j' then
-call SetUnitPosition(CreateUnit(GetOwningPlayer(GetKillingUnitBJ()),pet_egg[1],0,0,0),GetUnitX(Iv),GetUnitY(Iv))
+if GetSpellAbilityId()=='Ab2p' then
+call SetUnitPosition(CreateUnit(GetOwningPlayer(Iv), pet_egg[GetRandomInt(1,6)], 0, 0, 0), GetUnitX(Iv), GetUnitY(Iv))
+call SetPlayerHandicapXPBJ(GetOwningPlayer(Iv), GetPlayerHandicapXPBJ(GetOwningPlayer(Iv)) +15)
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000孵化成功！经验获取率增加15%！当前经验率:" + R2S(GetPlayerHandicapXPBJ(GetOwningPlayer(Iv))))
 
 endif
 // 马良Q
@@ -30941,6 +31058,18 @@ set Iv=null
 set CE=null
 set LQ=null
 endfunction
+// 释放技能后摇结束触发
+function shifa_init takes nothing returns nothing
+local integer CC=0
+set trig_shifa=CreateTrigger()
+loop
+exitwhen CC>14
+call TriggerRegisterPlayerUnitEvent(trig_shifa,Player(CC),EVENT_PLAYER_UNIT_SPELL_FINISH,null)
+set CC=CC+1
+endloop
+call TriggerAddAction(trig_shifa,function shifa_finish_action)
+endfunction
+// 释放技能后摇开始触发
 function tP takes nothing returns nothing
 local integer CC=0
 set T4=CreateTrigger()
@@ -32846,6 +32975,7 @@ call IncUnitAbilityLevelSwapped($4130384F,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$4F726B6E then
 call IncUnitAbilityLevelSwapped($414F6C73,GetTriggerUnit())
+call UnitAddItem(GetTriggerUnit(),CreateItem('it0p',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 else
 endif
 endif
@@ -33690,7 +33820,7 @@ function wW takes nothing returns nothing
 call RemoveUnit(GetEnumUnit())
 endfunction
 function wX takes nothing returns boolean
-return IsUnitAlly(GetFilterUnit(),Player(8))==true and IsUnitType(GetFilterUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetFilterUnit())!=Player(PLAYER_NEUTRAL_PASSIVE)
+return IsUnitAlly(GetFilterUnit(),Player(8))==true and IsUnitType(GetFilterUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetFilterUnit())!=Player(PLAYER_NEUTRAL_PASSIVE) and GetUnitPointValue(GetFilterUnit())!==100
 endfunction
 function wY takes nothing returns nothing
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"5秒后将挑战心魔")
@@ -34418,6 +34548,7 @@ call ExecuteFunc("nB")
 call ExecuteFunc("tL")
 call ExecuteFunc("sw")
 call ExecuteFunc("tP")
+call ExecuteFunc("shifa_init")
 call ExecuteFunc("g8")
 call ExecuteFunc("sn")
 call ExecuteFunc("jc")
