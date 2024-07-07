@@ -26917,12 +26917,10 @@ call pt(GetTriggerUnit(),Pr,It,Iu,GetUnitAbilityLevel(GetTriggerUnit(),GetSpellA
 endif
 endif
 call RemoveLocation(LQ)
-set LQ=null
-set CE=null
-set I2=null
-set Pr=null
+
 endfunction
 function px takes nothing returns nothing
+local integer CC=0
 set Pq=CreateTrigger()
 // 投掷监听事件
 call TriggerRegisterUnitEvent(Pq,Cu,EVENT_UNIT_SPELL_EFFECT)
@@ -30154,7 +30152,6 @@ local real UQ=0.
 local real UR=0.
 local real T7=0.
 local real T8=0.
-local location LQ
 local integer FZ=0
 local integer JZ=GetSpellAbilityId()
 local integer JS=GetUnitAbilityLevel(GetTriggerUnit(),JZ)
@@ -30174,6 +30171,7 @@ call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
 endif
 endif
 
+
 endfunction
 
 // 释放技能前摇时触发函数
@@ -30192,6 +30190,11 @@ local integer FZ=0
 local integer JZ=GetSpellAbilityId()
 local integer JS=GetUnitAbilityLevel(GetTriggerUnit(),JZ)
 local integer touzi=0
+local real It=null
+local real Iu=null
+local unit Pr=null
+local group I2=CreateGroup()
+
 if GetUnitTypeId(CE) == GetUnitTypeId(she) and GetUnitState(she, UNIT_STATE_LIFE) >1 then
 call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000八岐化蛇不受法术影响！")
 call UnitRemoveBuffs(CE,false,true)
@@ -30199,6 +30202,44 @@ call UnitRemoveAbility(CE,$4253544E)
 call UnitRemoveAbility(CE,$42505345)
 call UnitRemoveAbility(CE,$42303054)
 return
+endif
+
+// 投掷
+if  GetSpellAbilityId()=='A0GR' then
+set LQ=GetSpellTargetLoc()
+set It=GetLocationX(LQ)
+set Iu=GetLocationY(LQ)
+// set I2=CreateGroup()
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"开始投掷！")
+
+call GroupEnumUnitsInRange(I2,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()),220.,null)
+loop
+set CE=FirstOfGroup(I2)
+call GroupRemoveUnit(I2,CE)
+exitwhen CE==null
+if bj(CE) and GetUnitState(CE,UNIT_STATE_LIFE)>0. and CE!=GetTriggerUnit() and Pr==null then
+set Pr=CE
+endif
+endloop
+call DestroyGroup(I2)
+if IsTerrainPathable(It,Iu,PATHING_TYPE_WALKABILITY)==true or (It>=-1300. and It<=-860. and Iu>=150. and Iu<=600.) then
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"不可以扔到那里！！！")
+call SetUnitPosition(GetTriggerUnit(),GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+call PlaySoundBJ(O)
+else
+if Pr==null then
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"附近没有可以用来丢的单位")
+call SetUnitPosition(GetTriggerUnit(),GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"准备扔"+GetUnitName(Pr))
+call pt(GetTriggerUnit(),Pr,It,Iu,GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId()))
+
+endif
+endif
+call RemoveLocation(LQ)
+set LQ=null
+set I2=null
+set Pr=null
 endif
 
 if GetSpellAbilityId()=='Ab2u' then
@@ -31057,6 +31098,9 @@ endif
 set Iv=null
 set CE=null
 set LQ=null
+set I2=null
+set Pr=null
+
 endfunction
 // 释放技能后摇结束触发
 function shifa_init takes nothing returns nothing
@@ -33820,7 +33864,7 @@ function wW takes nothing returns nothing
 call RemoveUnit(GetEnumUnit())
 endfunction
 function wX takes nothing returns boolean
-return IsUnitAlly(GetFilterUnit(),Player(8))==true and IsUnitType(GetFilterUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetFilterUnit())!=Player(PLAYER_NEUTRAL_PASSIVE) and GetUnitPointValue(GetFilterUnit())!==100
+return IsUnitAlly(GetFilterUnit(),Player(8))==true  and IsUnitType(GetFilterUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetFilterUnit())!=Player(PLAYER_NEUTRAL_PASSIVE)  and GetUnitPointValue(GetFilterUnit())!=100
 endfunction
 function wY takes nothing returns nothing
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"5秒后将挑战心魔")
