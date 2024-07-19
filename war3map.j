@@ -2,6 +2,7 @@
 globals
     //globals from YDWETimerSystem:
 constant boolean LIBRARY_YDWETimerSystem=true
+constant integer YDWEEventDamageData___EVENT_DAMAGE_DATA_IS_ATTACK=2
 integer YDWETimerSystem__CurrentTime
 integer YDWETimerSystem__CurrentIndex
 integer YDWETimerSystem__TaskListHead
@@ -81,6 +82,8 @@ integer array pet_egg
 trigger trig_lifeLoss =null
 group life_loss_group
 location loss_loc
+// 张角
+trigger Q_death_trig
 // SOS事件
 trigger sos_listen
 boolean sos_cooldown=false
@@ -125,6 +128,7 @@ trigger she_trg=null
 unit spider =null
 trigger spider_trg =null
 // 新英雄
+unit zhangjiao =null
 unit jingwei =null
 unit zhuGeGuo=null
 unit zhuiSuiZhe=null
@@ -1376,6 +1380,11 @@ native EXSetUnitFacing takes unit u,real angle returns nothing
 native EXPauseUnit takes unit u,boolean flag returns nothing
 native EXSetUnitCollisionType takes boolean enable,unit u,integer t returns nothing
 native EXSetUnitMoveType takes unit u,integer t returns nothing
+
+// 判断伤害是否是普通攻击
+function YDWEIsEventAttackDamage takes nothing returns boolean
+return 0 !=EXGetEventDamageData(YDWEEventDamageData___EVENT_DAMAGE_DATA_IS_ATTACK)
+endfunction
 
     //两个单位之间的角度
 function YDWEAngleBetweenUnits takes unit fromUnit,unit toUnit returns real
@@ -3806,10 +3815,7 @@ endif
 if bC(Ij, 'it0r') == true then
 set extra = extra +0.6
 endif 
-// 轩辕剑60法强
-if GetUnitAbilityLevel(Ij,'Ab3o')>0 then
-set JT=JT*1.6
-endif
+
 
 // 自然之力
 if bC(Ij, $6974306B) == true then
@@ -3849,6 +3855,11 @@ endif
 if IsUnitEnemy(Ij,Player(8)) then
 set JT=JT*.2
 endif
+// 轩辕剑60法强
+if GetUnitAbilityLevel(Ij,'Ab3o')>0 then
+set extra=extra*1.6
+endif
+
 set JT = JT * (1 +extra)
 call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT))
 return JT
@@ -4038,7 +4049,349 @@ call DestroyGroup(I2)
 set I2=null
 set CE=null
 endfunction
+// 张鲁技能开始
 
+// 添加超负荷
+// function zhanglu_E_add takes unit Iv returns nothing
+// call UnitAddAbility(Iv,1094801476)
+// call UnitMakeAbilityPermanent(Iv,true,1094801476)
+// endfunction
+// 
+// function zhanglu_E_actions takes unit Iv,unit CE,integer Ii returns nothing
+// local real loc_damage=0
+// local unit loc_unit=null
+// local real loc_x=GetUnitX(CE)
+// local real loc_y=GetUnitY(CE)
+// local group loc_group
+// set loc_damage=15*Ii+15
+// // 超负荷减速
+// call UnitAddAbility(II_I1_I,1093686069)
+// call IssueTargetOrder(II_I1_I,"slow",loc_unit)
+// call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",loc_x,loc_y))
+// // call GroupClear(loc_group)
+// call GroupEnumUnitsInRange(loc_group,loc_x,loc_y,300,null)
+// loop
+// set loc_unit=FirstOfGroup(loc_group)
+// exitwhen loc_unit==null
+// if I1III1_I(loc_unit,0,2,0,0,null,Iv,false)then
+// call SetUnitOwner(II_I1_I,Player(15),false)
+// call IssueTargetOrder(II_I1_I,"slow",loc_unit)
+// if true then
+// call SaveInteger(FS,GetHandleId(loc_unit),'',0)
+// else
+// call SaveInteger(FS,GetHandleId(loc_unit),'',1)
+// endif
+// endif
+// call GroupRemoveUnit(loc_group,loc_unit)
+// endloop
+// call UnitRemoveAbility(II_I1_I,1093686069)
+// call UnitRemoveAbility(Iv,1094801476)
+// endfunction
+// // 移动闪电特效
+function move_lightning takes lightning loc_l,unit loc_u1,unit loc_u2 returns lightning
+local real loc_h1=128*(GetTerrainCliffLevel(GetUnitX(loc_u1),GetUnitY(loc_u1))-2)+GetUnitFlyHeight(loc_u1)+30
+local real loc_h2=128*(GetTerrainCliffLevel(GetUnitX(loc_u2),GetUnitY(loc_u2))-2)+GetUnitFlyHeight(loc_u2)+30
+call MoveLightningEx(loc_l,true,GetUnitX(loc_u1),GetUnitY(loc_u1),loc_h1,GetUnitX(loc_u2),GetUnitY(loc_u2),loc_h2)
+return loc_l
+endfunction
+// // 设置单位飞行效果
+function unit_fly takes unit Iv,real fly_height,integer nothingelse returns nothing
+call UnitAddAbility(Iv,'Arav')
+call UnitRemoveAbility(Iv,'Arav')
+call SetUnitFlyHeight(Iv,fly_height,0)
+endfunction
+
+// // 球状闪电位移
+function zhangjiao_R_action takes nothing returns nothing
+local timer CS=GetExpiredTimer()
+local unit Iv = LoadUnitHandle(FS, GetHandleId(CS), 115)
+local unit loc_u=LoadUnitHandle(FS, GetHandleId(CS),117)
+local unit loc_f=LoadUnitHandle(FS, GetHandleId(CS),102)
+local unit loc_e=LoadUnitHandle(FS, GetHandleId(CS),101)
+local lightning loc_l=LoadLightningHandle(FS, GetHandleId(CS),108)
+local integer loc_i=LoadInteger(FS, GetHandleId(CS),105)
+local real loc_x=LoadReal(FS, GetHandleId(CS),88)
+local real loc_y=LoadReal(FS, GetHandleId(CS),89)
+local real loc_x1=LoadReal(FS, GetHandleId(CS),120)
+local real loc_y1=LoadReal(FS, GetHandleId(CS),121)
+local real loc_d=SquareRoot((loc_x-loc_x1)*(loc_x-loc_x1)+(loc_y-loc_y1)*(loc_y-loc_y1))
+local real loc_r=GetUnitMoveSpeed(Iv)*(2+1*loc_i)*0.025
+local real loc_a=Atan2(loc_y1-loc_y,loc_x1-loc_x)
+local group loc_group=null
+
+if IsUnitType(Iv,UNIT_TYPE_STUNNED) or IsUnitType(Iv,UNIT_TYPE_SNARED) or IsUnitType(Iv,UNIT_TYPE_POLYMORPHED) or IsUnitType(Iv,UNIT_TYPE_SLEEPING) or IsUnitPaused(Iv) or GetUnitMoveSpeed(Iv)<10 then
+call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab3u',true)
+call UnitRemoveAbility(Iv,'Avul')
+call SetUnitPathing(Iv,true)
+
+call DestroyEffect(LoadEffectHandle(FS,GetHandleId(CS),104))
+call RemoveUnit(loc_u)
+call RemoveUnit(loc_f)
+call UnitApplyTimedLife(loc_e,0,0)
+call DestroyLightning(loc_l)
+
+call PauseTimer(CS)
+call FlushChildHashtable(FS,GetHandleId(CS))
+call DestroyTimer(CS)
+elseif GetWidgetLife(Iv)>1 and loc_d>loc_r and GetUnitState(Iv, UNIT_STATE_MANA) >100 then
+set loc_x=loc_x+Cos(loc_a)*loc_r
+set loc_y=loc_y+Sin(loc_a)*loc_r
+
+call SetUnitState(Iv, UNIT_STATE_MANA, GetUnitState(Iv, UNIT_STATE_MANA) -(3 + loc_i))
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000当前法力值:" + R2S(GetUnitState(Iv, UNIT_STATE_MANA)))
+
+
+call SetUnitX(Iv,loc_x)
+call SetUnitY(Iv,loc_y)
+call SetUnitPosition(loc_u,loc_x,loc_y)
+call SetUnitPosition(loc_f,loc_x,loc_y)
+call move_lightning(loc_l,Iv,loc_e)
+call SaveReal(FS,GetHandleId(CS),88,loc_x)
+call SaveReal(FS,GetHandleId(CS),89,loc_y)
+
+else
+if GetWidgetLife(Iv)>1 then
+call SetUnitPosition(Iv,loc_x1,loc_y1)
+endif
+if GetUnitState(Iv, UNIT_STATE_MANA) >100 then
+    // 实际距离/100*技能*智力
+call bs(Iv, loc_x, loc_y, 330, (1+LoadReal(FS, GetHandleId(CS), 118) / 5000 ) * getMasterServent(Iv), 0, 0)
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000落地伤害:" + R2S( LoadReal(FS, GetHandleId(CS), 118) / 1000 * getMasterServent(Iv)))
+
+endif
+call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab3u',true)
+call UnitRemoveAbility(Iv,'Avul')
+call SetUnitPathing(Iv,true)
+set loc_d=SquareRoot((GetUnitX(Iv)-GetUnitX(loc_e))*(GetUnitX(Iv)-GetUnitX(loc_e))+(GetUnitY(Iv)-GetUnitY(loc_e))*(GetUnitY(Iv)-GetUnitY(loc_e)))
+set loc_d=loc_d*0.01*(2.8+2.8*loc_i)
+
+call DestroyEffect(LoadEffectHandle(FS,GetHandleId(CS),104))
+call RemoveUnit(loc_u)
+call RemoveUnit(loc_f)
+call UnitApplyTimedLife(loc_e,0,0)
+call DestroyLightning(loc_l)
+set loc_group=CreateGroup()
+call GroupEnumUnitsInRange(loc_group,GetUnitX(Iv),GetUnitY(Iv),75+75*loc_i,null)
+loop
+set loc_f=FirstOfGroup(loc_group)
+exitwhen loc_f==null
+// if I1III1_I(loc_f,0,2,0,0,null,Iv,true)then
+// call I1III__I(Iv,loc_f,1,loc_d+I1II1_II(Iv,1)*0.6)
+// call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Human\\ManaFlare\\ManaFlareBoltImpact.mdl",loc_f,"origin"))
+// endif
+// call FlushChildHashtable(FS,GetHandleId(CS))
+call GroupRemoveUnit(loc_group,loc_f)
+endloop
+call DestroyGroup(loc_group)
+set loc_group=null
+call PauseTimer(CS)
+
+call DestroyTimer(CS)
+endif
+
+
+
+set CS=null
+set Iv=null
+set loc_u=null
+set loc_f=null
+set loc_e=null
+set loc_l=null
+endfunction
+// // 球状闪电触发
+function zhangjiao_R takes unit Iv returns nothing
+local integer ability_level=GetUnitAbilityLevel(Iv,'Ab3u')
+local timer CS=CreateTimer()
+local real loc_x=GetUnitX(Iv)
+local real loc_y=GetUnitY(Iv)
+local real fact_distance =0
+// // 球状闪电模型
+local unit loc_u=CreateUnit(GetOwningPlayer(Iv),'ua01',loc_x,loc_y,0)
+// // 本体模型
+local unit loc_f=CreateUnit(GetOwningPlayer(Iv),'ua01',loc_x,loc_y,0)
+// // 马甲
+local unit loc_e=CreateUnit(GetOwningPlayer(Iv),'e099',loc_x,loc_y,0)
+// // 闪电特效
+local lightning loc_l=AddLightning("FORK",true,loc_x,loc_y,loc_x,loc_y)
+
+set fact_distance = SquareRoot((GetUnitX(Iv)-GetSpellTargetX())*(GetUnitX(Iv)-GetSpellTargetX())+(GetUnitY(Iv)-GetSpellTargetY())*(GetUnitY(Iv)-GetSpellTargetY()))
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000目标实际距离:" + R2S(fact_distance))
+
+call move_lightning(loc_l,Iv,loc_e)
+call UnitApplyTimedLife(loc_e,0,50)
+
+call SetUnitPathing(Iv,false)
+call SetUnitPathing(loc_u,false)
+call UnitAddAbility(Iv,'Avul')
+call unit_fly(loc_f,GetUnitFlyHeight(Iv),0)
+call unit_fly(loc_u,GetUnitFlyHeight(Iv),0)
+
+call SaveReal(FS,GetHandleId(CS),118,fact_distance)
+call SaveReal(FS,GetHandleId(Iv),'Avul',1.0)
+call SaveUnitHandle(FS,GetHandleId(CS),115,Iv)
+call SaveUnitHandle(FS,GetHandleId(CS),117,loc_u)
+call SaveUnitHandle(FS,GetHandleId(CS),102,loc_f)
+call SaveUnitHandle(FS,GetHandleId(CS),101,loc_e)
+call SaveLightningHandle(FS,GetHandleId(CS),108,loc_l)
+call SaveInteger(FS,GetHandleId(CS),105,ability_level)
+call SaveReal(FS,GetHandleId(CS),120,GetSpellTargetX())
+call SaveReal(FS,GetHandleId(CS),121,GetSpellTargetY())
+call SaveReal(FS,GetHandleId(CS),88,GetUnitX(Iv))
+call SaveReal(FS,GetHandleId(CS),89,GetUnitY(Iv))
+call SaveReal(FS,GetHandleId(CS),116,1.0)
+call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab3u',false)
+call SaveEffectHandle(FS,GetHandleId(CS),104,AddSpecialEffectTarget("effects\\Lightning_Ball_Tail_FX.mdx",loc_f,"origin"))
+call TimerStart(CS,0.025,true,function zhangjiao_R_action)
+
+// set CS=CreateTimer()
+// call TimerStart(CS,1,false,function I_11111II)
+// call II11I1II(CS,115,Iv)
+set Iv=null
+set CS=null
+set loc_u=null
+set loc_f=null
+set loc_e=null
+set loc_l=null
+endfunction
+
+function zhangjiao_Q_action takes nothing returns nothing 
+local timer CS=GetExpiredTimer()
+local integer Ix=GetHandleId(CS)
+// 残影
+local unit Iv=LoadUnitHandle(Ia,Ix,102)
+local unit CE =null
+local group loc_g=CreateGroup()
+call SaveReal(Ia, Ix, 100, LoadReal(Ia, Ix, 100) -0.1)
+call GroupEnumUnitsInRange(loc_g,GetUnitX(Iv),GetUnitY(Iv),220.,null)
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000风暴残影计时:" + R2S(LoadReal(Ia, Ix, 100)))
+
+loop
+set CE=FirstOfGroup(loc_g)
+call GroupRemoveUnit(loc_g,CE)
+exitwhen IsPlayerAlly(GetOwningPlayer(CE), Player(8)) == false 
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000风暴残影判定:" + GetUnitName(CE))
+
+endloop
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000风暴残影判定:" + GetUnitName(CE))
+
+if IsPlayerAlly(GetOwningPlayer(CE), Player(8)) == false and CE != null then
+call DestroyTimer(CS)
+call UnitApplyTimedLife(Iv,$42487765,.1)
+set loc_g =null
+call DestroyGroup(loc_g)
+endif
+
+// 倒计时结束杀死残影并造成范围伤害
+if LoadReal(Ia, Ix, 100) <=0 then
+    call DestroyTimer(CS)
+    call UnitApplyTimedLife(Iv,$42487765,.1)
+    call DestroyGroup(loc_g)
+endif
+endfunction
+function zhangjiao_Q takes unit Iv returns nothing
+local timer CS=CreateTimer()
+local integer Ix=GetHandleId(CS)
+local real loc_x = GetUnitX(Iv)
+local real loc_y = GetUnitY(Iv)
+local unit loc_u =null
+// 当前技能Id
+local integer loc_ab_id=GetSpellAbilityId()
+// 当前技能等级
+local integer loc_ab_level=GetUnitAbilityLevel(Iv,loc_ab_id)
+// 定时器计时
+local real loc_time = 5.0 *loc_ab_level
+// 倒计时
+call SaveReal(Ia, Ix, 100,loc_time)
+// 本体
+
+// 在技能点创建一个残影
+// 将残影存入哈希表
+set loc_u = CreateUnit(GetOwningPlayer(Iv),'ua01',loc_x,loc_y,0)
+
+if GetUnitAbilityLevel(Iv, 'Ab3t') >0 then
+call UnitAddAbility(loc_u,'Ab3t')
+call SetUnitAbilityLevel(loc_u, 'Ab3t',GetUnitAbilityLevel(Iv, 'Ab3t'))
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000残影被动等级:" + I2S(GetUnitAbilityLevel(loc_u,'Ab3t')))
+
+endif
+call SaveUnitHandle(Ia, GetHandleId(loc_u), 101, Iv)
+call SaveUnitHandle(Ia,Ix,102,loc_u)
+
+call TimerStart(CS,.1,true,function zhangjiao_Q_action)
+// 计时器时间用技能等级计算
+
+
+endfunction
+
+function zhangjiao_Q_death_condtion takes nothing returns boolean
+return GetUnitTypeId(GetTriggerUnit()) == 'ua01'
+endfunction
+
+function zhangjiao_Q_death_action takes nothing returns nothing
+local real loc_x = GetUnitX(GetTriggerUnit())
+local real loc_y = GetUnitY(GetTriggerUnit())
+local unit Iv = LoadUnitHandle(Ia, GetHandleId(GetTriggerUnit()),101)
+local real loc_dmg = bk(Iv, 3, GetUnitAbilityLevel(Iv, 'Ab3r'))
+// call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffff0000残影死亡造成伤害:" + R2S(loc_dmg))
+call bs(Iv,loc_x,loc_y,450,loc_dmg,0,0)
+call FlushChildHashtable(Ia, GetHandleId(GetTriggerUnit()))
+endfunction
+
+function zhangjiao_Q_death_init takes nothing returns nothing
+set Q_death_trig=CreateTrigger()
+call TriggerRegisterAnyUnitEventBJ(Q_death_trig,EVENT_PLAYER_UNIT_DEATH)
+call TriggerAddCondition(Q_death_trig,Condition(function zhangjiao_Q_death_condtion))
+call TriggerAddAction(Q_death_trig,function zhangjiao_Q_death_action)
+endfunction
+
+function zhangjiao_F_action  takes nothing returns nothing
+local timer CS=GetExpiredTimer()
+ local group I2=CreateGroup()
+local unit CE
+local unit Iv = LoadUnitHandle(FS, GetHandleId(CS),101)
+// local real Ii=bk(Iv,3,GetUnitAbilityLevel(Iv,$4130355A))*.5
+local real Ii=bk(Iv,3,GetUnitAbilityLevel(Iv,'Ab3v'))
+call GroupEnumUnitsInRange(I2,GetUnitX(Iv),GetUnitY(Iv),1000,null)
+loop
+set CE=FirstOfGroup(I2)
+exitwhen CE==null
+call GroupRemoveUnit(I2,CE)
+if IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetWidgetLife(CE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
+call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Other\\Monsoon\\MonsoonBoltTarget.mdl",GetUnitX(CE),GetUnitY(CE)))
+call UnitDamageTarget(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+endif
+endloop
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000万雷天牢剩余时间1:" + R2S(LoadReal(FS, GetHandleId(CS), 103)))
+
+if LoadReal(FS, GetHandleId(CS), 103) <0 then
+     call DestroyTimer(CS)
+     call DestroyGroup(I2)
+else
+    call SaveReal(FS, GetHandleId(CS), 103, LoadReal(FS, GetHandleId(CS), 103) -LoadReal(FS, GetHandleId(CS), 102))
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000万雷天牢剩余时间2:" + R2S(LoadReal(FS, GetHandleId(CS), 103)))
+
+endif
+call DestroyGroup(I2)
+set I2=null
+set CE=null   
+endfunction
+
+function zhangjiao_F takes unit Iv returns nothing 
+local timer CS=CreateTimer()
+local integer Ix=GetHandleId(CS)
+local real loc_time =0
+local real loc_long_time =0
+set loc_long_time = 5 + GetUnitAbilityLevel(Iv, 'Ab3v') *0.5
+set loc_time = 0.8 - GetUnitAbilityLevel(Iv, 'Ab3v') * 0.1
+call SaveUnitHandle(FS, Ix, 101,Iv)
+// 触发间隔
+call SaveReal(FS, Ix, 102,loc_time)
+// 持续时间
+call SaveReal(FS, Ix, 103,loc_long_time)
+call TimerStart(CS,loc_time,true,function zhangjiao_F_action)
+
+endfunction
+// 张鲁技能结束
 // 精卫技能开始
 function jingwei_Q_Action takes nothing returns nothing
 local timer CS=GetExpiredTimer()
@@ -4629,9 +4982,9 @@ call DisplayTextToPlayer(GetLocalPlayer(), 0, 0,"七星灯的力量暂时还没�
 
 elseif sos_cooldown ==false and bC(Dz,'srtl') == true then
     if Dz !=null then
-call UnitAddItem(Dz,CreateItem($49303053,GetUnitX(Dz),GetUnitY(Dz)))
+call UnitAddItem(Dz,CreateItem('IR01',GetUnitX(Dz),GetUnitY(Dz)))
     endif
-call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|Cffff0000玩家" + I2S(GetConvertedPlayerId(GetTriggerPlayer())) + "使用了七星守护！孔明进入9秒的无敌状态！冷却时间10分钟")
+call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|Cffff0000玩家" + I2S(GetConvertedPlayerId(GetTriggerPlayer())) + "使用了七星守护！孔明进入18秒的无敌状态！冷却时间10分钟")
 set sos_cooldown = true
 call TimerStart(CS,600,false,function Trig_sos_time_off)
 else 
@@ -5123,7 +5476,7 @@ endfunction
 
 // 陈到技能触发开始
 function Trig_Xuyi1Conditions takes nothing returns boolean
-    //  call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"开始释放技能")
+ 
     //  call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "技能是id：" + I2S(GetSpellAbilityId()))
     return GetSpellAbilityId() == $41623174
 endfunction
@@ -5229,6 +5582,9 @@ function Trig_Xuyi1Actions takes nothing returns nothing
     
     set ydl_localvar_step=ydl_localvar_step + 3
 //   call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"开始释放蓄意轰拳2")
+ if GetUnitTypeId(GetTriggerUnit()) == 'HA02' then
+        call SetUnitAnimationByIndex(GetTriggerUnit(), 4)
+       endif
  call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
  call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
     call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Orc\\Disenchant\\DisenchantSpecialArt.mdl", GetTriggerUnit(), "hand left"))
@@ -5275,7 +5631,7 @@ endfunction
 
 // 强手裂颅事件
 function Trig_llConditions takes nothing returns boolean
-    return GetSpellAbilityId() == $41623172
+    return GetSpellAbilityId() == 'Ab1r'
 endfunction
 
 function Trig_llFunc004T takes nothing returns nothing
@@ -5370,15 +5726,20 @@ endfunction
 function Trig_llActions takes nothing returns nothing
     local timer ydl_timer
     local integer ydl_localvar_step= LoadInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
- set ydl_localvar_step=ydl_localvar_step + 3
- call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
- call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+    set ydl_localvar_step=ydl_localvar_step + 3
+       if GetUnitTypeId(GetTriggerUnit()) == 'HA02' then
+        call SetUnitAnimationByIndex(GetTriggerUnit(), 3)
+       endif
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+    call SaveInteger(YDLOC, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
     call SaveReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2, GetUnitFacing(GetTriggerUnit()))
     call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x1E9E05F9, CreateUnit(GetOwningPlayer(GetTriggerUnit()), $75303068, ( ( GetUnitX(GetTriggerUnit()) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( GetUnitY(GetTriggerUnit()) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) - ( 90.00 ) )))
     call SaveUnitHandle(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xE5067F58, CreateUnit(GetOwningPlayer(GetTriggerUnit()), $75303068, ( ( GetUnitX(GetTriggerUnit()) ) + ( ( ( CosBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) - ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( GetUnitY(GetTriggerUnit()) ) + ( ( ( SinBJ(( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) - ( 90.00 ) )) ) * ( 80.00 ) ) ) ), ( ( LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2) ) + ( 90.00 ) )))
     set ydl_timer=CreateTimer()
     call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
     call TimerStart(ydl_timer, 0.00, false, function Trig_llFunc004T)
+    
+
     set ydl_timer=CreateTimer()
     call SaveUnitHandle(YDLOC, GetHandleId(ydl_timer), 0x458B7DE9, GetTriggerUnit())
     call SaveReal(YDLOC, GetHandleId(ydl_timer), 0xA3098AE2, LoadReal(YDLOC, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA3098AE2))
@@ -5489,7 +5850,12 @@ function Trig_lllfffActions takes nothing returns nothing
     if ( ( udg_lr == false ) ) then
         // call UnitAddAbility(chendao, 'A005')
         // call UnitRemoveAbility(chendao, 'A008')
+        if GetUnitTypeId(chendao) == 'HA02' then
+        call SetUnitAnimationByIndex(chendao, 1)
+        else
         call SetUnitAnimationByIndex(chendao, 5)
+        endif
+        
         call QueueUnitAnimation(GetAttacker(), "stand")
         // 
         call SetUnitState(chendao, ConvertUnitState(37), GetUnitState(chendao, ConvertUnitState(37)) -0.5)
@@ -5499,8 +5865,13 @@ function Trig_lllfffActions takes nothing returns nothing
         // call UnitRemoveAbility(chendao, 'A005')
        
         call SetUnitState(chendao, ConvertUnitState(37), GetUnitState(chendao, ConvertUnitState(37)) + 0.5)
-
+        if GetUnitTypeId(chendao) == 'HA02' then
+        call SetUnitAnimationByIndex(chendao, 2)
+        else
         call SetUnitAnimationByIndex(chendao, 4)
+        endif
+
+    
         call QueueUnitAnimation(GetAttacker(), "stand")
         set udg_lr=false
         set udg_hy=GetTriggerUnit()
@@ -5547,8 +5918,11 @@ function Trig_tiaoFunc014T takes nothing returns nothing
         call YDWETimerDestroyEffect(1.00 , AddSpecialEffectTarget("Abilities\\Spells\\Human\\Defend\\DefendCaster.mdl", loc_self, "origin"))
         call SaveUnitHandle(YDLOC,loc_id, 0x384C9D86, CreateUnit(GetOwningPlayer(loc_self), $65303939, 0, 0, 0))
         call IssueTargetOrder(LoadUnitHandle(YDLOC,loc_id, 0x384C9D86), "thunderbolt", loc_target)
+          if GetUnitTypeId(loc_self) == 'HA02' then
+        call SetUnitAnimationByIndex(loc_self, 8)
+        else
         call SetUnitAnimation(loc_self, "attack")
-     
+        endif
         call SaveBoolean(YDLOC,loc_id, 0xC2781FCF, true)
     else
     endif
@@ -5558,6 +5932,9 @@ function Trig_tiaoFunc014T takes nothing returns nothing
             call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget(LoadStr(YDLOC,loc_id, 0x62C50DE6), loc_self, "handright"))
             call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget(LoadStr(YDLOC,loc_id, 0x62C50DE6), loc_self, "handleft"))
             call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget(LoadStr(YDLOC,loc_id, 0x62C50DE6), loc_self, "head"))
+           if GetUnitTypeId(loc_self) == 'HA02' then
+            call SetUnitAnimationByIndex(loc_self, 6)
+           endif
         else
             call SaveReal(YDLOC,loc_id, 0xA99320FA, ( ( LoadReal(YDLOC,loc_id, 0xA99320FA) ) + ( ( ( 1.80 ) - ( Pow(0.94, LoadReal(YDLOC,loc_id, 0x9E4D0A0D)) ) ) ) ))
             call SaveReal(YDLOC,loc_id, 0x9E4D0A0D, SquareRoot(( ( Pow(LoadReal(YDLOC,loc_id, 0x2FC9F415), 2.00) ) - ( Pow(( ( LoadReal(YDLOC,loc_id, 0xA99320FA) ) - ( LoadReal(YDLOC,loc_id, 0x2FC9F415) ) ), 2.00) ) )))
@@ -5625,6 +6002,9 @@ function Trig_tiaoActions takes nothing returns nothing
     if UnitHasBuffBJ(GetSpellTargetUnit(), 'BHds') == true then
         call UnitRemoveBuffBJ('BHds', GetSpellTargetUnit())
     endif
+          if GetUnitTypeId(GetTriggerUnit()) == 'HA02' then
+        call SetUnitAnimationByIndex(GetTriggerUnit(), 8)
+       endif
     call SaveReal(YDLOC, loc_num, 0x2970F80D, 0.00)
     call SaveInteger(YDLOC, loc_num, 0x9FDB62AC, 0)
     call SaveReal(YDLOC, loc_num, 0xA3098AE2, YDWEAngleBetweenUnits(GetTriggerUnit() , GetSpellTargetUnit()))
@@ -5689,6 +6069,8 @@ function InitCustomTriggers takes nothing returns nothing
     call InitTrig_AnnihilateABlackHole()
     call InitTrig_AnnihilateABlackHole2()
     call InitTrig_S_DummyUnitDeath()
+    // 
+    call zhangjiao_Q_death_init()
     set udg_AnnihilateBlackHoleSLv=0
     set udg_AnnihilateABlackHoleDInteger=0
     set udg_AnnihilateABlackHoleTimer=CreateTimer()
@@ -6448,17 +6830,22 @@ endif
 // 黄忠触发技能效果
 if GetUnitTypeId(JW) == GetUnitTypeId(huntingUnit) and GetRandomInt(1,10)>8 then
 call IssuePointOrder(CreateUnit(GetOwningPlayer(JW),$65303048,GetUnitX(JW),GetUnitY(JW),GetUnitFacing(JW)),"carrionswarm",GetUnitX(Ig),GetUnitY(Ig))
-call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00百步穿杨！")
+call DisplayTextToPlayer(GetOwningPlayer(JW),0,0,"|Cff00ff00百步穿杨！")
+
+// call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00百步穿杨！")
 endif
 if IsUnitAlly(JW,Player(8))==true and bW(JW,$72616D33)!=null and GetRandomInt(1,10)==1 then
 call IssuePointOrder(CreateUnit(GetOwningPlayer(JW),$65303048,GetUnitX(JW),GetUnitY(JW),GetUnitFacing(JW)),"carrionswarm",GetUnitX(Ig),GetUnitY(Ig))
-if huntingStart==true then
+if huntingStart==true  and huntingFinish==false then
 set huntingTime=huntingTime+1
-call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00百步穿杨！已完成"+I2S(huntingTime)+"/30次！")
+call DisplayTextToPlayer(GetOwningPlayer(JW),0,0,"|Cff00ff00百步穿杨！已完成"+I2S(huntingTime)+"/30次！")
+// call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00百步穿杨！已完成"+I2S(huntingTime)+"/30次！")
 endif
 if huntingTime>29 and huntingStart==true and huntingFinish==false then
     // set huntingStart=false
-    call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00你已完成了30次强化射击，去找猎人证明给他看吧！")
+call DisplayTextToPlayer(GetOwningPlayer(JW),0,0,"|Cff00ff00你已完成了30次强化射击，去找猎人证明给他看吧！")
+
+    // call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00你已完成了30次强化射击，去找猎人证明给他看吧！")
 
 endif
 endif
@@ -7265,7 +7652,8 @@ endif
 exitwhen true
 endif
 set Ix=Ix+1
-exitwhen Ix>22
+// 按钮判断范围
+exitwhen Ix>24
 endloop
 call DialogDisplay(CC,IM[LF],false)
 set CC=null
@@ -7388,6 +7776,16 @@ elseif GetUnitTypeId(Iv)==$48475330 then
 call DialogSetMessage(IM[LF],"选择替换鬼神吕布皮肤")
 set LG[22]=DialogAddButton(IM[LF],"伊利丹",1)
 set LH[22]=$48475332
+set LI=true
+elseif GetUnitTypeId(Iv)==$48303033 then
+call DialogSetMessage(IM[LF],"选择替换陈到皮肤")
+set LG[23]=DialogAddButton(IM[LF],"拉丝塔亚拳皇",1)
+set LH[23]='HA02'
+set LI=true
+elseif GetUnitTypeId(Iv)=='HZF0' then
+call DialogSetMessage(IM[LF],"选择替换张飞皮肤")
+set LG[24] = DialogAddButton(IM[LF], "冥王-张飞", 1)
+set LH[24]='HA03'
 set LI=true
 endif
 if LI then
@@ -8852,7 +9250,7 @@ endfunction
 function d10 takes unit Ij,unit CE returns nothing
 local timer CS=CreateTimer()
 local integer Is=GetHandleId(CS)
-local real Iw = I2R(IMinBJ(archeryTime,75))
+local real Iw = I2R(IMaxBJ(archeryTime,75))
 local real JT=LoadReal(Ia,GetHandleId(CE),GetHandleId(Ij))
 local real Io=I2R(GetHeroStr(Ij,true)+GetHeroAgi(Ij,true)+GetHeroInt(Ij,true))+GetUnitState(Ij,ConvertUnitState(18))+GetUnitState(Ij,ConvertUnitState(19))
 local group I2=CreateGroup()
@@ -16833,11 +17231,16 @@ call SetUnitState(Cu,UNIT_STATE_MANA,130)
 call UnitAddItemToSlotById(Cu,$72617436,0)
 call UnitAddItemToSlotById(Cu,$636C666D,1)
 call UnitAddItemToSlotById(Cu,$70656E72,2)
+// 关凤
 set Cv=CreateUnit(CC,$4F677268,-3722.2,-7867.1,277.77)
+call ShowUnitHide(Cv)
 call SetUnitState(Cv,UNIT_STATE_MANA,160)
 call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
+// 张角
+set zhangjiao=CreateUnit(CC,'HA04',-3722.2,-7867.1,277.77)
+call UnitAddItemToSlotById(zhangjiao,'sbch',0)
 // 精卫
 set jingwei=CreateUnit(CC,'HA01',-3763.4,-6827.6,273.26)
 call SetUnitState(jingwei,UNIT_STATE_MANA,220)
@@ -16860,11 +17263,13 @@ call UnitAddItemToSlotById(zongyu,$72646531,0)
 // call UnitAddItemToSlotById(zongyu,$636C666D,1)
 // call UnitAddItemToSlotById(zongyu,$70656E72,2)
 // 陈到
-set chendao=CreateUnit(CC,$48303033,-3763.4,-7327.1,273.26)
+set chendao = CreateUnit(CC, $48303033, -3763.4, -7327.1, 273.26)
 call SetUnitState(chendao,UNIT_STATE_MANA,220)
 call UnitAddItemToSlotById(chendao,$72646531,0)
-call UnitAddItemToSlotById(chendao,$636C666D,1)
-call UnitAddItemToSlotById(chendao,$736F7231,2)
+call UnitAddItem(chendao,CreateItem($736F7231,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+
+// call UnitAddItemToSlotById(chendao,$636C666D,1)
+// call UnitAddItemToSlotById(chendao,$736F7231,2)
 // 孙乾
 set sunQian=CreateUnit(CC,$48303032,-3563.4,-7327.1,273.26)
 call SetUnitState(sunQian,UNIT_STATE_MANA,220)
@@ -17035,8 +17440,9 @@ call UnitAddItemToSlotById(DJ,$636C666D,1)
 call UnitAddItemToSlotById(DJ,$70656E72,2)
 // 黄忠
 set DK=CreateUnit(CC,$48303036,-3173.,-7107.2,282.02)
-call SetUnitState(DK,UNIT_STATE_MANA,150)
+// call SetUnitState(DK,UNIT_STATE_MANA,150)
 call UnitAddItemToSlotById(DK,$706D6E61,0)
+// call UnitAddItemToSlotById(DK,$72616D33,0)
 call UnitAddItemToSlotById(DK,$636C666D,1)
 call UnitAddItemToSlotById(DK,$70656E72,2)
 set CE=CreateUnit(CC,$68637468,-3562.4,12895.,337.407)
@@ -17192,7 +17598,7 @@ set Dq=CreateUnit(CC,$48475330,-3375.3,-6706.,267.8)
 call SetUnitState(Dq,UNIT_STATE_MANA,200)
 call UnitAddItemToSlotById(Dq,$72687468,0)
 call UnitAddItemToSlotById(Dq,$70656E72,1)
-call UnitAddItemToSlotById(Dq,$636C666D,2)
+// call UnitAddItemToSlotById(Dq,$636C666D,2)
 // 魏延
 set Dr=CreateUnit(CC,$48575930,-3712.3,-6677.4,259.71)
 call SetUnitState(Dr,UNIT_STATE_MANA,100)
@@ -17221,8 +17627,10 @@ call UnitAddItemToSlotById(Du,$70656E72,2)
 // 设置赵云初始装备
 set Dv=CreateUnit(CC,$485A5930,-3399.9,-6921.6,274.418)
 call SetUnitState(Dv,UNIT_STATE_MANA,200)
-call UnitAddItemToSlotById(Dv,$72656A36,0)
-call UnitAddItemToSlotById(Dv,$736F7231,1)
+call UnitAddItem(Dv,CreateItem($72656A36,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call UnitAddItem(Dv,CreateItem($736F7231,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+// call UnitAddItemToSlotById(Dv,$72656A36,0)
+// call UnitAddItemToSlotById(Dv,$736F7231,1)
 // 神秘商店
 set Dw=CreateUnit(CC,$75303054,-11195.1,15655.2,188.31)
 // 吕绮玲
@@ -18088,7 +18496,7 @@ endfunction
 function g3 takes nothing returns boolean
 return IsUnitEnemy(GetTriggerUnit(),GetOwningPlayer(GetEventDamageSource()))==true
 endfunction
-// 攻击触发主函数
+// 受伤触发主函数
 function g4 takes nothing returns nothing
 local unit Ig=GetTriggerUnit()
 local unit Ih=GetEventDamageSource()
@@ -18105,6 +18513,53 @@ else
 endif
 else
 endif
+// 张角被动
+if Ih == zhangjiao and GetUnitAbilityLevel(Ih, 'Ab3y') > 0 and IsUnitType(Ih, UNIT_TYPE_HERO) then
+    if YDWEIsEventAttackDamage() then
+    call UnitDamageTarget(Ih, Ig, I2R(GetHeroInt(Ih,true) * GetUnitAbilityLevel(Ih, 'Ab3s')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852096)
+    call UnitRemoveAbility(Ih,'Ab3y')
+    call SaveInteger(Ia, GetHandleId(Ig), 103, LoadInteger(Ia, GetHandleId(Ig), 103) +1)
+    call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前目标印记层数：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
+
+    else
+    // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前不是普通攻击" )
+    endif
+
+endif
+// 残影攻击
+if GetUnitTypeId(Ih) == 'ua01' or Ih == zhangjiao  then
+    if YDWEIsEventAttackDamage() then
+    call UnitDamageTarget(Ih, Ig, I2R(100 * (GetUnitAbilityLevel(Ih, 'Ab3t') + 1)), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call SaveInteger(Ia, GetHandleId(Ih), 102, LoadInteger(Ia, GetHandleId(Ih), 102) +1)
+    // 如果目标
+    if LoadInteger(Ia, GetHandleId(Ih), 102) >8 then
+        // 清零残影身上被动计数
+        call SaveInteger(Ia, GetHandleId(Ih), 102, 0)
+        // 目标身上印记层数+1
+        call SaveInteger(Ia, GetHandleId(Ig), 103, LoadInteger(Ia, GetHandleId(Ig), 103) +1)
+        call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前目标印记层数：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
+
+    endif
+  
+
+    endif
+endif
+// 印记爆炸
+//   如果目标身上印记层数>3则引爆印记
+    if LoadInteger(Ia, GetHandleId(Ig), 103) >2 then
+        // 
+            call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00开始引爆：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
+
+  call SaveInteger(Ia, GetHandleId(Ig), 103, 0)
+  if GetUnitTypeId(Ih) == 'ua01' then
+call UnitDamageTarget(Ih, Ig, bk(LoadUnitHandle(Ia, GetHandleId(Ih),101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih),101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+  elseif Ih == zhangjiao then
+    call UnitDamageTarget(Ih, Ig, bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+  endif
+    
+    endif
 // maliang被动
 if Ig ==maliang and  GetUnitAbilityLevel(Ig, 'A0BX') >0 then
 // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00挨打的是马良：" + I2S(GetUnitAbilityLevel(Ig, $41304844)))
@@ -21947,11 +22402,17 @@ function jX takes nothing returns nothing
 call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(Ce,-10000.,2257.,false)
+if huntingFinish==true  then 
+call UnitAddAbility(Ce,'Ab3p')
+endif
 endfunction
 function jY takes nothing returns nothing
 call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(Cm,-14323.,1800.,false)
+if huntingFinish==true  then 
+call UnitAddAbility(Cm,'Ab3p')
+endif
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00霸王咕嘎再次出现在隐秘洞窟")
 endfunction
 function jZ takes nothing returns nothing
@@ -21964,6 +22425,7 @@ call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00黑水玄蛇再次出�
 if huntingFinish==true  then 
     set huntingBoss[4]=true
     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00黑水玄蛇已被标记！")
+     call UnitAddAbility(Cl,'Ab3p')
 else
     set huntingBoss[4]=false
 endif
@@ -21978,6 +22440,7 @@ call ReviveHero(Ci,12600.,7380.,false)
 call ReviveHero(Cj,12600.,5777.,false)
 call SetUnitInvulnerable(Ck,true)
 endfunction
+// 死亡触发函数
 function jb takes nothing returns nothing
 local integer KW
 local timer MG
@@ -22370,6 +22833,7 @@ endif
 if huntingFinish==true and archeryTime<30 and GetRandomInt(1,5)>2 then 
     set huntingBoss[0]=true
     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00项羽之魂已被标记！")
+    call UnitAddAbility(CN,'Ab3p')
 else
     set huntingBoss[0]=false
 endif
@@ -22470,6 +22934,7 @@ endif
 if huntingFinish==true and archeryTime<30 and GetRandomInt(1,5)>2 then 
     set huntingBoss[1]=true
     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00刑天魔神已被标记！")
+    call UnitAddAbility(CQ,'Ab3p')
 else
     set huntingBoss[1]=false
 endif
@@ -22528,6 +22993,7 @@ endif
 if huntingFinish==true and archeryTime<80 and GetRandomInt(1,5)>2 then 
     set huntingBoss[2]=true
     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00 夔牛（黑）已被标记！")
+    call UnitAddAbility(CO,'Ab3p')
 else
     set huntingBoss[2]=false
 endif
@@ -22583,7 +23049,9 @@ call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(she,1878.7,7866.2,false)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00八岐化蛇再次出现在玄武洞窟")
-
+if huntingFinish==true  then 
+call UnitAddAbility(she,'Ab3p')
+endif
 if Gq>=6 then
 call ModifyHeroStat(bj_HEROSTAT_STR,she,bj_MODIFYMETHOD_ADD,50)
 call ModifyHeroStat(bj_HEROSTAT_AGI,she,bj_MODIFYMETHOD_ADD,20)
@@ -22602,10 +23070,10 @@ endfunction
 function sheDeath takes nothing returns nothing
 local timer MG
 
-// local unit killer = GetKillingUnitBJ()
-// if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingBoss[2]==true then
-// call archeryEvent(4)
-// endif
+local unit killer = GetKillingUnitBJ()
+if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit)  then
+call archeryEvent(8)
+endif
 set Jd[66]=GetUnitLoc(GetTriggerUnit())
 if Gq >6 then
 call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
@@ -22672,7 +23140,9 @@ call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(spider,-7535.7,-7173.,false)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00蜘蛛罔象再次出现在丛林深处")
-
+if huntingFinish==true  then 
+call UnitAddAbility(spider,'Ab3p')
+endif
 if Gq>=6 then
 call ModifyHeroStat(bj_HEROSTAT_STR,spider,bj_MODIFYMETHOD_ADD,20)
 call ModifyHeroStat(bj_HEROSTAT_AGI,spider,bj_MODIFYMETHOD_ADD,40)
@@ -22691,10 +23161,10 @@ endfunction
 function spiderDeath takes nothing returns nothing
 local timer MG
 
-// local unit killer = GetKillingUnitBJ()
-// if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingBoss[2]==true then
-// call archeryEvent(4)
-// endif
+local unit killer = GetKillingUnitBJ()
+if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) then
+call archeryEvent(8)
+endif
 set Jd[66]=GetUnitLoc(GetTriggerUnit())
 
 if Gq >6 then
@@ -22772,6 +23242,7 @@ endif
 if huntingFinish==true and archeryTime<80 and GetRandomInt(1,5)>2 then 
     set huntingBoss[3]=true
     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00夔牛（红）已被标记！")
+    call UnitAddAbility(CP,'Ab3p')
 else
     set huntingBoss[3]=false
 endif
@@ -22834,7 +23305,7 @@ call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"猎人：“这�
 else
 if bC(GetTriggerUnit(),$73727263)==true then
     // 如果UP数量大于50，则给一个蛋
-if GetItemCharges(bW(GetTriggerUnit(), $73727263)) > 50 then
+if GetItemCharges(bW(GetTriggerUnit(), $73727263)) > 49 then
 call UnitAddItem(GetTriggerUnit(), CreateItem('it0p', GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit())))
 call TransmissionFromUnitWithNameBJ(GetPlayersAll(),DD,"猎人",null,"这就是不知道什么妖兽的蛋，送给你！",bj_TIMETYPE_ADD,0,true)
 endif
@@ -28940,6 +29411,20 @@ elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab3c',Iv)==2 then
 call IncUnitAbilityLevel(Iv,'Ab3c')
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00神灭斩的等级已经提升了！")
 endif
+// 张角大招
+elseif Iv == zhangjiao then
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab3v',Iv)<1  then
+call UnitAddAbilityBJ('Ab3v',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab3v')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00万雷天牢！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab3v',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab3v')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00万雷天牢的等级已经提升了！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab3v',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab3v')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00万雷天牢的等级已经提升了！")
+endif
+
 
 endif
 set Iv=null
@@ -30474,8 +30959,11 @@ call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, D
 call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
 endif
 endif
-
-
+// 张角Q
+if GetSpellAbilityId()=='Ab3r' then
+call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000风暴残影！")
+call zhangjiao_Q(Iv)
+endif
 endfunction
 
 // 释放技能前摇时触发函数
@@ -30508,10 +30996,27 @@ call UnitRemoveAbility(CE,$42505345)
 return
 endif
 
-if UnitHasBuffBJ(CE, $42303054) == true or GetUnitAbilityLevel(CE, 'A06Y') > 0 then
+if(UnitHasBuffBJ(CE, $42303054) == true or GetUnitAbilityLevel(CE, 'A06Y') > 0) and GetSpellAbilityId() !='A0DA' then
 call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000目标单位拥有抵抗！")
 return
 endif
+// 张角E被动效果
+if (GetSpellAbilityId() == 'Ab3u' or GetSpellAbilityId() == 'Ab3r' or GetSpellAbilityId() == 'Ab3v') and GetUnitAbilityLevel(Iv, 'Ab3s') > 0 then
+// call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000超负荷被动！")
+call UnitAddAbility(Iv,'Ab3y')
+endif
+
+if GetSpellAbilityId()=='Ab3u' then
+// call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000电光留影！")
+call zhangjiao_R(Iv)
+endif
+
+if GetSpellAbilityId()=='Ab3v' then
+// call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000万雷天牢！")
+call zhangjiao_F(Iv)
+endif
+
+// call db(Iv)
 // 精卫Q
 if GetSpellAbilityId() == 'Ab38' then
 call jingwei_Q(Iv)
@@ -33572,6 +34077,12 @@ if GetUnitTypeId(GetTriggerUnit())=='HA01' then
 call IncUnitAbilityLevelSwapped('Ab3c',GetTriggerUnit())
 call IncUnitAbilityLevelSwapped('Ab3i',GetTriggerUnit())
 else
+ // 张角大招
+if GetUnitTypeId(GetTriggerUnit())=='HA04' then
+call IncUnitAbilityLevelSwapped('Ab3v',GetTriggerUnit())
+
+else
+endif
 endif
 endif
 endif
