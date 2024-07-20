@@ -151,6 +151,7 @@ boolean giveShield=false
 boolean giveGlove=false
 boolean giveTongQian=false
 boolean giveGang=false
+boolean giveTianshu =false
 // 新模式
 button choosedButton=null
 button potholingButton=null
@@ -3851,6 +3852,14 @@ if GetUnitAbilityLevel(Ij,$41623078)>0 then
 // set JT=JT*1.2
 set extra = extra +0.4
 endif
+// 太平令法强
+if GetUnitAbilityLevel(Ij,'Ab40')>0 then 
+set extra = extra +0.3
+endif
+// 天书法强
+if GetUnitAbilityLevel(Ij,'Ab42')>0 then 
+set extra = extra +0.8
+endif
 // 如果是玩家8，系数0.2
 if IsUnitEnemy(Ij,Player(8)) then
 set JT=JT*.2
@@ -3860,6 +3869,12 @@ if GetUnitAbilityLevel(Ij,'Ab3o')>0 then
 set extra=extra*1.6
 endif
 
+if GetUnitAbilityLevel(Ij,'Ab42')>0 then 
+
+    if GetRandomInt(1, 10) <3 then
+        set extra=extra*2
+    endif
+endif
 set JT = JT * (1 +extra)
 call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT))
 return JT
@@ -4307,7 +4322,14 @@ call SaveReal(Ia, Ix, 100,loc_time)
 // 在技能点创建一个残影
 // 将残影存入哈希表
 set loc_u = CreateUnit(GetOwningPlayer(Iv),'ua01',loc_x,loc_y,0)
+// 太平令和天书加射程
+if GetUnitAbilityLevel(Iv, 'Ab40') >0 then
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000有太平射程效果:" )
 
+call SetUnitState(loc_u,ConvertUnitState(22),800) 
+ call SetUnitAcquireRange(loc_u,900)
+call UnitAddAbility(loc_u,'Z006')
+endif
 if GetUnitAbilityLevel(Iv, 'Ab3t') >0 then
 call UnitAddAbility(loc_u,'Ab3t')
 call SetUnitAbilityLevel(loc_u, 'Ab3t',GetUnitAbilityLevel(Iv, 'Ab3t'))
@@ -4351,6 +4373,7 @@ local unit CE
 local unit Iv = LoadUnitHandle(FS, GetHandleId(CS),101)
 // local real Ii=bk(Iv,3,GetUnitAbilityLevel(Iv,$4130355A))*.5
 local real Ii=bk(Iv,3,GetUnitAbilityLevel(Iv,'Ab3v'))
+
 call GroupEnumUnitsInRange(I2,GetUnitX(Iv),GetUnitY(Iv),1000,null)
 loop
 set CE=FirstOfGroup(I2)
@@ -4358,10 +4381,12 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetWidgetLife(CE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Other\\Monsoon\\MonsoonBoltTarget.mdl",GetUnitX(CE),GetUnitY(CE)))
+if GetUnitAbilityLevel(Iv, 'Ab41') >0 then
+call SaveInteger(Ia, GetHandleId(CE), 103, LoadInteger(Ia, GetHandleId(CE), 103) +1)
+endif
 call UnitDamageTarget(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
-// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000万雷天牢剩余时间1:" + R2S(LoadReal(FS, GetHandleId(CS), 103)))
 
 if LoadReal(FS, GetHandleId(CS), 103) <0 then
      call DestroyTimer(CS)
@@ -4388,6 +4413,11 @@ call SaveUnitHandle(FS, Ix, 101,Iv)
 call SaveReal(FS, Ix, 102,loc_time)
 // 持续时间
 call SaveReal(FS, Ix, 103,loc_long_time)
+if GetUnitAbilityLevel(Iv, 'Ab41') >0 then
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000有太平增伤效果:" )
+
+endif
+
 call TimerStart(CS,loc_time,true,function zhangjiao_F_action)
 
 endfunction
@@ -17240,7 +17270,10 @@ call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
 // 张角
 set zhangjiao=CreateUnit(CC,'HA04',-3722.2,-7867.1,277.77)
-call UnitAddItemToSlotById(zhangjiao,'sbch',0)
+// call UnitAddItemToSlotById(zhangjiao,'sbch',0)
+call UnitAddItemToSlotById(zhangjiao,'it0v',0)
+call UnitAddItemToSlotById(zhangjiao,'it0u',1)
+call UnitAddItemToSlotById(zhangjiao,'it0t',2)
 // 精卫
 set jingwei=CreateUnit(CC,'HA01',-3763.4,-6827.6,273.26)
 call SetUnitState(jingwei,UNIT_STATE_MANA,220)
@@ -18553,10 +18586,25 @@ endif
 
   call SaveInteger(Ia, GetHandleId(Ig), 103, 0)
   if GetUnitTypeId(Ih) == 'ua01' then
-call UnitDamageTarget(Ih, Ig, bk(LoadUnitHandle(Ia, GetHandleId(Ih),101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih),101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
-  elseif Ih == zhangjiao then
-    call UnitDamageTarget(Ih, Ig, bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    // 专属增伤
+    if GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab41') >0 then
+    // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cffff0000有爆伤效果:")
 
+    call UnitDamageTarget(Ih, Ig, 1.5 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+    else
+        call UnitDamageTarget(Ih, Ig, bk(LoadUnitHandle(Ia, GetHandleId(Ih),101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih),101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+    endif
+  elseif Ih == zhangjiao then
+     if GetUnitAbilityLevel(Ih,'Ab41') > 0 then
+            // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cffff0000有爆伤效果:")
+
+    call UnitDamageTarget(Ih, Ig, 1.5 * bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+     else
+         call UnitDamageTarget(Ih, Ig, bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+   
+     endif
   endif
     
     endif
@@ -34419,7 +34467,21 @@ return GetItemTypeId(GetManipulatedItem())==$627A6266 and bC(GetTriggerUnit(),$6
 endfunction
 // 三国演义兑换事件
 function v6 takes nothing returns nothing
+    local integer loc_random_num =0
 call RemoveItem(aj(GetTriggerUnit(),$6B74726D))
+if GetTriggerUnit()==zhangjiao then
+set loc_random_num = GetRandomInt(1,3)
+if loc_random_num == 1 then
+    // 太平令
+call UnitAddItemByIdSwapped('it0u',GetTriggerUnit())
+elseif loc_random_num ==2 then
+    // 遁甲天书
+call UnitAddItemByIdSwapped('dtsb',GetTriggerUnit())
+else
+    // 太平要术
+call UnitAddItemByIdSwapped('I005',GetTriggerUnit())
+endif
+endif
 // 精卫-凤羽，低概率获得朱雀圣痕
 if GetTriggerUnit()==jingwei then
 call UnitAddItemByIdSwapped('bspd',GetTriggerUnit())
@@ -34944,8 +35006,24 @@ call UnitAddItemByIdSwapped($69743061,GetTriggerUnit())
 call DisplayTextToForce(GetPlayersAll(),"雷鸣霹雳映天光，不要再来烦我了。")
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了混元霹雳手！")
 set Tg=null
+elseif GetTriggerUnit() == Tg and giveTianshu ==false and bC(GetTriggerUnit(), 'it0v') == true and bC(GetTriggerUnit(), 'it0u') == true and bC(GetTriggerUnit(), 'I005') == true and bC(GetTriggerUnit(), 'I001') == true and bC(GetTriggerUnit(), 'I002') == true and bC(GetTriggerUnit(), 'I01B') == true then
+ call RemoveItem(aj(GetTriggerUnit(),'it0v'))
+ call RemoveItem(aj(GetTriggerUnit(),'it0u'))
+ call RemoveItem(aj(GetTriggerUnit(),'I005'))
+ call RemoveItem(aj(GetTriggerUnit(),'I001'))
+ call RemoveItem(aj(GetTriggerUnit(),'I002'))
+ call RemoveItem(aj(GetTriggerUnit(),'I01B'))
+ call UnitAddItemByIdSwapped('it0t',GetTriggerUnit())
+set giveTianshu = true
+call DisplayTextToForce(GetPlayersAll(),"罢了，我知汝事未竟，愿未了，这古卷天书便拿走吧")
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了天书古卷！")
+else
+if GetTriggerUnit() == zhangjiao and giveTianshu==false then
+call DisplayTextToForce(GetPlayersAll(), "孟凌，吾早已传天书与汝，汝莫非还想一睹古卷？")
 else
 call DisplayTextToForce(GetPlayersAll(),"你我无缘！！")
+endif
+
 set Tg=GetTriggerUnit()
 endif
 call ShowUnitHide(Db)
