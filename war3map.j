@@ -84,6 +84,7 @@ group life_loss_group
 location loss_loc
 // 张角
 trigger Q_death_trig
+trigger taiPing_trig
 // SOS事件
 trigger sos_listen
 boolean sos_cooldown=false
@@ -97,6 +98,9 @@ trigger zongyu_trg_W =null
 trigger zongyu_trg_X =null
 unit udg_xx= null
 integer zongyu_R_enchance =0
+boolean array zongyu_found
+real array zongyu_found_x
+real array zongyu_found_y
 // chendao
 unit udg_hy= null
 integer udg_CS= 0
@@ -112,9 +116,11 @@ trigger gg_trg_tiao= null
 // 洛河图书
 trigger trig_game_start
 trigger found_trig
+trigger zongyu_found_trig
 trigger found_resgister
 trigger map_listen
 integer found_time =4
+integer found_percent = 0
 timer found_timer =null
 integer array hight_level_item_pool
 // 心之钢
@@ -2361,11 +2367,11 @@ endfunction
 function archeryEvent takes integer time returns nothing
     if huntingFinish ==true then
     set archeryTime = archeryTime+time
-    if archeryTime>150 then
-        set archeryTime=150
+    if archeryTime>300 then
+        set archeryTime=300
         endif
     // 每层印记+5点射程和
-    // call DisplayTextToForce(GetPlayersAll(),GetUnitName(huntingUnit)+"|Cff00ff00黄忠当前印记层数："+I2S(archeryTime))
+    call DisplayTextToForce(GetPlayersAll(),GetUnitName(huntingUnit)+"|Cff00ff00黄忠当前印记层数："+I2S(archeryTime))
     call SetUnitState(huntingUnit,ConvertUnitState(22),1250+archeryTime*5)
      call SetUnitAcquireRange(huntingUnit,1250+archeryTime*5)
      call SetUnitState(huntingUnit,ConvertUnitState(18),GetUnitState(huntingUnit,ConvertUnitState(18))+time*3)
@@ -4152,7 +4158,7 @@ elseif GetWidgetLife(Iv)>1 and loc_d>loc_r and GetUnitState(Iv, UNIT_STATE_MANA)
 set loc_x=loc_x+Cos(loc_a)*loc_r
 set loc_y=loc_y+Sin(loc_a)*loc_r
 
-call SetUnitState(Iv, UNIT_STATE_MANA, GetUnitState(Iv, UNIT_STATE_MANA) -(3 + loc_i))
+call SetUnitState(Iv, UNIT_STATE_MANA, GetUnitState(Iv, UNIT_STATE_MANA) -(3 + loc_i *2))
 // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000当前法力值:" + R2S(GetUnitState(Iv, UNIT_STATE_MANA)))
 
 
@@ -4170,7 +4176,7 @@ call SetUnitPosition(Iv,loc_x1,loc_y1)
 endif
 if GetUnitState(Iv, UNIT_STATE_MANA) >100 then
     // 实际距离/100*技能*智力
-call bs(Iv, loc_x, loc_y, 330, (1+LoadReal(FS, GetHandleId(CS), 118) / 5000 ) * getMasterServent(Iv), 0, 0)
+call bs(Iv, loc_x, loc_y, 330, (1+LoadReal(FS, GetHandleId(CS), 118) / 5000 ) * getMasterServent(Iv), 1, 0)
 call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000落地伤害:" + R2S( LoadReal(FS, GetHandleId(CS), 118) / 1000 * getMasterServent(Iv)))
 
 endif
@@ -4230,7 +4236,7 @@ local unit loc_e=CreateUnit(GetOwningPlayer(Iv),'e099',loc_x,loc_y,0)
 local lightning loc_l=AddLightning("FORK",true,loc_x,loc_y,loc_x,loc_y)
 
 set fact_distance = SquareRoot((GetUnitX(Iv)-GetSpellTargetX())*(GetUnitX(Iv)-GetSpellTargetX())+(GetUnitY(Iv)-GetSpellTargetY())*(GetUnitY(Iv)-GetSpellTargetY()))
-call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000目标实际距离:" + R2S(fact_distance))
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000目标实际距离:" + R2S(fact_distance))
 
 call move_lightning(loc_l,Iv,loc_e)
 call UnitApplyTimedLife(loc_e,0,50)
@@ -4322,6 +4328,11 @@ call SaveReal(Ia, Ix, 100,loc_time)
 // 在技能点创建一个残影
 // 将残影存入哈希表
 set loc_u = CreateUnit(GetOwningPlayer(Iv),'ua01',loc_x,loc_y,0)
+if IsTerrainPathable(GetUnitX(loc_u), GetUnitY(loc_u), PATHING_TYPE_WALKABILITY) == true then
+call UnitApplyTimedLife(loc_u,$42487765,.1)
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000残影无法存留在此地形" )
+return
+endif
 // 太平令和天书加射程
 if GetUnitAbilityLevel(Iv, 'Ab40') >0 then
 // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000有太平射程效果:" )
@@ -4354,8 +4365,11 @@ local real loc_x = GetUnitX(GetTriggerUnit())
 local real loc_y = GetUnitY(GetTriggerUnit())
 local unit Iv = LoadUnitHandle(Ia, GetHandleId(GetTriggerUnit()),101)
 local real loc_dmg = bk(Iv, 3, GetUnitAbilityLevel(Iv, 'Ab3r'))
+// war3mapImported\\
+call DestroyEffect(AddSpecialEffect("zhangjiao_Q_texiao.mdl",loc_x,loc_y))
+
 // call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffff0000残影死亡造成伤害:" + R2S(loc_dmg))
-call bs(Iv,loc_x,loc_y,450,loc_dmg,0,0)
+call bs(Iv,loc_x,loc_y,450,loc_dmg,1,0)
 call FlushChildHashtable(Ia, GetHandleId(GetTriggerUnit()))
 endfunction
 
@@ -4372,7 +4386,7 @@ local timer CS=GetExpiredTimer()
 local unit CE
 local unit Iv = LoadUnitHandle(FS, GetHandleId(CS),101)
 // local real Ii=bk(Iv,3,GetUnitAbilityLevel(Iv,$4130355A))*.5
-local real Ii=bk(Iv,3,GetUnitAbilityLevel(Iv,'Ab3v'))
+local real Ii = bk(Iv, 3, GetUnitAbilityLevel(Iv, 'Ab3v')) *0.5
 
 call GroupEnumUnitsInRange(I2,GetUnitX(Iv),GetUnitY(Iv),1000,null)
 loop
@@ -4380,7 +4394,8 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetWidgetLife(CE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Other\\Monsoon\\MonsoonBoltTarget.mdl",GetUnitX(CE),GetUnitY(CE)))
+// call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Other\\Monsoon\\MonsoonBoltTarget.mdl",GetUnitX(CE),GetUnitY(CE)))
+call DestroyEffect(AddSpecialEffect("zhangjiao_F_texiao.mdl",GetUnitX(CE),GetUnitY(CE)))
 if GetUnitAbilityLevel(Iv, 'Ab41') >0 then
 call SaveInteger(Ia, GetHandleId(CE), 103, LoadInteger(Ia, GetHandleId(CE), 103) +1)
 endif
@@ -4492,7 +4507,7 @@ function jingwei_w takes unit Iv returns nothing
 local timer CS=CreateTimer()
 local integer Ix=GetHandleId(CS)
 local real loc_dmg 
-set loc_dmg = bk(Iv, 3, GetUnitAbilityLevel(Iv, 'Ab39')) *0.1
+set loc_dmg = bk(Iv, 3, GetUnitAbilityLevel(Iv, 'Ab39')) *0.05
 if LoadInteger(FS, GetConvertedPlayerId(GetOwningPlayer(Iv)), $7368686F) == 4 and bC(Iv, 'it0r') == true then
 set loc_dmg = loc_dmg *1.5
 endif
@@ -4718,6 +4733,7 @@ return(((IsUnitEnemy(GetFilterUnit(),GetOwningPlayer(udg_TriggerUnit))==true)and
 endfunction
 
 function Trig_S_DummyUnitDeathFunc001Func006Func005A takes nothing returns nothing
+
 call UnitDamageTargetBJ(maliang, GetEnumUnit(), bk(maliang, 3, GetUnitAbilityLevel(maliang, 'Ab2o')) *2, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED)
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(maliang)),$65303939,'Ab2a',1,GetUnitX(GetEnumUnit()),GetUnitY(GetEnumUnit()),bj_UNIT_FACING,3),852095,GetEnumUnit())
 endfunction
@@ -4731,6 +4747,8 @@ if((GetUnitTypeId(GetDyingUnit())=='u00k'))then
 set udg_AnnihilateABlackHoleDInteger=0
 set udg_TriggerUnit=GetDyingUnit()
 set udg_TemporaryCreatedPoint=GetUnitLoc(udg_TriggerUnit)
+call DestroyEffect(AddSpecialEffect("Objects\\Spawnmodels\\Other\\NeutralBuildingExplosion\\NeutralBuildingExplosion.mdl", GetUnitX(udg_TriggerUnit), GetUnitY(udg_TriggerUnit)))
+
 call PauseTimer(udg_AnnihilateABlackHoleTimer)
 set udg_GetUnitsInRectAllGroup=an(500.00,udg_TemporaryCreatedPoint,Condition(function Trig_S_DummyUnitDeathFunc001Func005002003))
 call ForGroupBJ(udg_GetUnitsInRectAllGroup,function Trig_S_DummyUnitDeathFunc001Func006Func005A)
@@ -4799,32 +4817,39 @@ call AdjustPlayerStateBJ(700*loc_level*found_time,GetOwningPlayer(Iv),PLAYER_STA
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(Iv))+"使用洛书河图找到了："+I2S(700 * loc_level *found_time)+"两黄金")
 
 elseif res <90 then
+     set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
    if loc_level == 5 then
     call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,127)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
-    if  Iv ==zongyu then
-        call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
-call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
-call IncUnitAbilityLevel(Iv,'Ab28')
-call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
+    if Iv == zongyu and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
+    call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
+    if GetUnitAbilityLevel(Iv, 'Ab28') <7 then
+    call IncUnitAbilityLevel(Iv,'Ab28')
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
+    endif
 
         endif    
-else
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(1,84)],Iv)
+    else
+    call UnitAddItemByIdSwapped(LJ[GetRandomInt(1,63)],Iv)
     call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"恭喜你找到了"+GetItemName(GetLastCreatedItem()))
 
     endif
-elseif res <100 then
+else
+    set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
     if loc_level > 3 then   
     call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,127)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
-     if  Iv ==zongyu then
-        call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
-call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
-call IncUnitAbilityLevel(Iv,'Ab28')
-call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
+    call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
+    if  Iv ==zongyu  and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
+    if GetUnitAbilityLevel(Iv, 'Ab28') <7 then
+    call IncUnitAbilityLevel(Iv,'Ab28')
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
+
+    endif
 
         endif  
     else
@@ -4861,6 +4886,11 @@ endfunction
 function found_result takes unit Iv returns nothing
     local integer loc_num = GetRandomInt(1,100)
     set found_time = found_time +1
+    // 第五次没挖到极品宝物增加保底概率
+    if loc_num <90 and ModuloInteger(found_time,5)==0 then
+        set found_percent = found_percent+5
+    endif
+    set loc_num = loc_num +found_percent
     if found_time ==20 then
     call DisplayTextToForce(GetPlayersAll(),"在摸金校尉不懈努力下，孔明从墓穴中找到了另一本洛书河图！")
     call SetItemInvulnerable(CreateItem('it0o',-1220.,-5240.),true)
@@ -4896,6 +4926,7 @@ function found_result takes unit Iv returns nothing
     if loc_num <95 then
       call  compute_found_result(loc_num, Iv,4)
     else
+        // set found_percent = 0
       call  compute_found_result(loc_num, Iv,5)
     endif
    endif
@@ -4905,15 +4936,73 @@ function found_result takes unit Iv returns nothing
     if loc_num <95 then
       call  compute_found_result(loc_num, Iv,5)
     else
+     
       call  compute_found_result(loc_num, Iv,6)
     endif
    endif
 endfunction
+// 宗预天赋挖宝
+function zongyu_found_conditions takes nothing returns boolean
+return GetSpellAbilityId()=='Ab47'
+endfunction
+function zongyu_found_actions takes nothing returns nothing
+        // call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00望气" )
 
+    // 判断是否开始挖宝了
+    if zongyu_found[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]==false then
+         set zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-7480.,7200.)
+         set zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-5000.,14250.)
+        loop
+            exitwhen IsTerrainPathable(zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],PATHING_TYPE_WALKABILITY)==false
+            set zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-7480.,7200.)
+            set zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-5000.,14250.)
+            call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"搜索墓穴中") 
+
+        endloop
+        // 获取两个随机坐标点
+        
+        // 判断两个点是否是可通行的
+        if IsTerrainPathable(zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],PATHING_TYPE_WALKABILITY)==false then
+        call PingMinimapForForce(ai(GetOwningPlayer(GetTriggerUnit())),zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],3.)
+        set zongyu_found[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=true
+        call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00宝物所在坐标：X "+(I2S(R2I(zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))+("/ Y "+I2S(R2I(zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))))+(" |cffFF0000你当前所在坐标：X "+(I2S(R2I(GetUnitX(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))+("/ Y "+I2S(R2I(GetUnitY(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))))))
+        call XV(GetTriggerUnit(),GetSpellAbilityId(),1,1)   
+        else
+        call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"图纸模糊不清,请看仔细2") 
+        endif
+        // 如果已经开始挖宝了
+        else
+            // 如果当前单位所在坐标满足要求
+            if zongyu_found[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]==true and GetUnitX(GetTriggerUnit())+500.>=zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] and GetUnitX(GetTriggerUnit())-500.<=zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] and GetUnitY(GetTriggerUnit())+500.>=zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] and GetUnitY(GetTriggerUnit())-500.<=zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] then
+                
+                set zongyu_found[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))] = false
+                call found_result(GetTriggerUnit())
+                // call SaveBoolean(FS,GetHandleId(GetTriggerUnit()),$140B62E4,false) 
+
+                // call SaveReal(FS,GetHandleId(GetTriggerUnit()),$150B62E2,180.)
+                call XV(GetTriggerUnit(),'Ab47',1,180.1) 
+
+                
+                //  call XV(GetTriggerUnit(),GetSpellAbilityId(),1,240.0)
+            else
+               call PingMinimapForForce(ai(GetOwningPlayer(GetTriggerUnit())),zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],3.)
+
+               call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00宝物所在坐标：X "+(I2S(R2I(zongyu_found_x[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))+("/ Y "+I2S(R2I(zongyu_found_y[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))))+(" |cffFF0000你当前所在坐标：X "+(I2S(R2I(GetUnitX(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))+("/ Y "+I2S(R2I(GetUnitY(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))))))
+               call TriggerSleepAction(0.5)
+               call XV(GetTriggerUnit(),'Ab47',1,1) 
+            //    call TriggerSleepAction(0.5)
+            //    call XV(GetTriggerUnit(),GetSpellAbilityId(),1,1)
+            endif
+    endif
+   
+endfunction
+
+// 藏宝图挖宝
 function found_conditions takes nothing returns boolean
 return GetSpellAbilityId()=='Ab23'
 endfunction
 function found_actions takes nothing returns nothing
+    // call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00寻龙" )
     // 判断是否开始挖宝了
     if IG[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]==false then
          set IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]=GetRandomReal(-7480.,7200.)
@@ -4956,7 +5045,8 @@ function found_actions takes nothing returns nothing
                 
                 //  call XV(GetTriggerUnit(),GetSpellAbilityId(),1,240.0)
             else
-               
+               call PingMinimapForForce(ai(GetOwningPlayer(GetTriggerUnit())),IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))],3.)
+
                call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00宝物所在坐标：X "+(I2S(R2I(IH[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))+("/ Y "+I2S(R2I(II[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]))))+(" |cffFF0000你当前所在坐标：X "+(I2S(R2I(GetUnitX(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))+("/ Y "+I2S(R2I(GetUnitY(Ib[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])))))))
                call TriggerSleepAction(0.2)
                call XV(GetTriggerUnit(),'Ab23',1,LoadReal(FS,GetHandleId(GetTriggerUnit()),$140B62E2)) 
@@ -4974,6 +5064,15 @@ call TriggerRegisterAnyUnitEventBJ(found_trig,EVENT_PLAYER_UNIT_SPELL_FINISH)
 call TriggerAddCondition(found_trig,Condition(function found_conditions))
 call TriggerAddAction(found_trig,function found_actions)
 endfunction
+
+function zongyun_found_init takes nothing returns nothing
+
+set zongyu_found_trig =CreateTrigger()
+call TriggerRegisterAnyUnitEventBJ(zongyu_found_trig,EVENT_PLAYER_UNIT_SPELL_FINISH)
+call TriggerAddCondition(zongyu_found_trig,Condition(function zongyu_found_conditions))
+call TriggerAddAction(zongyu_found_trig,function zongyu_found_actions)
+endfunction
+
 // 地图事件
 function Trig_listen_map_action takes nothing returns nothing
     if( bC(Ib[GetConvertedPlayerId(GetTriggerPlayer())], 'it0o') == true) then
@@ -5548,7 +5647,7 @@ function Trig_Xuyi1Func015Func011Func004A takes nothing returns nothing
         call GroupRemoveUnit(ydl_group, ydl_unit)
         if((IsUnitEnemy(ydl_unit, GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9))) == true) and(IsUnitInGroup(ydl_unit, LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460)) == false)) and ydl_unit != chendao then
             call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460), ydl_unit)
-            call UnitDamageTarget(chendao, ydl_unit, bk(chendao, 1, GetUnitAbilityLevel(chendao, 'Ab1t')) * (1 + GetUnitState(chendao, UNIT_STATE_MAX_LIFE) * 0.00002) , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+            call UnitDamageTarget(chendao, ydl_unit, GetUnitState(chendao, ConvertUnitState(18)) * (1 + GetUnitState(chendao, UNIT_STATE_MAX_LIFE) * 0.00002), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
             call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1t') * 300 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
             call YDWETimerDestroyEffect(2 , AddSpecialEffectTarget("Abilities\\Spells\\Items\\StaffOfPurification\\PurificationTarget.mdl", ydl_unit, "origin"))
@@ -5991,7 +6090,7 @@ function Trig_tiaoFunc014T takes nothing returns nothing
                     if ( ( IsUnitEnemy(ydl_unit, GetOwningPlayer(loc_self)) == true ) ) then
                         // 叹为观止伤害
                         call IssueTargetOrder(LoadUnitHandle(YDLOC,loc_id, 0x384C9D86), "thunderbolt", ydl_unit)
-                        call UnitDamageTarget(loc_self, ydl_unit, bk(loc_self, 1, GetUnitAbilityLevel(loc_self, 'Ab1s')) * (1 + GetUnitState(loc_self, UNIT_STATE_MAX_LIFE) * 0.00001) + GetUnitState(loc_target, UNIT_STATE_MAX_LIFE) * 0.07, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+                        call UnitDamageTarget(loc_self, ydl_unit,GetUnitState(loc_self, ConvertUnitState(18))  * (1 + GetUnitState(loc_self, UNIT_STATE_MAX_LIFE) * 0.00005) + GetUnitState(loc_target, UNIT_STATE_MAX_LIFE) * 0.07, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
                         // call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Objects\\Spawnmodels\\Orc\\OrcLargeDeathExplode\\OrcLargeDeathExplode.mdl", GetUnitX(ydl_unit), GetUnitY(ydl_unit)))
                          call range_stunEffect(chendao, GetUnitX(chendao), GetUnitY(chendao), 500, 3,true)
                     else
@@ -6091,6 +6190,7 @@ function InitCustomTriggers takes nothing returns nothing
     call InitTrig_zongyuW()
     call InitTrig_zongyuX()
     call Trig_found()
+    call zongyun_found_init()
     call Trig_listen_map()
     call Trig_Selected_unit()
     call registerBook()
@@ -6776,7 +6876,7 @@ call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$4131
 
 else
     // 
-if JW == zongyu and UnitHasBuffBJ(JW, 'B02Y') == false and LoadReal(Ia, GetHandleId(JW), $30304845) > 1 and LoadReal(Ia, GetHandleId(JW), $30304845) !=GetUnitState(JW, ConvertUnitState(37)) then
+if JW == zongyu and UnitHasBuffBJ(JW, 'B02Y') == false and LoadReal(Ia, GetHandleId(JW), $30304845) >0 and LoadReal(Ia, GetHandleId(JW), $30304845) != GetUnitState(JW, ConvertUnitState(37)) then
 // call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "怒拳破结束！" )
 call SetUnitState(JW, ConvertUnitState(37),LoadReal(Ia, GetHandleId(JW), $30304845))  
 endif
@@ -7682,8 +7782,8 @@ endif
 exitwhen true
 endif
 set Ix=Ix+1
-// 按钮判断范围
-exitwhen Ix>24
+// 按钮判断范围,皮肤可选范围
+exitwhen Ix>26
 endloop
 call DialogDisplay(CC,IM[LF],false)
 set CC=null
@@ -7816,6 +7916,16 @@ elseif GetUnitTypeId(Iv)=='HZF0' then
 call DialogSetMessage(IM[LF],"选择替换张飞皮肤")
 set LG[24] = DialogAddButton(IM[LF], "冥王-张飞", 1)
 set LH[24]='HA03'
+set LI=true
+elseif GetUnitTypeId(Iv)=='H008' then
+call DialogSetMessage(IM[LF],"选择替换宗预皮肤")
+set LG[25] = DialogAddButton(IM[LF], "无心僧人-宗预", 1)
+set LH[25]='HA05'
+set LI=true
+elseif GetUnitTypeId(Iv)=='HA01' then
+call DialogSetMessage(IM[LF],"选择替换精卫皮肤")
+set LG[26] = DialogAddButton(IM[LF], "女帝-精卫", 1)
+set LH[26]='HA06'
 set LI=true
 endif
 if LI then
@@ -17270,10 +17380,11 @@ call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
 // 张角
 set zhangjiao=CreateUnit(CC,'HA04',-3722.2,-7867.1,277.77)
-// call UnitAddItemToSlotById(zhangjiao,'sbch',0)
-call UnitAddItemToSlotById(zhangjiao,'it0v',0)
-call UnitAddItemToSlotById(zhangjiao,'it0u',1)
-call UnitAddItemToSlotById(zhangjiao,'it0t',2)
+call UnitAddItemToSlotById(zhangjiao,'sbch',0)
+// call UnitAddItemToSlotById(zhangjiao,'it0v',0)
+// call UnitAddItemToSlotById(zhangjiao,'it0u',1)
+// call UnitAddItemToSlotById(zhangjiao,'it0t',2)
+// call UnitAddItemToSlotById(zhangjiao,'mlst',3)
 // 精卫
 set jingwei=CreateUnit(CC,'HA01',-3763.4,-6827.6,273.26)
 call SetUnitState(jingwei,UNIT_STATE_MANA,220)
@@ -18549,11 +18660,13 @@ endif
 // 张角被动
 if Ih == zhangjiao and GetUnitAbilityLevel(Ih, 'Ab3y') > 0 and IsUnitType(Ih, UNIT_TYPE_HERO) then
     if YDWEIsEventAttackDamage() then
-    call UnitDamageTarget(Ih, Ig, I2R(GetHeroInt(Ih,true) * GetUnitAbilityLevel(Ih, 'Ab3s')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call UnitDamageTarget(Ih, Ig, I2R(GetHeroInt(Ih,true) * GetUnitAbilityLevel(Ih, 'Ab3s')), false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
     call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852096)
+    call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",GetUnitX(Ig),GetUnitY(Ig)))
+
     call UnitRemoveAbility(Ih,'Ab3y')
     call SaveInteger(Ia, GetHandleId(Ig), 103, LoadInteger(Ia, GetHandleId(Ig), 103) +1)
-    call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前目标印记层数：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
+    // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前目标印记层数：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
 
     else
     // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前不是普通攻击" )
@@ -18571,7 +18684,7 @@ if GetUnitTypeId(Ih) == 'ua01' or Ih == zhangjiao  then
         call SaveInteger(Ia, GetHandleId(Ih), 102, 0)
         // 目标身上印记层数+1
         call SaveInteger(Ia, GetHandleId(Ig), 103, LoadInteger(Ia, GetHandleId(Ig), 103) +1)
-        call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前目标印记层数：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
+        // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00当前目标印记层数：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
 
     endif
   
@@ -18582,7 +18695,8 @@ endif
 //   如果目标身上印记层数>3则引爆印记
     if LoadInteger(Ia, GetHandleId(Ig), 103) >2 then
         // 
-            call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00开始引爆：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
+            // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00开始引爆：" + I2S(LoadInteger(Ia, GetHandleId(Ig), 103)))
+call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\MarkOfChaos\\MarkOfChaosTarget.mdl",GetUnitX(Ig),GetUnitY(Ig)))
 
   call SaveInteger(Ia, GetHandleId(Ig), 103, 0)
   if GetUnitTypeId(Ih) == 'ua01' then
@@ -18590,19 +18704,19 @@ endif
     if GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab41') >0 then
     // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cffff0000有爆伤效果:")
 
-    call UnitDamageTarget(Ih, Ig, 1.5 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call UnitDamageTarget(Ih, Ig, 1.2 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
     else
-        call UnitDamageTarget(Ih, Ig, bk(LoadUnitHandle(Ia, GetHandleId(Ih),101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih),101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call UnitDamageTarget(Ih, Ig, 0.8 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
     endif
   elseif Ih == zhangjiao then
      if GetUnitAbilityLevel(Ih,'Ab41') > 0 then
             // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cffff0000有爆伤效果:")
 
-    call UnitDamageTarget(Ih, Ig, 1.5 * bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call UnitDamageTarget(Ih, Ig, 1.2 * bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
      else
-         call UnitDamageTarget(Ih, Ig, bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+         call UnitDamageTarget(Ih, Ig, 0.8 *bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
    
      endif
   endif
@@ -22495,6 +22609,8 @@ local timer MG
 local integer Jk
 local unit VK=GetKillingUnit()
 local integer touzi =0
+local group loc_group=CreateGroup()
+local unit loc_u
 // 黄忠击杀判定
 local unit killer = GetKillingUnitBJ()
 // if IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true and GetOwningPlayer(GetTriggerUnit())!=Player(PLAYER_NEUTRAL_AGGRESSIVE) and GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and huntingFinish==true then
@@ -22510,9 +22626,25 @@ call AddHeroXPSwapped(GetUnitLevel(C5) * GetRandomInt(1, GetUnitLevel(C5) ) *20,
 else
 call AddHeroXPSwapped(GetUnitLevel(C5) * GetRandomInt(1,GetUnitLevel(C5)), zhuGeGuo, true)
 endif
-    
-
 endif
+
+// 如果死的是张角
+if GetTriggerUnit()== EI then
+call GroupEnumUnitsInRange(loc_group,GetUnitX(EI),GetUnitY(EI),1000,null)
+loop
+set loc_u=FirstOfGroup(loc_group)
+exitwhen loc_u == zhangjiao or GetUnitTypeId(loc_u) == $484D5331 or loc_u ==null
+call GroupRemoveUnit(loc_group,loc_u)
+endloop
+if loc_u !=null then
+set Mt[2]=GetUnitLoc(GetTriggerUnit())
+call CreateItemLoc('it0v',Mt[2])
+call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "罢了罢了,我太平教义自有后人传承！")
+endif
+call DestroyGroup(loc_group)
+endif
+
+
 // 如果击杀者是孙乾，且灌铅骰子技能等级>0
 if killer == sunQian and GetUnitAbilityLevel(killer, $41623075) >0 then
 set touzi = GetRandomInt(1, 6) 
@@ -28549,6 +28681,16 @@ return IsUnitAlly(GetTriggerUnit(),Player(8))==true
 endfunction
 function q8 takes nothing returns nothing
 local unit Iv=GetTriggerUnit()
+// 切换皮肤后更换变量
+if GetUnitTypeId(Iv) == 'HA05' and Iv !=zongyu then
+set zongyu = Iv
+endif   
+
+if GetUnitTypeId(Iv) == 'HA06' and Iv !=jingwei then
+set jingwei = Iv
+endif  
+
+// 英雄升级解锁大招
 if GetUnitTypeId(Iv)==$48595030 then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevel(Iv,$41595052)<1 then
 call UnitAddAbility(Iv,$41595052)
@@ -29207,7 +29349,7 @@ call IncUnitAbilityLevelSwapped($41594D35,Iv)
 call SetHeroAgi(Iv,GetHeroAgi(Iv,false)+100,true)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00苍穹炽*灼炎胤的等级已经提升了！")
 endif
-elseif GetUnitTypeId(Iv)==$485A4630 then
+elseif GetUnitAbilityLevel(Iv, 'S002') >0 or GetUnitAbilityLevel(Iv, 'AZF0') >0 then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevel(Iv,$415A4635)<1 then
 call UnitAddAbilityBJ($415A4635,Iv)
 call SetUnitState(Iv,ConvertUnitState(1),GetUnitState(Iv,ConvertUnitState(1))+2000)
@@ -29411,10 +29553,12 @@ endif
 elseif GetUnitAbilityLevel(Iv,'Ab26')>0  and Iv == zongyu then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab28',Iv)<1 then
 call UnitAddAbilityBJ('Ab28',Iv)
+// call SetUnitAbilityLevel(Iv, 'Ab28',7)
 call UnitMakeAbilityPermanent(Iv,true,'Ab28')
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00怒拳破！")
 elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab28',Iv)==1 then
 call IncUnitAbilityLevel(Iv,'Ab28')
+// call SetUnitAbilityLevel(Iv, 'Ab28',7)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00怒拳破的等级已经提升了！")
 elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab28',Iv)==2 then
 call IncUnitAbilityLevel(Iv,'Ab28')
@@ -31009,7 +31153,7 @@ endif
 endif
 // 张角Q
 if GetSpellAbilityId()=='Ab3r' then
-call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000风暴残影！")
+// call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000风暴残影！")
 call zhangjiao_Q(Iv)
 endif
 endfunction
@@ -31090,7 +31234,7 @@ call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, D
 endif
 
 if GetSpellAbilityId() == 'Ab3i' then
-set Ii = bk(Iv, 3, GetUnitAbilityLevel(Iv, GetSpellAbilityId()) +2) * 3 + LoadReal(FS, GetConvertedPlayerId(GetOwningPlayer(Iv)), $68746D64) * 800
+set Ii = bk(Iv, 3, GetUnitAbilityLevel(Iv, GetSpellAbilityId()) +2) * 3 + LoadReal(FS, GetConvertedPlayerId(GetOwningPlayer(Iv)), $68746D64) * 1000
 if LoadInteger(FS, GetConvertedPlayerId(GetOwningPlayer(Iv)), $7368686F) == 4 and bC(Iv, 'it0r') == true then
 set Ii = Ii *1.5
 endif
@@ -31134,7 +31278,7 @@ endif
 
 endif
 
-if Iv == jingwei and GetUnitAbilityLevel(Iv, 'Ab3a') > 0 and JZ != 'Ab23' then
+if Iv == jingwei and GetUnitAbilityLevel(Iv, 'Ab3a') > 0 and JZ != 'Ab23' and JZ != 'Ab47' then
 call SaveInteger(FS,GetConvertedPlayerId(GetOwningPlayer(Iv)), $7368686F, LoadInteger(FS,GetConvertedPlayerId(GetOwningPlayer(Iv)), $7368686F) + 1)
 if LoadInteger(FS, GetConvertedPlayerId(GetOwningPlayer(Iv)), $7368686F) > 3 then
     call UnitAddAbility(Iv,'Ab3f')
@@ -31281,11 +31425,19 @@ endif
 endif
 // 宗预大招
 if GetSpellAbilityId() == 'Ab28' then
-    call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "怒拳破！" )
-if GetUnitState(Iv, ConvertUnitState(37)) <1 then
-   call SetUnitState(Iv, ConvertUnitState(37),1.5) 
-endif
+    call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "怒拳破！当前技能等级：" + I2S(GetUnitAbilityLevel(Iv, 'Ab28')))
+if  LoadReal(Ia,GetHandleId(Iv),$30304845) == 0 then
+        // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "存储当前攻速：" + R2S(LoadReal(Ia,GetHandleId(Iv),$30304845)))
+
 call SaveReal(Ia,GetHandleId(Iv),$30304845,GetUnitState(Iv, ConvertUnitState(37)))
+endif
+
+if GetUnitState(Iv, ConvertUnitState(37)) <0.5 then
+call SetUnitState(Iv, ConvertUnitState(37), LoadReal(Ia,GetHandleId(Iv),$30304845)) 
+else
+call SaveReal(Ia,GetHandleId(Iv),$30304845,GetUnitState(Iv, ConvertUnitState(37)))
+endif
+
 call SetUnitState(Iv, ConvertUnitState(37),0.4)  
 endif
 // 高翔大招
