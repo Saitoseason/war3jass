@@ -123,6 +123,7 @@ integer found_time =4
 integer found_percent = 0
 timer found_timer =null
 integer array hight_level_item_pool
+boolean daomu_find =false
 // 心之钢
 trigger XinZhiGangTrigger=null
 // boolean xinZhiGangReady =false
@@ -1943,6 +1944,20 @@ set hight_level_item_pool[61]=$49303041
 set hight_level_item_pool[62]=$6F76656E
 // 魔魂盔
 set hight_level_item_pool[63]=$49303033
+// 精品小馒头
+set hight_level_item_pool[64]='pres'
+// 九转金丹
+set hight_level_item_pool[65]='rej3'
+// 强化石
+set hight_level_item_pool[66]='dkfw'
+// 优质兽皮
+set hight_level_item_pool[67]='srrc'
+// 藏宝图
+set hight_level_item_pool[68]='tlum'
+// 仙魔书
+set hight_level_item_pool[69]='grsl'
+// 太平令
+set hight_level_item_pool[70]='it0u'
 // 魔神甲
 set hight_level_item_pool[71]=$70737064
 // 魔神之翼
@@ -1999,8 +2014,8 @@ set hight_level_item_pool[110]=$69743035
 set hight_level_item_pool[111]=$69743036
 set hight_level_item_pool[112]=$69743037
 set hight_level_item_pool[113]=$69743038
-// 藏宝图
-set hight_level_item_pool[114]=$746C756D
+// 虎符
+set hight_level_item_pool[114]='wtlg'
 // 落宝铜钱
 set hight_level_item_pool[115]=$69743065
 // 的卢满级
@@ -2017,8 +2032,8 @@ set hight_level_item_pool[120]=$69743062
 set hight_level_item_pool[121]=$69743067
 // 器胚青龙
 set hight_level_item_pool[122]=$69743064
-// 小李飞刀
-set hight_level_item_pool[123]=$69743066
+// 太平清领道
+set hight_level_item_pool[123]='it0v'
 // 心之钢
 set hight_level_item_pool[124]=$69743069
 //  神鬼天惊
@@ -2027,6 +2042,16 @@ set hight_level_item_pool[125]='it0n'
 set hight_level_item_pool[126]='it0k'
 // 洛河图书 
 set hight_level_item_pool[127]='it0o'
+// 羽渡尘
+set hight_level_item_pool[128]='it0r'
+// 苍玄之书
+set hight_level_item_pool[129]='it0s'
+// 天书古卷
+set hight_level_item_pool[130]='it0t'
+// 奇趣蛋
+set hight_level_item_pool[131]='it0p'
+// 洛阳铲
+set hight_level_item_pool[132]='it0y'
 // 刚弓
 set hight_level_item_pool[170]=$6B70696E
 // 钢剑
@@ -3709,8 +3734,13 @@ local real JT=I2R(JS*200)
 if Ik==0 then
 set JT=I2R((GetHeroStr(Ij,true)+GetHeroAgi(Ij,true)+GetHeroInt(Ij,true))*JS)*.75+JT
 // 力量伤害技能系数
-elseif Ik==1 then
-set JT=I2R(GetHeroStr(Ij,true)*(JS+1))+JT+I2R(JS+1)*.02*GetUnitState(Ij,ConvertUnitState(1))
+elseif Ik == 1  then
+    if IsUnitEnemy(Ij, Player(8)) ==false then
+        set JT=I2R(GetHeroStr(Ij,true)*(JS+1))+JT+I2R(JS+1)*.02*GetUnitState(Ij,ConvertUnitState(1))
+    else  
+        set JT=I2R(GetHeroStr(Ij,true)*(JS+1))
+
+    endif
 
 // set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.03)+JT
 // set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.05
@@ -3783,11 +3813,7 @@ if GetUnitAbilityLevel(Ij,$41304238)>0 then
 // set JT=JT*1.15
 set extra = extra +0.15
 endif
-// 霸王套伤害系数2
-if GetUnitAbilityLevel(Ij,$41304730)>0 then
-// set JT=JT*2
-set extra = extra +1.2
-endif
+
 // 青龙套伤害系数1.45（存疑，可能被删除）
 if GetUnitAbilityLevel(Ij,$4130464E)>0 or GetUnitAbilityLevel(Ij,$41304657)>0 then
 // set JT=JT*1.45
@@ -3866,6 +3892,13 @@ endif
 if GetUnitAbilityLevel(Ij,'Ab42')>0 then 
 set extra = extra +0.8
 endif
+
+// 霸王套伤害系数2
+if GetUnitAbilityLevel(Ij,$41304730)>0 then
+// set JT=JT*2
+set extra = extra * 1.8
+endif
+
 // 如果是玩家8，系数0.2
 if IsUnitEnemy(Ij,Player(8)) then
 set JT=JT*.2
@@ -4820,41 +4853,40 @@ elseif res <90 then
      set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
    if loc_level == 5 then
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,127)],Iv)
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
     if Iv == zongyu and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
     call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
     if GetUnitAbilityLevel(Iv, 'Ab28') <7 then
     call IncUnitAbilityLevel(Iv,'Ab28')
-    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
     endif
 
         endif    
     else
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(1,63)],Iv)
-    call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"恭喜你找到了"+GetItemName(GetLastCreatedItem()))
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(1,63)],Iv)
+    call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"恭喜" + GetUnitName(Iv) + "找到了"+GetItemName(GetLastCreatedItem()))
 
     endif
 else
     set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
     if loc_level > 3 then   
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,127)],Iv)
-    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,GetUnitName(Iv) +"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
     call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
-    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
+    call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) + "|cffff0000在墓穴中找到了武功秘籍！减少0.05的攻击间隔！")
     if  Iv ==zongyu  and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
     if GetUnitAbilityLevel(Iv, 'Ab28') <7 then
     call IncUnitAbilityLevel(Iv,'Ab28')
-    call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
+    call DisplayTimedTextToForce(GetPlayersAll(),6.,GetUnitName(Iv) +"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
 
     endif
 
         endif  
     else
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(1,84)],Iv)
-    call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"恭喜你找到了"+GetItemName(GetLastCreatedItem()))
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(1,84)],Iv)
+    call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "恭喜" + GetUnitName(Iv) + "找到了" + GetItemName(GetLastCreatedItem()))
 
     endif
 
@@ -4867,11 +4899,11 @@ call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
 call IncUnitAbilityLevel(Iv,'Ab28')
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
-call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,127)],Iv)
+call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 else
 set zongyu_R_enchance = zongyu_R_enchance +1
-call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,127)],Iv)
+call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 endif
 endif
@@ -4891,9 +4923,11 @@ function found_result takes unit Iv returns nothing
         set found_percent = found_percent+5
     endif
     set loc_num = loc_num +found_percent
-    if found_time ==20 then
+    if found_time > 20 and daomu_find ==false then
     call DisplayTextToForce(GetPlayersAll(),"在摸金校尉不懈努力下，孔明从墓穴中找到了另一本洛书河图！")
     call SetItemInvulnerable(CreateItem('it0o',-1220.,-5240.),true)
+    call SetItemInvulnerable(CreateItem('it0y',-1220.,-5240.),true)
+    set daomu_find =true
     endif
     // 结果判定
     // 挖掘次数1
@@ -5647,7 +5681,8 @@ function Trig_Xuyi1Func015Func011Func004A takes nothing returns nothing
         call GroupRemoveUnit(ydl_group, ydl_unit)
         if((IsUnitEnemy(ydl_unit, GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9))) == true) and(IsUnitInGroup(ydl_unit, LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460)) == false)) and ydl_unit != chendao then
             call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460), ydl_unit)
-            call UnitDamageTarget(chendao, ydl_unit, GetUnitState(chendao, ConvertUnitState(18)) * (1 + GetUnitState(chendao, UNIT_STATE_MAX_LIFE) * 0.00002), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+            // 蓄意红圈伤害
+            call UnitDamageTarget(chendao, ydl_unit, GetUnitState(chendao, ConvertUnitState(18)) * (1 + GetUnitState(chendao, UNIT_STATE_MAX_LIFE) * 0.00005), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
             call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1t') * 300 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
             call YDWETimerDestroyEffect(2 , AddSpecialEffectTarget("Abilities\\Spells\\Items\\StaffOfPurification\\PurificationTarget.mdl", ydl_unit, "origin"))
@@ -9077,7 +9112,7 @@ local real Iu=LoadReal(Ia,Ix,$30306879)
 local real Px=0
 local real Py=0
 local real U9=0
-local real U8=bk(Iv,0,1)
+// local real U8=bk(Iv,0,1)
 if PQ<U5 and GetWidgetLife(Iv)>1 then
 set Px=It+PQ*U6*Cos(UF*3.14159/180.)
 set Py=Iu+PQ*U6*Sin(UF*3.14159/180.)
@@ -17808,7 +17843,7 @@ call f8()
 endfunction
 function gB takes nothing returns nothing
 local weathereffect Y
-set W=Rect(-1728.,-5664.,-704.,-4736.)
+set W=Rect(-1928.,-5964.,-504.,-4536.)
 set X=Rect(-3648.,-7968.,-2176.,-6976.)
 set Y=AddWeatherEffect(X,$4C526D61)
 call EnableWeatherEffect(Y,true)
@@ -22348,6 +22383,20 @@ set LJ[61]=$49303041
 set LJ[62]=$6F76656E
 // 魔魂盔
 set LJ[63]=$49303033
+// 精品小馒头
+set LJ[64]='pres'
+// 九转金丹
+set LJ[65]='rej3'
+// 强化石
+set LJ[66]='dkfw'
+// 优质兽皮
+set LJ[67]='srrc'
+// 藏宝图
+set LJ[68]='tlum'
+// 仙魔书
+set LJ[69]='grsl'
+// 太平令
+set LJ[70]='it0u'
 // 伏羲琴
 set LJ[71]=$49303049
 // 崆峒印
@@ -30885,7 +30934,7 @@ if GetSpellAbilityId()==$41623074  then
     endif
      // 四阶段偷装备
     if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) == 2 then
-    call UnitAddItemByIdSwapped(LJ[GetRandomInt(99,127)],GetTriggerUnit())
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],GetTriggerUnit())
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000从"+GetUnitName(GetSpellTargetUnit())+("|cffff0000身上偷到了极品宝物："+GetItemName(GetLastCreatedItem())))
     // 如果偷到的装备是追日靴
     if GetItemTypeId(GetLastCreatedItem()) == $49303030 then
@@ -34370,9 +34419,9 @@ else
 if GetUnitTypeId(GetTriggerUnit())==$48475930 or GetUnitTypeId(GetTriggerUnit())==$48475931 or GetUnitTypeId(GetTriggerUnit())==$48475932 then
 call IncUnitAbilityLevelSwapped($41475952,GetTriggerUnit())
 else
-if GetUnitTypeId(GetTriggerUnit())==$485A4630 then
+if GetUnitTypeId(GetTriggerUnit()) == $485A4630 or GetUnitAbilityLevel(GetTriggerUnit(), 'S002') >0 then
 call IncUnitAbilityLevel(GetTriggerUnit(),$415A4635)
-call SetUnitState(GetTriggerUnit(),UNIT_STATE_MAX_LIFE,GetUnitState(GetTriggerUnit(),UNIT_STATE_MAX_LIFE)+1000.)
+call SetUnitState(GetTriggerUnit(),UNIT_STATE_MAX_LIFE,GetUnitState(GetTriggerUnit(),UNIT_STATE_MAX_LIFE)+3000.)
 else
 if GetUnitTypeId(GetTriggerUnit())==$484C4C51 or GetUnitTypeId(GetTriggerUnit())==$484C5132 or GetUnitTypeId(GetTriggerUnit())==$484C5131 then
 call IncUnitAbilityLevel(GetTriggerUnit(),$41304451)
@@ -34688,7 +34737,7 @@ if GetUnitTypeId(GetTriggerUnit())==$48505430 then
 call UnitAddItemByIdSwapped($49303049,GetTriggerUnit())
 return
 endif
-if GetUnitTypeId(GetTriggerUnit())==$485A4630 or  GetUnitTypeId(GetTriggerUnit())=='H007' then
+if GetUnitAbilityLevel(GetTriggerUnit(), 'S002') >0 or  GetUnitTypeId(GetTriggerUnit())=='H007' then
     // 张飞-盘古斧
 call UnitAddItemByIdSwapped($6F636F72,GetTriggerUnit())
 return
