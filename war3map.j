@@ -4034,7 +4034,7 @@ loop
 set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
-if Ij != CE and GetUnitState(CE, UNIT_STATE_LIFE) > .405 and IsUnitEnemy(CE, GetOwningPlayer(Ij)) == true and IsUnitType(CE, UNIT_TYPE_STRUCTURE) == false and GetUnitTypeId(CE) != GetUnitTypeId(she) and GetUnitPointValue(CE)!=100 then
+if Ij != CE and GetUnitState(CE, UNIT_STATE_LIFE) > .405 and IsUnitEnemy(CE, GetOwningPlayer(Ij)) == true and IsUnitType(CE, UNIT_TYPE_STRUCTURE) == false and GetUnitTypeId(CE) != GetUnitTypeId(she) and ! (IsUnitType(CE, UNIT_TYPE_HERO) == true and GetUnitPointValue(CE) == 100) then
 call UnitDamageTarget(Ij,CE,Iz,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
@@ -5014,7 +5014,7 @@ function zongyu_found_actions takes nothing returns nothing
                 // call SaveBoolean(FS,GetHandleId(GetTriggerUnit()),$140B62E4,false) 
 
                 // call SaveReal(FS,GetHandleId(GetTriggerUnit()),$150B62E2,180.)
-                if bC(Iv, 'it0y') == true
+                if bC(GetTriggerUnit(), 'it0y') == true then
                       call XV(GetTriggerUnit(),'Ab47',1,120.1) 
                 else
                       call XV(GetTriggerUnit(),'Ab47',1,240.1) 
@@ -5076,7 +5076,7 @@ function found_actions takes nothing returns nothing
 
                 call SaveReal(FS,GetHandleId(GetTriggerUnit()),$140B62E2,150.)
                 // call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00冷却开始：" )
-                if bC(Iv, 'it0y') == true
+                if bC(GetTriggerUnit(), 'it0y') == true then
                        call SaveReal(FS,GetHandleId(GetTriggerUnit()),$140B62E2,120.)
                     //   call XV(GetTriggerUnit(),'Ab23',1,120.1) 
                 else
@@ -6889,6 +6889,10 @@ local real attackTime =0
 // if JW == zongyu then 
 //     call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "技能等级:" + I2S( GetUnitAbilityLevel(JW, 'Ab27')))
 // endif
+if GetUnitAbilityLevel(JW, 'Ab2r') >0 and IsUnitType(Ig, UNIT_TYPE_FLYING) == false and IsUnitType(Ig, UNIT_TYPE_HERO) == false and IsUnitType(Ig, UNIT_TYPE_STRUCTURE) == false and IsUnitType(Ig, UNIT_TYPE_STRUCTURE) == false and IsUnitEnemy(JW, GetOwningPlayer(Ig)) == true then
+    call IssueTargetOrderById(JW, 852247,Ig)
+endif
+
 if  GetUnitAbilityLevel(JW, 'Ab26') >0 then
     call UnitDamageTarget(JW, Ig, (GetHeroAgi(JW, true))+(GetHeroInt(JW, true))+(GetHeroStr(JW, true)), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
     //如果当前攻击的单位不是
@@ -22875,8 +22879,8 @@ call CreateItem($49303249,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
 endif
-// 1/8概率出雷霆之力
-if GetRandomInt(0,8)==5 then
+// 1/6概率出雷霆之力
+if GetRandomInt(0,6)==5 then
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
@@ -22925,7 +22929,7 @@ if GetRandomInt(0,3)==3 then
 call CreateItem($49303057,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
-if GetRandomInt(0,8)==5 then
+if GetRandomInt(0,6)==5 then
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
@@ -27262,7 +27266,7 @@ endif
 call UnitRemoveAbility(GetSpellTargetUnit(),$41706976)
 call UnitRemoveAbility(GetSpellTargetUnit(),$4167686F)
 else
-if IsUnitType(GetSpellTargetUnit(),UNIT_TYPE_HERO)==false and (GetRandomInt(1,10)==10 or GetUnitAbilityLevel(GetTriggerUnit(), $41304731) >= 9) and GetUnitPointValue(GetSpellTargetUnit())!=56 then
+if IsUnitType(GetSpellTargetUnit(), UNIT_TYPE_HERO) == false and (GetRandomInt(1,10)==10 or GetUnitAbilityLevel(GetTriggerUnit(), $41304731) >= 9) and GetUnitPointValue(GetSpellTargetUnit())!=56 then
 call SetUnitOwner(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()),true)
 // 如果是小血狼
 if GetUnitTypeId(GetSpellTargetUnit())==$6E777766 then
@@ -27279,7 +27283,7 @@ endif
 endif
 else
 if GetSpellAbilityId()==$41425351 then
-if IsUnitType(GetSpellTargetUnit(),UNIT_TYPE_HERO)==false and IsUnitEnemy(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()))==true and GetUnitPointValue(GetSpellTargetUnit())!=56 then
+if IsUnitType(GetSpellTargetUnit(), UNIT_TYPE_HERO) == false and IsUnitEnemy(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()))==true and GetUnitPointValue(GetSpellTargetUnit())!=56 then
 call UnitRemoveAbility(GetSpellTargetUnit(),$41706976)
 call UnitRemoveAbility(GetSpellTargetUnit(),$4167686F)
 call UnitRemoveAbility(GetSpellTargetUnit(),$42656E61)
@@ -27920,6 +27924,7 @@ call RemoveLocation(LQ)
 endfunction
 function px takes nothing returns nothing
 local integer CC=0
+return
 set Pq=CreateTrigger()
 // 投掷监听事件
 call TriggerRegisterUnitEvent(Pq,Cu,EVENT_UNIT_SPELL_EFFECT)
@@ -28075,7 +28080,7 @@ function qC takes nothing returns nothing
     endif
 // 如果学的是登神长阶
 if GetLearnedSkillBJ()==$41623132 then
-    //  call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00登神长阶！" )
+     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00登神长阶！" )
     if GetUnitAbilityLevel(GetTriggerUnit(), $41623132) ==6 then
         call SetUnitState(GetTriggerUnit(),ConvertUnitState(22),625)
     endif
@@ -31252,7 +31257,7 @@ call UnitRemoveAbility(CE,$42505345)
 return
 endif
 
-if(UnitHasBuffBJ(CE, $42303054) == true or GetUnitAbilityLevel(CE, 'A06Y') > 0) and GetSpellAbilityId() !='A0DA' then
+if CE !=Iv and (UnitHasBuffBJ(CE, $42303054) == true or GetUnitAbilityLevel(CE, 'A06Y') > 0) and GetSpellAbilityId() != 'A0DA' then
 call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000目标单位拥有抵抗！")
 return
 endif
@@ -35187,7 +35192,7 @@ if GetTriggerUnit() == Tg and GetTriggerUnit() == sunQian and giveTongQian ==fal
     call UnitAddItemByIdSwapped($69743065,GetTriggerUnit())
     // call UnitAddItemByIdSwapped($69743067,GetTriggerUnit())
 endif
-// 孙乾的专属
+// 心之钢
 if GetTriggerUnit() == Tg and giveGang == false and GetRandomInt(1, 10) ==1 then
     // and bC(GetTriggerUnit(), $69743067) == true
     set giveGang=true
@@ -35197,6 +35202,21 @@ if GetTriggerUnit() == Tg and giveGang == false and GetRandomInt(1, 10) ==1 then
     call UnitAddItemByIdSwapped($69743069,GetTriggerUnit())
     // call UnitAddItemByIdSwapped($69743067,GetTriggerUnit())
 endif
+
+if GetTriggerUnit() == Tg and giveTianshu ==false and bC(GetTriggerUnit(), 'it0v') == true and bC(GetTriggerUnit(), 'it0u') == true and bC(GetTriggerUnit(), 'I005') == true and bC(GetTriggerUnit(), 'I001') == true and bC(GetTriggerUnit(), 'I002') == true and bC(GetTriggerUnit(), 'I01B') == true then
+ call RemoveItem(aj(GetTriggerUnit(),'it0v'))
+ call RemoveItem(aj(GetTriggerUnit(),'it0u'))
+ call RemoveItem(aj(GetTriggerUnit(),'I005'))
+ call RemoveItem(aj(GetTriggerUnit(),'I001'))
+ call RemoveItem(aj(GetTriggerUnit(),'I002'))
+ call RemoveItem(aj(GetTriggerUnit(),'I01B'))
+ call UnitAddItemByIdSwapped('it0t',GetTriggerUnit())
+set giveTianshu = true
+set Tg=null
+call DisplayTextToForce(GetPlayersAll(),"罢了，我知汝事未竟，愿未了，这古卷天书便拿走吧")
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了天书古卷！")
+endif
+
 if GetTriggerUnit()==Tg and GetRandomInt(1,150)<=GetUnitLevel(GetTriggerUnit()) and givePaper==false then
 // call DisableTrigger(GetTriggeringTrigger())
 call UnitAddItemByIdSwapped($72656A32,GetTriggerUnit())
@@ -35222,17 +35242,6 @@ call UnitAddItemByIdSwapped($69743061,GetTriggerUnit())
 call DisplayTextToForce(GetPlayersAll(),"雷鸣霹雳映天光，不要再来烦我了。")
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了混元霹雳手！")
 set Tg=null
-elseif GetTriggerUnit() == Tg and giveTianshu ==false and bC(GetTriggerUnit(), 'it0v') == true and bC(GetTriggerUnit(), 'it0u') == true and bC(GetTriggerUnit(), 'I005') == true and bC(GetTriggerUnit(), 'I001') == true and bC(GetTriggerUnit(), 'I002') == true and bC(GetTriggerUnit(), 'I01B') == true then
- call RemoveItem(aj(GetTriggerUnit(),'it0v'))
- call RemoveItem(aj(GetTriggerUnit(),'it0u'))
- call RemoveItem(aj(GetTriggerUnit(),'I005'))
- call RemoveItem(aj(GetTriggerUnit(),'I001'))
- call RemoveItem(aj(GetTriggerUnit(),'I002'))
- call RemoveItem(aj(GetTriggerUnit(),'I01B'))
- call UnitAddItemByIdSwapped('it0t',GetTriggerUnit())
-set giveTianshu = true
-call DisplayTextToForce(GetPlayersAll(),"罢了，我知汝事未竟，愿未了，这古卷天书便拿走吧")
-call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了天书古卷！")
 else
 if GetTriggerUnit() == zhangjiao and giveTianshu==false then
 call DisplayTextToForce(GetPlayersAll(), "孟凌，吾早已传天书与汝，汝莫非还想一睹古卷？")
