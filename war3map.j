@@ -5014,7 +5014,12 @@ function zongyu_found_actions takes nothing returns nothing
                 // call SaveBoolean(FS,GetHandleId(GetTriggerUnit()),$140B62E4,false) 
 
                 // call SaveReal(FS,GetHandleId(GetTriggerUnit()),$150B62E2,180.)
-                call XV(GetTriggerUnit(),'Ab47',1,180.1) 
+                if bC(Iv, 'it0y') == true
+                      call XV(GetTriggerUnit(),'Ab47',1,120.1) 
+                else
+                      call XV(GetTriggerUnit(),'Ab47',1,240.1) 
+                endif
+              
 
                 
                 //  call XV(GetTriggerUnit(),GetSpellAbilityId(),1,240.0)
@@ -5071,7 +5076,13 @@ function found_actions takes nothing returns nothing
 
                 call SaveReal(FS,GetHandleId(GetTriggerUnit()),$140B62E2,150.)
                 // call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00冷却开始：" )
-
+                if bC(Iv, 'it0y') == true
+                       call SaveReal(FS,GetHandleId(GetTriggerUnit()),$140B62E2,120.)
+                    //   call XV(GetTriggerUnit(),'Ab23',1,120.1) 
+                else
+                      call SaveReal(FS,GetHandleId(GetTriggerUnit()),$140B62E2,240.)
+                    //   call XV(GetTriggerUnit(),'Ab23',1,180.1) 
+                endif
                 else
 
                 endif
@@ -6339,11 +6350,11 @@ local unit Iv=LoadUnitHandle(Ia,Ix,$6865726F)
 // call DisplayTextToPlayer(GetOwningPlayer(zhuiSuiZhe), 0, 0, "|Cff00ff00追随者！" + R2S(getMasterServent(zhuGeGuo)))
 
 // 生命值
-call SetUnitState(zhuiSuiZhe, ConvertUnitState(1), GetHeroLevel(zhuGeGuo) *200 + GetHeroInt(zhuGeGuo, true) *20)
+call SetUnitState(zhuiSuiZhe, ConvertUnitState(1), GetHeroLevel(zhuGeGuo) *150 + GetHeroInt(zhuGeGuo, true) *20)
 // 攻击
-call SetUnitState(zhuiSuiZhe, ConvertUnitState(18), GetHeroLevel(zhuGeGuo) *15 + GetHeroInt(zhuGeGuo, true) *2)
+call SetUnitState(zhuiSuiZhe, ConvertUnitState(18), GetHeroLevel(zhuGeGuo) * 20) 
 // 护甲
-call SetUnitState(zhuiSuiZhe, ConvertUnitState(32), GetHeroInt(zhuGeGuo, true) *0.1 + GetUnitState(Iv, ConvertUnitState(32)) * 3)
+call SetUnitState(zhuiSuiZhe, ConvertUnitState(32), GetHeroInt(zhuGeGuo, true) *0.1 + GetUnitState(Iv, ConvertUnitState(32)) * 2)
 if GetOwningPlayer(Iv)==Player(15) then
 call PauseTimer(CS)
 call RemoveUnit(zhuiSuiZhe)
@@ -28064,7 +28075,7 @@ function qC takes nothing returns nothing
     endif
 // 如果学的是登神长阶
 if GetLearnedSkillBJ()==$41623132 then
-     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00登神长阶！" )
+    //  call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00登神长阶！" )
     if GetUnitAbilityLevel(GetTriggerUnit(), $41623132) ==6 then
         call SetUnitState(GetTriggerUnit(),ConvertUnitState(22),625)
     endif
@@ -29542,6 +29553,10 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff
 elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped($41623134,Iv)==2 then
 call IncUnitAbilityLevel(Iv,$41623134)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00圣裁之刻的等级已经提升了！")
+elseif GetHeroLevel(Iv) >= 90 and GetUnitAbilityLevel(Iv, 'Ab4e') ==0 then
+   call UnitAddAbilityBJ('Ab4e',Iv) 
+   call UnitMakeAbilityPermanent(Iv,true,'Ab4e')
+else 
 endif
 // 高翔大招
 elseif GetUnitAbilityLevel(Iv,$41623165)>0 then
