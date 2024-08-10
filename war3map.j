@@ -4034,7 +4034,7 @@ loop
 set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
-if Ij != CE and GetUnitState(CE, UNIT_STATE_LIFE) > .405 and IsUnitEnemy(CE, GetOwningPlayer(Ij)) == true and IsUnitType(CE, UNIT_TYPE_STRUCTURE) == false and GetUnitTypeId(CE) != GetUnitTypeId(she) and ! (IsUnitType(CE, UNIT_TYPE_HERO) == true and GetUnitPointValue(CE) == 100) then
+if Ij != CE and GetUnitState(CE, UNIT_STATE_LIFE) > .405 and IsUnitEnemy(CE, GetOwningPlayer(Ij)) == true and IsUnitType(CE, UNIT_TYPE_STRUCTURE) == false and GetUnitTypeId(CE) != GetUnitTypeId(she) and GetUnitPointValue(CE)!=100 then
 call UnitDamageTarget(Ij,CE,Iz,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
@@ -27255,7 +27255,7 @@ return GetSpellAbilityId()==$41304731 or GetSpellAbilityId()==$41425351
 endfunction
 function o3 takes nothing returns nothing
 if GetSpellAbilityId()==$41304731 then
-if IsUnitType(GetSpellTargetUnit(), UNIT_TYPE_HERO) == false and bC(GetTriggerUnit(), $7368746D) == true  and GetUnitPointValue(GetSpellTargetUnit()) != 56 and (GetRandomInt(1, 4) == 4 or GetUnitAbilityLevel(GetTriggerUnit(), $41304731) >= 9) then
+if  bC(GetTriggerUnit(), $7368746D) == true  and GetUnitPointValue(GetSpellTargetUnit()) != 56 and (GetRandomInt(1, 4) == 4 or GetUnitAbilityLevel(GetTriggerUnit(), $41304731) >= 9) then
 call SetUnitOwner(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()),true)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+("捕获了："+GetUnitName(GetSpellTargetUnit())))
 // 如果是小血狼
@@ -27266,7 +27266,7 @@ endif
 call UnitRemoveAbility(GetSpellTargetUnit(),$41706976)
 call UnitRemoveAbility(GetSpellTargetUnit(),$4167686F)
 else
-if IsUnitType(GetSpellTargetUnit(), UNIT_TYPE_HERO) == false and (GetRandomInt(1,10)==10 or GetUnitAbilityLevel(GetTriggerUnit(), $41304731) >= 9) and GetUnitPointValue(GetSpellTargetUnit())!=56 then
+if  (GetRandomInt(1,10)==10 or GetUnitAbilityLevel(GetTriggerUnit(), $41304731) >= 9) and GetUnitPointValue(GetSpellTargetUnit())!=56 then
 call SetUnitOwner(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()),true)
 // 如果是小血狼
 if GetUnitTypeId(GetSpellTargetUnit())==$6E777766 then
@@ -27283,7 +27283,7 @@ endif
 endif
 else
 if GetSpellAbilityId()==$41425351 then
-if IsUnitType(GetSpellTargetUnit(), UNIT_TYPE_HERO) == false and IsUnitEnemy(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()))==true and GetUnitPointValue(GetSpellTargetUnit())!=56 then
+if  IsUnitEnemy(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()))==true and GetUnitPointValue(GetSpellTargetUnit())!=56 then
 call UnitRemoveAbility(GetSpellTargetUnit(),$41706976)
 call UnitRemoveAbility(GetSpellTargetUnit(),$4167686F)
 call UnitRemoveAbility(GetSpellTargetUnit(),$42656E61)
@@ -31257,7 +31257,7 @@ call UnitRemoveAbility(CE,$42505345)
 return
 endif
 
-if CE !=Iv and (UnitHasBuffBJ(CE, $42303054) == true or GetUnitAbilityLevel(CE, 'A06Y') > 0) and GetSpellAbilityId() != 'A0DA' then
+if(UnitHasBuffBJ(CE, $42303054) == true or GetUnitAbilityLevel(CE, 'A06Y') > 0) and GetSpellAbilityId() !='A0DA' then
 call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000目标单位拥有抵抗！")
 return
 endif
