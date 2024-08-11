@@ -6383,6 +6383,18 @@ endfunction
 
 function rongzhu_ability_choose takes nothing returns nothing
 local button loc_btn=GetClickedButton()
+local integer loc_index = 1
+local integer loc_ab 
+local integer loc_ab_level 
+   loop 
+    exitwhen rongzhu_btn[GetPlayerId(GetTriggerPlayer()) * 100 + loc_index] == loc_btn
+    set loc_index = loc_index +1
+    endloop
+set loc_ab = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
+set loc_ab_level = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能：" + GetAbilityName(loc_ab))
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能等级：" + I2S(loc_ab_level))
+
 call DestroyTrigger(GetTriggeringTrigger())
 call DialogDestroy(GetClickedDialog())
 set loc_btn =null
@@ -6393,13 +6405,16 @@ function rongzhu_foreach_4 takes player loc_player returns nothing
     local trigger loc_trig = CreateTrigger()
     local integer loc_level = LoadInteger(Ia, GetPlayerId(loc_player), StringHash("rongzhu_times"))
     local integer loc_time1 = GetRandomInt(0,1)
-    local integer loc_time2 = GetRandomInt(1,7) 
-    local integer loc_time3 = GetRandomInt(1,7) 
-    local integer loc_time4 = GetRandomInt(1,7) 
+    local integer loc_time2
+    local integer loc_time3
+    local integer loc_time4
     call DialogSetMessage(loc_dialog,"请选择熔铸技能")
     // set rongzhu_btn[1] = DialogAddButton(loc_dialog, "测试",1)
     if loc_time1 == 1 then
     //  取随机数
+    set loc_time2 = GetRandomInt(1,7) 
+    set loc_time3 = GetRandomInt(1,7)
+    set loc_time4 = GetRandomInt(1,7)
     loop 
     exitwhen loc_time2 != loc_time3
     set loc_time3 = GetRandomInt(1,7)
@@ -6410,10 +6425,48 @@ function rongzhu_foreach_4 takes player loc_player returns nothing
     endloop
     // I2S(GetAbilityName(rongzhu_extra_pool[1])) + "(1)"
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time2]) + "(1)", 1)
+    // 将对应技能存起来
+    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_extra_pool[loc_time2])
+    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time2])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time2]))) + 1)
+    
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time3]) + "(1)", 1)
+    // 将对应技能存起来
+    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_extra_pool[loc_time3])
+    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time3])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time3]))) + 1)
+    
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time4]) + "(1)", 1)
-
+    // 将对应技能存起来
+    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_extra_pool[loc_time4])
+    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + 1)
     else
+    set loc_time2 = GetRandomInt(1,21) 
+    set loc_time3 = GetRandomInt(1,21)
+    set loc_time4 = GetRandomInt(1,21)
+    loop 
+    exitwhen loc_time2 != loc_time3
+    set loc_time3 = GetRandomInt(1,21)
+    endloop
+    loop 
+    exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
+    set loc_time4 = GetRandomInt(1,21)
+    endloop
+    // 
+    set loc_time1=GetRandomInt(1,loc_level)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_level) + ")", loc_level)
+    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
+    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time2]))) + loc_level)
+    // 
+    set loc_time1=GetRandomInt(1,loc_level)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_level) + ")", loc_level)
+    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
+    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time3]))) + loc_level)
+    // 
+    set loc_time1=GetRandomInt(1,loc_level)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_level) + ")", loc_level)
+    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
+    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + loc_level)
+
+
     endif
     
     call TriggerRegisterDialogEvent(loc_trig,loc_dialog)
@@ -6431,7 +6484,7 @@ function rongzhu_start takes unit Iv, item loc_item,boolean loc_bool returns not
     local integer loc_num = 0
 
     if bC(Iv, 'it12') == true and loc_bool then
-  
+    call SaveItemHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"),loc_item)
     call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
     call rongzhu_foreach_4(GetTriggerPlayer())
     elseif bC(Iv, 'it11') == true then
