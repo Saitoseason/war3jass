@@ -73,6 +73,11 @@ group udg_AnnihilateABlackHoleGruop2=null
 unit udg_TriggerUnit=null
 location udg_TemporaryCreatedPoint=null
 group udg_GetUnitsInRectAllGroup=null
+// 熔铸事件
+trigger rongzhu_trig=null
+button array rongzhu_btn
+integer array rongzhu_ability_pool
+integer array rongzhu_extra_pool
 // shifa
 trigger trig_shifa =null
 // 奇趣蛋事件
@@ -131,6 +136,8 @@ trigger XinZhiGangTrigger=null
 // boolean xinZhiGangReady =false
 item gangmen =null
 sound gang =null
+// 物品系统
+trigger item_trig
 // 新boss
 unit she =null
 trigger she_trg=null
@@ -1392,6 +1399,111 @@ native EXSetUnitFacing takes unit u,real angle returns nothing
 native EXPauseUnit takes unit u,boolean flag returns nothing
 native EXSetUnitCollisionType takes boolean enable,unit u,integer t returns nothing
 native EXSetUnitMoveType takes unit u,integer t returns nothing
+//给物品添加技能 
+function YDWEItemAbilityStorage takes integer itid,integer ab returns nothing
+    local integer index= (LoadInteger(YDHT, StringHash((I2S(itid) )), StringHash(( "AbilityStorageIndex")))) // INLINED!!
+    set index=index + 1
+    call SaveInteger(YDHT, StringHash((I2S(itid) )), StringHash(( "AbilityStorage" + I2S(index) )), ( ab)) // INLINED!!
+    call SaveInteger(YDHT, StringHash((I2S(itid) )), StringHash(( "AbilityStorageIndex" )), ( index)) // INLINED!!
+endfunction
+// 移除单位的物品技能
+function removeItemAbilityStorage takes integer itid, integer ab, unit Iv returns nothing
+    local string loc_str = (I2S(itid) + I2S(GetUnitTypeId(Iv)))
+    local integer index = (LoadInteger(YDHT, StringHash(loc_str), StringHash(("AbilityStorageIndex")))) // INLINED!!
+    set index=index + 1
+    call SaveInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorage" + I2S(index) )), 0) // INLINED!!
+    call SaveInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorageIndex" )), 0) // INLINED!!
+    call SaveInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorageLevel" )), 0) // INLINED!!
+endfunction
+// 给单位的物品绑定技能等级
+function setItemAbilityStorage takes integer itid, integer ab, unit Iv,integer ab_level returns nothing
+    local string loc_str = (I2S(itid) + I2S(GetUnitTypeId(Iv)))
+    local integer index = (LoadInteger(YDHT, StringHash(loc_str), StringHash(("AbilityStorageIndex")))) // INLINED!!
+    set index=index + 1
+    call SaveInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorage" + I2S(index) )), ( ab)) // INLINED!!
+    call SaveInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorageIndex" )), ( index)) // INLINED!!
+    call SaveInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorageLevel" )), ( ab_level)) // INLINED!!
+endfunction
+// 
+function YDWEItemAbilitySystemByAbility_CON takes nothing returns boolean
+    local unit loc_hero= GetTriggerUnit()
+    local item loc_item=GetManipulatedItem()
+    local trigger loc_item_trig=(LoadTriggerHandle(YDHT, StringHash((I2S((GetHandleId((loc_hero)))) )), StringHash(( "MulItemSlotByAbility")))) // INLINED!!
+    local integer loc_item_id=GetItemTypeId(loc_item)
+    local string loc_str = (I2S(loc_item_id) + I2S(GetUnitTypeId(loc_hero)))
+    local integer loc_index= (LoadInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorageIndex")))) // INLINED!!
+    local integer loc_level= (LoadInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorageLevel")))) // INLINED!!
+    local integer array loc_skills
+    local integer loc_i=0
+    local integer loc_N=(LoadInteger(YDHT, StringHash((I2S((GetHandleId((loc_item_trig)))) )), StringHash(( "ItemSlotNum")))) // INLINED!!
+    local boolean loc_OnOff=(LoadBoolean(YDHT, StringHash((I2S((GetHandleId((loc_hero)))) )), StringHash(( "YDWEItemAbilitySystemTriggerClose")))) // INLINED!!
+    if loc_index == 0 or loc_OnOff == true then
+        set loc_item=null
+        set loc_hero=null
+        set loc_item_trig=null
+        return false
+    endif
+    loop
+        set loc_i=loc_i + 1
+        exitwhen loc_i > loc_index
+        set loc_skills[loc_i]=(LoadInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorage" + I2S(loc_i))))) // INLINED!!
+        if GetTriggerEventId() == EVENT_PLAYER_UNIT_DROP_ITEM then
+            call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, "您失去了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(GetUnitAbilityLevel(loc_hero, loc_skills[loc_i])) + "级)!")
+            call UnitRemoveAbility(loc_hero, loc_skills[loc_i])
+          elseif GetTriggerEventId() == EVENT_PLAYER_UNIT_PICKUP_ITEM then
+            call UnitAddAbility(loc_hero, loc_skills[loc_i])
+            call UnitMakeAbilityPermanent(loc_hero, true, loc_skills[loc_i])
+            call SetUnitAbilityLevel(loc_hero, loc_skills[loc_i],loc_level)
+            call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, "您获得了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(GetUnitAbilityLevel(loc_hero, loc_skills[loc_i])) + "级)!")
+
+        endif
+    endloop
+    set loc_item=null
+    set loc_hero=null
+    set loc_item_trig=null
+    return false
+endfunction
+
+// function YDWEItemAbilitySystemByAbility_CON takes nothing returns boolean
+//     local unit loc_hero= GetTriggerUnit()
+//     local item loc_item=GetManipulatedItem()
+//     local trigger loc_item_trig=(LoadTriggerHandle(YDHT, StringHash((I2S((GetHandleId((loc_hero)))) )), StringHash(( "MulItemSlotByAbility")))) // INLINED!!
+//     local integer loc_item_id=GetItemTypeId(loc_item)
+//     local string loc_str = (I2S(loc_item_id) + I2S(GetUnitTypeId(loc_hero)))
+//     local integer loc_index= (LoadInteger(YDHT, StringHash((I2S(loc_item_id) )), StringHash(( "AbilityStorageIndex")))) // INLINED!!
+//     local integer array loc_skills
+//     local integer loc_i=0
+//     local integer loc_N=(LoadInteger(YDHT, StringHash((I2S((GetHandleId((loc_item_trig)))) )), StringHash(( "ItemSlotNum")))) // INLINED!!
+//     local boolean loc_OnOff=(LoadBoolean(YDHT, StringHash((I2S((GetHandleId((loc_hero)))) )), StringHash(( "YDWEItemAbilitySystemTriggerClose")))) // INLINED!!
+//     if loc_index == 0 or loc_OnOff == true then
+//         set loc_item=null
+//         set loc_hero=null
+//         set loc_item_trig=null
+//         return false
+//     endif
+//     loop
+//         set loc_i=loc_i + 1
+//         exitwhen loc_i > loc_index
+//         set loc_skills[loc_i]=(LoadInteger(YDHT, StringHash((I2S(loc_item_id) )), StringHash(( "AbilityStorage" + I2S(loc_i))))) // INLINED!!
+//         if GetTriggerEventId() == EVENT_PLAYER_UNIT_DROP_ITEM then
+//             call UnitRemoveAbility(loc_hero, loc_skills[loc_i])
+//           elseif GetTriggerEventId() == EVENT_PLAYER_UNIT_PICKUP_ITEM then
+//             call UnitAddAbility(loc_hero, loc_skills[loc_i])
+//             call UnitMakeAbilityPermanent(loc_hero, true, loc_skills[loc_i])
+//         endif
+//     endloop
+//     set loc_item=null
+//     set loc_hero=null
+//     set loc_item_trig=null
+//     return false
+// endfunction
+ function YDWEItemAbilitySystemInit takes nothing returns nothing
+    local trigger item_trig= CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(item_trig, EVENT_PLAYER_UNIT_PICKUP_ITEM)
+    call TriggerRegisterAnyUnitEventBJ(item_trig, EVENT_PLAYER_UNIT_DROP_ITEM)
+    call TriggerAddCondition(item_trig, Condition(function YDWEItemAbilitySystemByAbility_CON))
+    set item_trig=null
+endfunction
 
 // 判断伤害是否是普通攻击
 function YDWEIsEventAttackDamage takes nothing returns boolean
@@ -1806,6 +1918,39 @@ function YDWETimerRunPeriodicTriggerOver takes trigger trg,integer data returns 
     set loc_timer=null
 endfunction
 //library YDWETimerSystem ends
+    // 熔铸技能池子
+function set_rongzhu_pool takes nothing returns nothing
+set rongzhu_ability_pool[1] = 'K001'
+set rongzhu_ability_pool[2] = 'K002'
+set rongzhu_ability_pool[3] = 'K003'
+set rongzhu_ability_pool[4] = 'K004'
+set rongzhu_ability_pool[5] = 'K005'
+set rongzhu_ability_pool[6] = 'K006'
+set rongzhu_ability_pool[7] = 'K007'
+set rongzhu_ability_pool[8] = 'K008'
+set rongzhu_ability_pool[9] = 'K009'
+set rongzhu_ability_pool[10] = 'K00A'
+set rongzhu_ability_pool[11] = 'K00B'
+set rongzhu_ability_pool[12] = 'K00C'
+set rongzhu_ability_pool[13] = 'K00D'
+set rongzhu_ability_pool[14] = 'K00E'
+set rongzhu_ability_pool[15] = 'K00F'
+set rongzhu_ability_pool[16] = 'K00G'
+set rongzhu_ability_pool[17] = 'K00H'
+set rongzhu_ability_pool[18] = 'K00I'
+set rongzhu_ability_pool[19] = 'K00J'
+set rongzhu_ability_pool[20] = 'K00K'
+set rongzhu_ability_pool[21] = 'K00L'
+// 天外陨铁额外技能池子
+set rongzhu_extra_pool[1] = 'KA01'
+set rongzhu_extra_pool[2] = 'KA02'
+set rongzhu_extra_pool[3] = 'KA03'
+set rongzhu_extra_pool[4] = 'KA04'
+set rongzhu_extra_pool[5] = 'KA05'
+set rongzhu_extra_pool[6] = 'KA06'
+set rongzhu_extra_pool[7] = 'KA07'
+endfunction
+    // 宠物宝宝池子
 function set_pet_pool takes nothing returns nothing
     set pet_egg[1] ='n100'
     set pet_egg[2] ='n102'
@@ -2118,6 +2263,7 @@ set trig_game_start=CreateTrigger()
 call TriggerRegisterTimerEventSingle(trig_game_start,1.)
 call TriggerAddAction(trig_game_start,function set_item_pool)
 call TriggerAddAction(trig_game_start,function set_pet_pool)
+call TriggerAddAction(trig_game_start,function set_rongzhu_pool)
 
 endfunction
 // 物品池事件结束结束
@@ -6235,6 +6381,102 @@ endfunction
 // 陈到技能结束
 
 
+function rongzhu_ability_choose takes nothing returns nothing
+local button loc_btn=GetClickedButton()
+call DestroyTrigger(GetTriggeringTrigger())
+call DialogDestroy(GetClickedDialog())
+set loc_btn =null
+endfunction
+
+function rongzhu_foreach_4 takes player loc_player returns nothing 
+    local dialog loc_dialog=DialogCreate()
+    local trigger loc_trig = CreateTrigger()
+    local integer loc_level = LoadInteger(Ia, GetPlayerId(loc_player), StringHash("rongzhu_times"))
+    local integer loc_time1 = GetRandomInt(0,1)
+    local integer loc_time2 = GetRandomInt(1,7) 
+    local integer loc_time3 = GetRandomInt(1,7) 
+    local integer loc_time4 = GetRandomInt(1,7) 
+    call DialogSetMessage(loc_dialog,"请选择熔铸技能")
+    // set rongzhu_btn[1] = DialogAddButton(loc_dialog, "测试",1)
+    if loc_time1 == 1 then
+    //  取随机数
+    loop 
+    exitwhen loc_time2 != loc_time3
+    set loc_time3 = GetRandomInt(1,7)
+    endloop
+    loop 
+    exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
+    set loc_time4 = GetRandomInt(1,7)
+    endloop
+    // I2S(GetAbilityName(rongzhu_extra_pool[1])) + "(1)"
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time2]) + "(1)", 1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time3]) + "(1)", 1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time4]) + "(1)", 1)
+
+    else
+    endif
+    
+    call TriggerRegisterDialogEvent(loc_trig,loc_dialog)
+    call TriggerAddAction(loc_trig,function rongzhu_ability_choose)
+    call DialogDisplay(loc_player,loc_dialog,true)
+
+    // call DialogClear(loc_dialog)
+    // set loc_dialog = null
+    set loc_trig =null
+    // call DestroyTrigger(loc_trig)
+endfunction
+// 开始熔铸
+function rongzhu_start takes unit Iv, item loc_item,boolean loc_bool returns nothing
+    // 分别传入打造人、被打造的物品，是否可以使用第四级打造
+    local integer loc_num = 0
+
+    if bC(Iv, 'it12') == true and loc_bool then
+  
+    call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
+    call rongzhu_foreach_4(GetTriggerPlayer())
+    elseif bC(Iv, 'it11') == true then
+    elseif bC(Iv, 'it10') == true then
+    elseif bC(Iv, 'rat9') == true then
+    else
+
+    endif
+
+endfunction
+function rongzhu_condition takes nothing returns boolean
+// return GetItemTypeId(GetManipulatedItem())=='IR04'
+return (GetItemTypeId(GetManipulatedItem())=='IR04')
+endfunction
+
+function rongzhu_actions takes nothing returns nothing
+local unit Iv = GetTriggerUnit()
+local item trig_item = UnitItemInSlot(Iv,0)
+// 
+local integer loc_item_level=ModuloInteger(GetItemLevel(trig_item),10)
+// 
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00开始熔铸")
+// 如果触发英雄是刘睿，则可以使用天外陨铁，且任意装备都能锻造
+if Iv == liurui then
+call rongzhu_start(Iv, trig_item,true)
+else
+    // 判断第一件是不是武器
+if loc_item_level !=8 then
+ call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cff00ff00无法熔铸武器以外的装备！")
+return
+else
+    //开始熔铸 
+endif
+
+endif
+endfunction
+// // 初始化熔铸事件
+function init_rongzhu takes nothing returns nothing
+set rongzhu_trig=CreateTrigger()
+call TriggerRegisterAnyUnitEventBJ(rongzhu_trig,EVENT_PLAYER_UNIT_PICKUP_ITEM)
+call TriggerAddCondition(rongzhu_trig,Condition(function rongzhu_condition))
+call TriggerAddAction(rongzhu_trig,function rongzhu_actions)
+endfunction
+
+
 function InitCustomTriggers takes nothing returns nothing
     call InitTrig_Xuyi1()
     call InitTrig_ll()
@@ -6253,6 +6495,7 @@ function InitCustomTriggers takes nothing returns nothing
     call Trig_Selected_unit()
     call registerBook()
     call Trig_listen_sos()
+    call init_rongzhu()
     // 
     call InitTrig_AnnihilateABlackHole()
     call InitTrig_AnnihilateABlackHole2()
@@ -22196,12 +22439,15 @@ call TriggerRegisterPlayerChatEvent(KR,Player(6),"-Q",true)
 call TriggerRegisterPlayerChatEvent(KR,Player(7),"-Q",true)
 call TriggerAddAction(KR,function i9)
 endfunction
+// 人品调查判断
 function jC takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$6B79626C and bC(GetTriggerUnit(),$6D6C7374)==true and (IsItemInvulnerable(aj(GetTriggerUnit(),$6D6C7374))==false and bC(GetTriggerUnit(),$67656D74)==true or bC(GetTriggerUnit(),$6C757265)==true or bC(GetTriggerUnit(),$746D7363)==true or bC(GetTriggerUnit(),$61727363)==true or bC(GetTriggerUnit(),$6E666C67)==true)
 endfunction
 function jD takes nothing returns nothing
+    // 轩辕剑
 call SetItemInvulnerable(aj(GetTriggerUnit(),$6D6C7374),true)
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"完成打造,获得能力,攻击时有10%机率触发各种特殊效果")
+// 任意玉
 call RemoveItem(aj(GetTriggerUnit(),$67656D74))
 call RemoveItem(aj(GetTriggerUnit(),$6C757265))
 call RemoveItem(aj(GetTriggerUnit(),$746D7363))
@@ -22214,6 +22460,7 @@ call TriggerRegisterAnyUnitEventBJ(M7,EVENT_PLAYER_UNIT_PICKUP_ITEM)
 call TriggerAddCondition(M7,Condition(function jC))
 call TriggerAddAction(M7,function jD)
 endfunction
+// 人品调查技能
 function jF takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$6B79626C and bC(GetTriggerUnit(),$6D6C7374)==true and IsItemInvulnerable(aj(GetTriggerUnit(),$6D6C7374))==true and bC(GetTriggerUnit(),$636E686E)==true and GetItemUserData(aj(GetTriggerUnit(),$6D6C7374))==0
 endfunction
@@ -22230,6 +22477,7 @@ call TriggerRegisterAnyUnitEventBJ(M8,EVENT_PLAYER_UNIT_PICKUP_ITEM)
 call TriggerAddCondition(M8,Condition(function jF))
 call TriggerAddAction(M8,function jG)
 endfunction
+
 function jI takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$6B79626C and bC(GetTriggerUnit(),$6D6C7374)==true and GetItemUserData(aj(GetTriggerUnit(),$6D6C7374))>0 and bC(GetTriggerUnit(),$73656872)==true
 endfunction
@@ -36355,6 +36603,7 @@ call regisetGaoxiangAttacked()
 call game_start_event()
 call InitCustomTriggers()
 call init_life_loss()
+
 endfunction
 function xb takes nothing returns nothing
 call SetPlayerStartLocation(Player(0),0)
