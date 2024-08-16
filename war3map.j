@@ -7826,13 +7826,13 @@ if GetUnitAbilityLevel(JW,$41303735)>0  then
 if GetRandomInt(1,4)==3 then
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$4143666E,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852226,Ig)
 if bC(JW, $676F626D) == true then 
-call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))) * 0.5, 4, 0) 
-call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))))) 
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))) * 0.7, 4, 0) 
+call textToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))))) 
 endif 
 
 if bC(JW, 'it0z') == true then 
-call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, 'it0z'))) * 0.5, 4, 0) 
-call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))))) 
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, 'it0z'))) * 0.7, 4, 0) 
+call textToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, 'it0z'))))) 
 endif 
 endif
 if IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and GetUnitAbilityLevel(Ig,$41303543)<1 then
@@ -18165,7 +18165,7 @@ set CE=CreateUnit(CC,$6E666E70,-704.,-7616.,270.)
 set CJ=CreateUnit(CC,$6861726D,-6848.,13248.,270.)
 set CK=CreateUnit(CC,$68303031,-1856.,-6592.,270.)
 set CE=CreateUnit(CC,$68303052,-1894.,-7293.7,357.27)
-set rongzhu_factory=CreateUnit(CC,$6861726D,-6848.,12848.,270.)
+set rongzhu_factory=CreateUnit(CC,'b002',-6848.,12848.,270.)
 
 endfunction
 function f6 takes nothing returns nothing
@@ -19522,14 +19522,17 @@ endif
 
 // 
 if GetUnitAbilityLevel(Ih, 'Ab4l') >0 then
+   call textToPlayer(GetOwningPlayer(Ih), 0, 0, "次攻击伤害计数：" + R2S( GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l')))
+
     if YDWEIsEventAttackDamage() then
     call SaveInteger(Ia, GetHandleId(Ih), StringHash("Ab4l"), LoadInteger(Ia, GetHandleId(Ih), StringHash("Ab4l")) + 1)
     if LoadInteger(Ia, GetHandleId(Ih), StringHash("Ab4l")) > 3 then
     call SaveInteger(Ia, GetHandleId(Ih), StringHash("Ab4l"),0)
-    call UnitDamageTarget(Ih, Ig, GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
-    if GetUnitLifePercent(Ih) >20 then
-    call setUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) -GetUnitState(Ih, UNIT_STATE_MAX_LIFE) * 0.1)
-    endif
+    call UnitDamageTarget(Ih, Ig, GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call textToPlayer(GetOwningPlayer(Ih), 0, 0, "第四次攻击伤害：" + R2S( GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l')))
+    // if GetUnitLifePercent(Ih) >20 then
+    // call setUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) -GetUnitState(Ih, UNIT_STATE_MAX_LIFE) * 0.1)
+    // endif
     endif
     endif
 endif
@@ -22665,14 +22668,15 @@ elseif bC(GetTriggerUnit(),$49303245)==true or bC(GetTriggerUnit(),$49303341)==t
    call RemoveItem(aj(GetTriggerUnit(),$49303237))
    call UnitAddItem(GetTriggerUnit(),CreateItem($69743068,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了鸩魔龙刀")
-elseif bC(GetTriggerUnit(),'I003')==true or bC(GetTriggerUnit(),'I01E')==true and bC(GetTriggerUnit(),'pspd')==true and bC(GetTriggerUnit(),'I006')==true and bC(GetTriggerUnit(),'gsou')==true and bC(GetTriggerUnit(),'cosl')==true and bC(GetTriggerUnit(),'it0d')==true then
+elseif bC(GetTriggerUnit(),'I003')==true or bC(GetTriggerUnit(),'I01E')==true and bC(GetTriggerUnit(),'pspd')==true and bC(GetTriggerUnit(),'I006')==true and bC(GetTriggerUnit(),'gsou')==true and bC(GetTriggerUnit(),'cosl')==true and (bC(GetTriggerUnit(),'it0d')==true or bC(GetTriggerUnit(),'I00B')==true ) then
  call RemoveItem(aj(GetTriggerUnit(),'I003'))
    call RemoveItem(aj(GetTriggerUnit(),'I01E'))
    call RemoveItem(aj(GetTriggerUnit(),'pspd'))
-   call RemoveItem(aj(GetTriggerUnit(),'I006'))
-   call RemoveItem(aj(GetTriggerUnit(),'gsou'))
     call RemoveItem(aj(GetTriggerUnit(),'it0d'))
+    call RemoveItem(aj(GetTriggerUnit(),'I006'))
+   call RemoveItem(aj(GetTriggerUnit(),'gsou'))
    call RemoveItem(aj(GetTriggerUnit(),'cosl'))
+   call RemoveItem(aj(GetTriggerUnit(),'I00B'))
    call UnitAddItem(GetTriggerUnit(),CreateItem('it0n',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了神鬼天惊")
     // 打造极八蛇矛
