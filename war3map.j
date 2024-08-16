@@ -53,6 +53,13 @@ real Ly=1
 boolean L1=false
 boolean Lz=true
 boolean L0=true
+// 用户指令事件  
+trigger UP_pick_trig 
+trigger clear_all_trig 
+item up_item =null
+integer up_num =0
+trigger text_show_trig 
+boolean array text_show 
 // 单位选中事件
 trigger select_listen
 unit pet_unit
@@ -79,6 +86,7 @@ button array rongzhu_btn
 integer array rongzhu_ability_pool
 integer array rongzhu_extra_pool
 integer xuan_yuan = GetRandomInt(101,107)
+unit rongzhu_factory =null
 // shifa
 trigger trig_shifa =null
 // 奇趣蛋事件
@@ -1479,18 +1487,18 @@ function YDWEItemAbilitySystemByAbility_CON takes nothing returns boolean
         set loc_level = (LoadInteger(YDHT, StringHash(loc_str), StringHash(( "AbilityStorageLevel"+ I2S(loc_i))))) 
         // call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, "当前技能等级：" + I2S(loc_level))
         if GetTriggerEventId() == EVENT_PLAYER_UNIT_DROP_ITEM then
-        call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, "您失去了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(loc_level) + "级)!")
+        call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, "|cffffcc00您失去了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(loc_level) + "级)!")
         call UnitRemoveAbility(loc_hero, loc_skills[loc_i])
         elseif GetTriggerEventId() == EVENT_PLAYER_UNIT_PICKUP_ITEM then
 
         if GetUnitAbilityLevel(loc_hero, loc_skills[loc_i]) >0 then
         call SetUnitAbilityLevel(loc_hero, loc_skills[loc_i],( GetUnitAbilityLevel(loc_hero, loc_skills[loc_i]) + loc_level))   
-        call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, GetUnitName(loc_hero) + " :获得了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(GetUnitAbilityLevel(loc_hero, loc_skills[loc_i])) + "级)!")
+        call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, GetUnitName(loc_hero) + " :|cffffcc00获得了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(GetUnitAbilityLevel(loc_hero, loc_skills[loc_i])) + "级)!")
         else
         call UnitAddAbilityBJ(loc_skills[loc_i], loc_hero)
         call UnitMakeAbilityPermanent(loc_hero, true, loc_skills[loc_i])
         call SetUnitAbilityLevel(loc_hero, loc_skills[loc_i],loc_level)
-        call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, GetUnitName(loc_hero) + " :获得了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(GetUnitAbilityLevel(loc_hero, loc_skills[loc_i])) + "级)!")
+        call DisplayTextToPlayer(GetOwningPlayer(loc_hero), 0, 0, GetUnitName(loc_hero) + " :|cffffcc00获得了以下效果：" + GetAbilityName(loc_skills[loc_i]) + "(" + I2S(GetUnitAbilityLevel(loc_hero, loc_skills[loc_i])) + "级)!")
         endif
 
          
@@ -1958,6 +1966,11 @@ function YDWETimerRunPeriodicTriggerOver takes trigger trg,integer data returns 
     set loc_timer=null
 endfunction
 //library YDWETimerSystem ends
+function textToPlayer takes player loc_player, real loc_x, real loc_y, string loc_string returns nothing 
+if text_show[GetPlayerId(loc_player)] == true then 
+call DisplayTextToPlayer(loc_player, loc_x, loc_y, loc_string) 
+endif 
+endfunction 
     // 熔铸技能池子
 function set_rongzhu_pool takes nothing returns nothing
 set rongzhu_ability_pool[1] = 'K001'
@@ -2133,10 +2146,10 @@ set hight_level_item_pool[61]=$49303041
 set hight_level_item_pool[62]=$6F76656E
 // 魔魂盔
 set hight_level_item_pool[63]=$49303033
-// 精品小馒头
-set hight_level_item_pool[64]='pres'
-// 九转金丹
-set hight_level_item_pool[65]='rej3'
+// 高级玄铁
+set hight_level_item_pool[64]='it10'
+// 超级玄铁
+set hight_level_item_pool[65]='it13'
 // 强化石
 set hight_level_item_pool[66]='dkfw'
 // 优质兽皮
@@ -2205,8 +2218,8 @@ set hight_level_item_pool[112]=$69743037
 set hight_level_item_pool[113]=$69743038
 // 虎符
 set hight_level_item_pool[114]='wtlg'
-// 落宝铜钱
-set hight_level_item_pool[115]=$69743065
+// 满级青钢
+set hight_level_item_pool[115]='jdrn'
 // 的卢满级
 set hight_level_item_pool[116]=$6B67616C
 // 奇谋
@@ -2241,6 +2254,10 @@ set hight_level_item_pool[130]='it0t'
 set hight_level_item_pool[131]='it0p'
 // 洛阳铲
 set hight_level_item_pool[132]='it0y'
+// 天外陨铁
+set hight_level_item_pool[133]='it12'
+// 远古残骸
+set hight_level_item_pool[134]='it14'
 // 刚弓
 set hight_level_item_pool[170]=$6B70696E
 // 钢剑
@@ -4014,6 +4031,11 @@ if GetUnitAbilityLevel(Ij,$41303237)>0 then
 // set JT=JT*1.5
 set extra = extra +0.3
 endif
+// 三国志法强+30
+if GetUnitAbilityLevel(Ij,$4130314C)>0 then
+// set JT=JT*1.5
+set extra = extra +0.3
+endif
 // 朱雀套系数1.5
 if GetUnitAbilityLevel(Ij,$41304241)>0 then
 // set JT=JT*1.5
@@ -4034,7 +4056,7 @@ endif
 // 青倚双剑效果
 if GetUnitAbilityLevel(Ij, 'Ab4f') > 0  then
 set Ix=GetItemCharges(bW(Ij,'it0z'))
-set extra = extra + 0.2 + I2R(Ix)*.05
+set extra = extra + 0.2 + I2R(Ix)*.04
 // set JT=JT*(1.05+I2R(Ix)*.05)
 endif
 //苍玄之书
@@ -4048,7 +4070,7 @@ endif
 // 七星灯效果增伤 基础1.05 + 每级灯0.05
 if GetUnitAbilityLevel(Ij, $41303231) > 0  then
 set Ix=GetItemCharges(bW(Ij,$7372746C))
-set extra = extra + 0.2 + I2R(Ix)*.07
+set extra = extra + 0.2 + I2R(Ix)*.05
 // set JT=JT*(1.05+I2R(Ix)*.05)
 endif
 
@@ -4057,7 +4079,7 @@ if bC(Ij, $6974306B) == true then
 // call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00自然之怒")
 set Ix = LoadInteger(Ia, GetHandleId(Ij), $130B62E6)
 // set JT=JT*(1.25+I2R(Ix)*.065)
-set extra = extra + 0.5 + I2R(Ix)*.09
+set extra = extra + 0.5 + I2R(Ix)*.07
 endif
 // 入魔系数1.1
 if GetUnitAbilityLevel(Ij,$4130354E)>0 then
@@ -4081,11 +4103,7 @@ if awakeTime>0 then
     // set JT=JT*(1+awakeTime*.2)
     endif
 endif
-// 落宝铜钱+法强
-if GetUnitAbilityLevel(Ij,$41623078)>0 then
-// set JT=JT*1.2
-set extra = extra +0.4
-endif
+
 // 太平令法强
 if GetUnitAbilityLevel(Ij,'Ab40')>0 then 
 set extra = extra +0.3
@@ -4105,6 +4123,13 @@ endif
 if IsUnitEnemy(Ij,Player(8)) then
 set JT=JT*.2
 endif
+
+// 落宝铜钱+法强
+if GetUnitAbilityLevel(Ij,$41623078)>0 then
+// set JT=JT*1.2
+set extra = extra *1.3
+endif
+
 // 轩辕剑60法强
 if GetUnitAbilityLevel(Ij,'Ab3o')>0 then
 set extra=extra*1.6
@@ -4121,7 +4146,8 @@ if GetUnitAbilityLevel(Ij,'Ab42')>0 then
     endif
 endif
 set JT = JT * (1 +extra)
-call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT))
+call textToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT))
+// call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT))
 return JT
 endfunction
 // 根据英雄智力和法强返回相应值
@@ -5021,6 +5047,39 @@ endfunction
 
 
 // 宗预技能开始
+// 
+function other_found_result takes unit Iv returns nothing
+local integer loc_i =0
+set loc_i = GetRandomInt(1,7)
+if IsUnitType(Iv,UNIT_TYPE_HERO) then
+if loc_i == 1 then
+call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
+call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) + "|cffff0000在墓穴中找到了武功秘籍-折梅手！他的攻击间隔减少了0.05！")
+
+elseif loc_i ==2 then
+call SetUnitState(Iv, ConvertUnitState(32), GetUnitState(Iv, ConvertUnitState(32)) +30)  
+call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) +"|cffff0000在墓穴中找到了武功秘籍-铁布衫！他的基础护甲提高了30点！")
+
+elseif loc_i ==3 then
+call SetUnitState(Iv, ConvertUnitState(1), GetUnitState(Iv, ConvertUnitState(1)) +5000)
+call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) +"|cffff0000在墓穴中找到了武功秘籍-龙象功！他的最大生命值提高了5000点！")
+elseif loc_i ==4 then
+call SetUnitState(Iv, ConvertUnitState(18), GetUnitState(Iv, ConvertUnitState(18)) +250)
+call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) +"|cffff0000在墓穴中找到了武功秘籍-太祖长拳！他的基础攻击提高了250点！")
+elseif loc_i ==5 then
+call SetHeroAgi(Iv, GetHeroAgi(Iv, false) + 100,true)
+call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) +"|cffff0000在墓穴中找到了武功秘籍-风灵影！他的基础敏捷提高了100点！")
+elseif loc_i ==6 then
+call SetHeroStr(Iv, GetHeroStr(Iv, false) + 100,true)
+call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) +"|cffff0000在墓穴中找到了武功秘籍-气冲斗牛！他的基础力量提高了100点！")
+elseif loc_i ==7 then
+call SetHeroInt(Iv, GetHeroInt(Iv, false) + 100,true)
+call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) +"|cffff0000在墓穴中找到了武功秘籍-道德经！他的基础智力提高了100点！")
+
+endif
+endif
+
+endfunction
 // 找宝结果
 function compute_found_result takes integer res, unit Iv,integer loc_level returns nothing 
 // 三个入参分别是，随机结果，触发单位，奖池等级
@@ -5062,7 +5121,7 @@ elseif res <90 then
      set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
    if loc_level == 5 then
-    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
     if Iv == zongyu and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
     call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
@@ -5081,10 +5140,9 @@ else
     set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
     if loc_level > 3 then   
-    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,GetUnitName(Iv) +"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
-    call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
-    call DisplayTimedTextToForce(GetPlayersAll(), 6., GetUnitName(Iv) + "|cffff0000在墓穴中找到了武功秘籍！减少0.05的攻击间隔！")
+    call other_found_result(Iv)
     if  Iv ==zongyu  and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
     if GetUnitAbilityLevel(Iv, 'Ab28') <7 then
     call IncUnitAbilityLevel(Iv,'Ab28')
@@ -5104,15 +5162,14 @@ endif
 if loc_level == 6  then
 if  Iv ==zongyu then
 set zongyu_R_enchance = zongyu_R_enchance +3
-call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
-call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！每次叠加攻击额外造成100点伤害并减少0.05的攻击间隔！")
+call other_found_result(Iv)
 call IncUnitAbilityLevel(Iv,'Ab28')
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
-call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
+call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 else
 set zongyu_R_enchance = zongyu_R_enchance +1
-call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],Iv)
+call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 endif
 endif
@@ -6478,17 +6535,29 @@ function rongzhu_foreach_1 takes player loc_player returns nothing
     set loc_time4 = GetRandomInt(1,21)
     endloop
     // 
+   if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(1,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),  loc_time1)
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(1,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(1,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + loc_time1)
@@ -6546,17 +6615,29 @@ function rongzhu_foreach_2 takes player loc_player returns nothing
     set loc_time4 = GetRandomInt(1,21)
     endloop
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(2,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),  loc_time1)
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(2,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(2,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + loc_time1)
@@ -6616,17 +6697,29 @@ function rongzhu_foreach_3 takes player loc_player returns nothing
     set loc_time4 = GetRandomInt(1,21)
     endloop
     // 
+     if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(3,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])), loc_time1)
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(3,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(3,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), loc_time1)
@@ -6718,17 +6811,29 @@ function rongzhu_foreach_4 takes player loc_player returns nothing
     set loc_time4 = GetRandomInt(1,21)
     endloop
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(4,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),loc_time1)
     // 
+   if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(4,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])),loc_time1)
     // 
+    if loc_level == 5 then
+    set loc_time1 = 4   
+    else
     set loc_time1=GetRandomInt(4,loc_level)
+    endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
     call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
     call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])),loc_time1)
@@ -6747,7 +6852,14 @@ function rongzhu_start takes unit Iv, item loc_item,boolean loc_bool returns not
     call removeItemAbilityStorage(GetItemTypeId(loc_item),Iv)
     call SaveUnitHandle(Ia, GetPlayerId(GetTriggerPlayer()),StringHash("rongzhu_unit"),Iv)
     call SaveItemHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"),loc_item)
-    if bC(Iv, 'it12') == true and loc_bool then
+    if bC(Iv, 'it14') == true then
+    call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 5)
+    // call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
+    call RemoveItem(aj(Iv,'it14'))
+    call rongzhu_foreach_4(GetTriggerPlayer())
+
+    elseif bC(Iv, 'it12') == true and loc_bool then
+
     call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
     call RemoveItem(aj(Iv,'it12'))
     call rongzhu_foreach_4(GetTriggerPlayer())
@@ -7631,8 +7743,15 @@ endif
 if GetUnitAbilityLevel(JW,$41303735)>0  then
 if GetRandomInt(1,4)==3 then
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$4143666E,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852226,Ig)
-call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))) , 4, 0)
-call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青釭如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D)))))
+if bC(JW, $676F626D) == true then 
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))) * 0.5, 4, 0) 
+call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))))) 
+endif 
+
+if bC(JW, 'it0z') == true then 
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, 'it0z'))) * 0.5, 4, 0) 
+call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))))) 
+endif 
 endif
 if IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and GetUnitAbilityLevel(Ig,$41303543)<1 then
 call UnitAddAbility(Ig,$41303543)
@@ -17955,9 +18074,12 @@ set CH=CreateUnit(CC,$656D6F77,4384.,9504.,270.)
 set CI=CreateUnit(CC,$6E7A6C63,-7098.1,7107.4,270.)
 set CE=CreateUnit(CC,$6830304B,-1859.4,-6966.1,357.53)
 set CE=CreateUnit(CC,$6E666E70,-704.,-7616.,270.)
+// 新城军需官
 set CJ=CreateUnit(CC,$6861726D,-6848.,13248.,270.)
 set CK=CreateUnit(CC,$68303031,-1856.,-6592.,270.)
 set CE=CreateUnit(CC,$68303052,-1894.,-7293.7,357.27)
+set rongzhu_factory=CreateUnit(CC,$6861726D,-6848.,12848.,270.)
+
 endfunction
 function f6 takes nothing returns nothing
 local player CC=Player(PLAYER_NEUTRAL_PASSIVE)
@@ -18015,7 +18137,7 @@ call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
 // 刘璿
 set liurui=CreateUnit(CC,'Hapm',-3422.2,-7867.1,277.77)
-call UnitAddItemToSlotById(liurui,$72646531,0)
+call UnitAddItemToSlotById(liurui,'frgd',0)
 call UnitAddItemToSlotById(liurui,$636C666D,1)
 call UnitAddItemToSlotById(liurui,$70656E72,2)
 // call UnitAddItemToSlotById(liurui,'fgun',0)
@@ -18767,6 +18889,7 @@ call ShowUnitHide(Cc)
 call ShowUnitHide(Cd)
 call ShowUnitHide(CK)
 call ShowUnitHide(CJ)
+call ShowUnitHide(rongzhu_factory)
 call ShowUnitHide(Db)
 call ShowUnitHide(DY)
 call ShowUnitHide(CX)
@@ -22388,14 +22511,14 @@ call RemoveItem(aj(GetTriggerUnit(),'srtl'))
 call UnitAddItem(GetTriggerUnit(),CreateItem('it0r',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了羽渡尘")
 // 打造自然魂珠
-elseif bC(GetTriggerUnit(),$49303142)==true and bC(GetTriggerUnit(),$62747374)==true and bC(GetTriggerUnit(),$73747067)==true and bC(GetTriggerUnit(),$726F7473)==true and bC(GetTriggerUnit(),$7372746C)==true and bC(GetTriggerUnit(),'I00B')==true then
+elseif bC(GetTriggerUnit(),$49303142)==true and bC(GetTriggerUnit(),$62747374)==true and bC(GetTriggerUnit(),$73747067)==true and bC(GetTriggerUnit(),$726F7473)==true and bC(GetTriggerUnit(),$7372746C)==true and bC(GetTriggerUnit(),'ledg')==true then
  
   call RemoveItem(aj(GetTriggerUnit(),$62747374))
    call RemoveItem(aj(GetTriggerUnit(),$49303142))
    call RemoveItem(aj(GetTriggerUnit(),$73747067))
    call RemoveItem(aj(GetTriggerUnit(),$726F7473))
     call RemoveItem(aj(GetTriggerUnit(),$7372746C))
-    call RemoveItem(aj(GetTriggerUnit(),'I00B'))
+    call RemoveItem(aj(GetTriggerUnit(),'ledg'))
     call UnitAddItem(GetTriggerUnit(),CreateItem($6974306B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
     call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了自然魂珠")
 // 真武战甲
@@ -22443,13 +22566,13 @@ elseif bC(GetTriggerUnit(),$49303245)==true or bC(GetTriggerUnit(),$49303341)==t
    call RemoveItem(aj(GetTriggerUnit(),$49303237))
    call UnitAddItem(GetTriggerUnit(),CreateItem($69743068,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了鸩魔龙刀")
-elseif bC(GetTriggerUnit(),'I003')==true or bC(GetTriggerUnit(),'I01E')==true and bC(GetTriggerUnit(),'pspd')==true and bC(GetTriggerUnit(),'I006')==true and bC(GetTriggerUnit(),'gsou')==true and bC(GetTriggerUnit(),'cosl')==true and bC(GetTriggerUnit(),'I00B')==true then
+elseif bC(GetTriggerUnit(),'I003')==true or bC(GetTriggerUnit(),'I01E')==true and bC(GetTriggerUnit(),'pspd')==true and bC(GetTriggerUnit(),'I006')==true and bC(GetTriggerUnit(),'gsou')==true and bC(GetTriggerUnit(),'cosl')==true and bC(GetTriggerUnit(),'it0d')==true then
  call RemoveItem(aj(GetTriggerUnit(),'I003'))
    call RemoveItem(aj(GetTriggerUnit(),'I01E'))
    call RemoveItem(aj(GetTriggerUnit(),'pspd'))
    call RemoveItem(aj(GetTriggerUnit(),'I006'))
    call RemoveItem(aj(GetTriggerUnit(),'gsou'))
-    call RemoveItem(aj(GetTriggerUnit(),'I00B'))
+    call RemoveItem(aj(GetTriggerUnit(),'it0d'))
    call RemoveItem(aj(GetTriggerUnit(),'cosl'))
    call UnitAddItem(GetTriggerUnit(),CreateItem('it0n',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了神鬼天惊")
@@ -22795,7 +22918,7 @@ else
 endif
 endfunction
 function i9 takes nothing returns nothing
-call DisplayTextToForce(GetPlayersAll(),"|cFFFF00335秒钟后将清理地上物品")
+call DisplayTextToForce(GetPlayersAll(), "|cFFFF00335秒钟后将清理地上可清除的物品") 
 call TriggerSleepAction(5.)
 call EnumItemsInRectBJ(GetPlayableMapRect(),function i8)
 endfunction
@@ -22811,6 +22934,113 @@ call TriggerRegisterPlayerChatEvent(KR,Player(6),"-Q",true)
 call TriggerRegisterPlayerChatEvent(KR,Player(7),"-Q",true)
 call TriggerAddAction(KR,function i9)
 endfunction
+
+// 地板全清事件  
+function clear_all_action takes nothing returns nothing 
+if IsItemHiddenBJ(GetEnumItem()) == false then 
+call SetWidgetLife(GetEnumItem(), 50) 
+call RemoveItem(GetEnumItem()) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(1), PLAYER_STATE_RESOURCE_GOLD) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(2), PLAYER_STATE_RESOURCE_GOLD) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(3), PLAYER_STATE_RESOURCE_GOLD) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(4), PLAYER_STATE_RESOURCE_GOLD) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(5), PLAYER_STATE_RESOURCE_GOLD) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(6), PLAYER_STATE_RESOURCE_GOLD) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(7), PLAYER_STATE_RESOURCE_GOLD) 
+call AdjustPlayerStateBJ(100 * GetUnitLevel(C5), ConvertedPlayer(8), PLAYER_STATE_RESOURCE_GOLD) 
+endif 
+  
+endfunction 
+
+function clear_all_event takes nothing returns nothing 
+call DisplayTextToForce(GetPlayersAll(), "|cFFFF003310秒钟后将清理地上所有物品！所有！") 
+call TriggerSleepAction(10.) 
+call EnumItemsInRectBJ(GetPlayableMapRect(), function clear_all_action) 
+endfunction 
+
+function init_clear_all takes nothing returns nothing 
+set clear_all_trig = CreateTrigger() 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(0), "-All", true) 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(1), "-All", true) 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(2), "-All", true) 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(3), "-All", true) 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(4), "-All", true) 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(5), "-All", true) 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(6), "-All", true) 
+call TriggerRegisterPlayerChatEvent(clear_all_trig, Player(7), "-All", true) 
+call TriggerAddAction(clear_all_trig, function clear_all_event) 
+endfunction 
+// // 收取优皮事件  
+function up_pick_action takes nothing returns nothing 
+
+if RequestExtraBooleanData(50, GetTriggerPlayer(), null, null, false, 0, 0, 0) == true and IsItemHiddenBJ(GetEnumItem()) == false then 
+if GetEnumItem() != up_item and GetItemTypeId(GetEnumItem()) == $73727263 then 
+call SetItemCharges(up_item, GetItemCharges(up_item) + 1) 
+call SetWidgetLife(GetEnumItem(), 50) 
+call RemoveItem(GetEnumItem()) 
+endif 
+endif 
+
+
+endfunction 
+function up_check_event takes nothing returns nothing 
+if RequestExtraBooleanData(50, GetTriggerPlayer(), null, null, false, 0, 0, 0) == true and IsItemHiddenBJ(GetEnumItem()) == false then 
+if GetEnumItem() != up_item and GetItemTypeId(GetEnumItem()) == $73727263 then 
+set up_num = up_num+1
+
+endif 
+endif 
+endfunction
+
+function up_pick_event takes nothing returns nothing 
+call DisplayTextToForce(GetPlayersAll(), "|cFFFF00335秒钟后将拾取所有优质兽皮放在孔明后方！") 
+set up_num = 0
+call EnumItemsInRectBJ(GetPlayableMapRect(), function up_check_event) 
+call TriggerSleepAction(5.) 
+if up_num>1 then
+set up_item = CreateItem($73727263, -1220., -5540.)
+call EnumItemsInRectBJ(GetPlayableMapRect(), function up_pick_action) 
+endif
+
+endfunction 
+function init_UP_pick takes nothing returns nothing 
+    set UP_pick_trig = CreateTrigger() 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(0), "-UP", true) 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(1), "-UP", true) 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(2), "-UP", true) 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(3), "-UP", true) 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(4), "-UP", true) 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(5), "-UP", true) 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(6), "-UP", true) 
+    call TriggerRegisterPlayerChatEvent(UP_pick_trig, Player(7), "-UP", true) 
+    call TriggerAddAction(UP_pick_trig, function up_pick_event) 
+endfunction 
+
+function text_event takes nothing returns nothing 
+if text_show[GetPlayerId(GetTriggerPlayer())] == true then
+set text_show[GetPlayerId(GetTriggerPlayer())] = false
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "|cff2600ff 已关闭部分文本效果提示！") 
+
+else
+set text_show[GetPlayerId(GetTriggerPlayer())] = true
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "|cff2600ff 已打开部分文本效果提示！") 
+endif
+endfunction 
+
+function init_show_text takes nothing returns nothing 
+    set text_show_trig = CreateTrigger() 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(0), "-TXT", true) 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(1), "-TXT", true) 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(2), "-TXT", true) 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(3), "-TXT", true) 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(4), "-TXT", true) 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(5), "-TXT", true) 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(6), "-TXT", true) 
+    call TriggerRegisterPlayerChatEvent(text_show_trig, Player(7), "-TXT", true) 
+    // call TriggerAddAction(text_show_trig, function up_pick_event) 
+    call TriggerAddAction(text_show_trig, function text_event) 
+endfunction 
+
 // 人品调查判断
 function jC takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$6B79626C and bC(GetTriggerUnit(),$6D6C7374)==true and (IsItemInvulnerable(aj(GetTriggerUnit(),$6D6C7374))==false and bC(GetTriggerUnit(),$67656D74)==true or bC(GetTriggerUnit(),$6C757265)==true or bC(GetTriggerUnit(),$746D7363)==true or bC(GetTriggerUnit(),$61727363)==true or bC(GetTriggerUnit(),$6E666C67)==true)
@@ -23040,10 +23270,10 @@ set LJ[61]=$49303041
 set LJ[62]=$6F76656E
 // 魔魂盔
 set LJ[63]=$49303033
-// 精品小馒头
-set LJ[64]='pres'
-// 九转金丹
-set LJ[65]='rej3'
+// 高级玄铁
+set LJ[64]='it10'
+// 超级玄铁
+set LJ[65]='it13'
 // 强化石
 set LJ[66]='dkfw'
 // 优质兽皮
@@ -23113,7 +23343,7 @@ set LJ[113]=$69743038
 // 藏宝图
 set LJ[114]=$746C756D
 // 落宝铜钱
-set LJ[115]=$69743065
+set LJ[115]='jdrn'
 // 的卢满级
 set LJ[116]=$6B67616C
 // 奇谋
@@ -23531,6 +23761,11 @@ if GetRandomInt(0,50)==27 then
 call CreateItem($49303233,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
+// 1/5的概率出天外陨铁
+if GetRandomInt(0,5)==0 then
+call CreateItem('it12',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
 set Jk=1
 loop
 exitwhen Jk>8
@@ -23541,6 +23776,7 @@ call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|cffffcc00成功击杀蚩尤,请�
 set MG=CreateTimer()
 call TimerStart(MG,60.,false,function ja)
 else
+    // 蛇
 if GetTriggerUnit()==Cl then
 if GetRandomInt(1,10)==2 then
 else
@@ -23575,6 +23811,10 @@ if GetRandomInt(0,6)==5 then
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
+if GetRandomInt(0,5)==0 then
+call CreateItem('it12',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
 if GetUnitTypeId(GetKillingUnitBJ())==$51544453 or GetUnitTypeId(GetKillingUnitBJ())==$48303051 then
 call CreateItem($6D67746B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
@@ -23591,6 +23831,9 @@ if GetTriggerUnit()==Cm then
     if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit)and huntingFinish==true then
 call archeryEvent(24)
 endif
+// 必出远古残骸
+call CreateItem('it14',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+
     // 霸王套掉落机制
 set VL[0]=PlaceRandomItem(SZ,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 // call ItemPoolRemoveItemType(SZ,GetItemTypeId(VL[0]))
@@ -23603,6 +23846,12 @@ if GetTriggerUnit()==Ce then
     if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and archeryTime<120 then
 call archeryEvent(6)
 endif
+
+if GetRandomInt(0,5)==0 then
+call CreateItem('it10',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
 if GetUnitAbilityLevel(Ce,$41304244)==0 and GetRandomInt(1,5)==3 then
 if GetRandomInt(1,20)==19 then
 // call UnitAddAbility(Ce,$41304244)
@@ -23841,6 +24090,7 @@ else
 call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[31])
 endif
 
+
 if GetRandomInt(1, 8) == 3  then
 if Gq <7 then
         call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[31])
@@ -23848,6 +24098,7 @@ if Gq <7 then
         call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[31])
     endif
 endif
+
 
 if GetRandomInt(1,3)==1 then
 call CreateItemLoc($6772736C,Jd[31])
@@ -23899,6 +24150,11 @@ if Gq >6 then
 call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
 else
 call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+endif
+
+if GetRandomInt(0,5)==0 then
+call CreateItem('it10',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
 endif
 
 if GetRandomInt(1, 5) == 3 then
@@ -23970,6 +24226,11 @@ endif
 if GetRandomInt(1,10)==2 then
 else
 call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+endif
+
+if GetRandomInt(0,5)==0 then
+call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
 endif
 
 if GetRandomInt(1,5)==3 then
@@ -24063,6 +24324,12 @@ if GetRandomInt(1,10)==2 then
 else
 call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 endif
+// 玄铁掉落
+if GetRandomInt(0,5)==0 then
+call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
 if GetRandomInt(1,5)==3 then
 if Gq <7 then
         call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
@@ -24611,13 +24878,13 @@ endfunction
 function kU takes nothing returns nothing
 set KP=CreateTrigger()
 call TriggerRegisterPlayerChatEvent(KP,Player(0),"QB",true)
-call TriggerRegisterPlayerChatEvent(KR,Player(1),"QB",true)
-call TriggerRegisterPlayerChatEvent(KR,Player(2),"QB",true)
-call TriggerRegisterPlayerChatEvent(KR,Player(3),"QB",true)
-call TriggerRegisterPlayerChatEvent(KR,Player(4),"QB",true)
-call TriggerRegisterPlayerChatEvent(KR,Player(5),"QB",true)
-call TriggerRegisterPlayerChatEvent(KR,Player(6),"QB",true)
-call TriggerRegisterPlayerChatEvent(KR,Player(7),"QB",true)
+call TriggerRegisterPlayerChatEvent(KP,Player(1),"QB",true)
+call TriggerRegisterPlayerChatEvent(KP,Player(2),"QB",true)
+call TriggerRegisterPlayerChatEvent(KP,Player(3),"QB",true)
+call TriggerRegisterPlayerChatEvent(KP,Player(4),"QB",true)
+call TriggerRegisterPlayerChatEvent(KP,Player(5),"QB",true)
+call TriggerRegisterPlayerChatEvent(KP,Player(6),"QB",true)
+call TriggerRegisterPlayerChatEvent(KP,Player(7),"QB",true)
 call TriggerAddAction(KP,function kT)
 endfunction
 function kV takes nothing returns nothing
@@ -25082,8 +25349,11 @@ call ModifyHeroStat(bj_HEROSTAT_INT,Iv,bj_MODIFYMETHOD_ADD,20)
 call QuestMessageBJ(GetPlayersAll(),bj_QUESTMESSAGE_COMPLETED,"送信（完成）")
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"获得了所有属性+20及3000点经验的奖励。")
 call DisplayTextToForce(GetPlayersAll(),"|cffffcc00新城的刷兵被开启了，守住新城每一波都将获得木材奖励；孟达死去后会关闭刷兵和奖励。")
+call DisplayTextToForce(GetPlayersAll(),"|cffffcc00在新城找到了军械库和军器监！如果孟达战死则会消失。")
 call ShowUnitShow(Ed)
 call ShowUnitShow(CJ)
+call ShowUnitShow(rongzhu_factory)
+
 call SetUnitPositionLoc(Ed,GetRectCenter(w))
 call CreateNUnitsAtLoc(10,N7[GetUnitLevel(C5)],Player(9),GetRectCenter(w),bj_UNIT_FACING)
 call EnableTrigger(N8)
@@ -25191,6 +25461,8 @@ call DestroyTrigger(OJ)
 call DisplayTimedTextToForce(GetPlayersAll(),5.,"|Cffff0000孟达已经战死！新城失守！")
 call ShowUnitHide(CJ)
 call RemoveUnit(CJ)
+call ShowUnitHide(rongzhu_factory)
+call RemoveUnit(rongzhu_factory)
 call SetUnitOwner(Dh,Player(PLAYER_NEUTRAL_PASSIVE),true)
 call DestroyTrigger(N8)
 set KB=CreateGroup()
@@ -31600,7 +31872,7 @@ if GetSpellAbilityId()==$41623074  then
     endif
      // 四阶段偷装备
     if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) == 2 then
-    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,132)],GetTriggerUnit())
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],GetTriggerUnit())
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000从"+GetUnitName(GetSpellTargetUnit())+("|cffff0000身上偷到了极品宝物："+GetItemName(GetLastCreatedItem())))
     // 如果偷到的装备是追日靴
     if GetItemTypeId(GetLastCreatedItem()) == $49303030 then
@@ -34313,7 +34585,7 @@ call TriggerAddCondition(TG,Condition(function vD))
 call TriggerAddAction(TG,function vE)
 endfunction
 function vG takes nothing returns nothing
-if GetRandomInt(1,15)==7 then
+if GetRandomInt(1,20)==7 then
 call DestroyTrigger(GetTriggeringTrigger())
 call CreateItem($49303251,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
@@ -36987,7 +37259,9 @@ call regisetGaoxiangAttacked()
 call game_start_event()
 call InitCustomTriggers()
 call init_life_loss()
-
+call init_show_text()
+call init_UP_pick()
+call init_clear_all()
 endfunction
 function xb takes nothing returns nothing
 call SetPlayerStartLocation(Player(0),0)
@@ -40620,6 +40894,7 @@ loop
 exitwhen i > 8
 set gamblePlayerGroup[i] = 0
 set huntingBoss[i]=false
+set text_show[i] = false 
 set i = i + 1
 endloop
 endfunction
