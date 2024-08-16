@@ -6492,63 +6492,62 @@ endfunction
 
 
 // 刘睿-见龙卸甲被动
-// function liurui_w_action2 takes nothing returns nothing
-// local trigger CS=GetTriggeringTrigger()
-// local integer Ix=GetHandleId(CS)
-// local unit Iv = LoadUnitHandle(FS, Ix, StringHash("Source"))
-// local unit CE=GetEventDamageSource()
-// local real loc_damage=GetEventDamage()
-// local real has_damage = LoadReal(FS, Ix, "KrakenShell|Damage")
-// local real has_time = LoadReal(FS, Ix, "KrakenShell|LastTime")
-// if IsUnitAlly(Iv, CE) ==false then
-// if(has_time+6)<(TimerGetElapsed(all_timer)) then
-// set has_damage=0
-// endif
+function liurui_w_action2 takes nothing returns boolean
+local trigger CS=GetTriggeringTrigger()
+local integer Ix=GetHandleId(CS)
+local unit Iv = LoadUnitHandle(FS, Ix, StringHash("Source"))
+local unit CE=GetEventDamageSource()
+local real loc_damage=GetEventDamage()
+local real has_damage = LoadReal(FS, Ix, StringHash("KrakenShell|Damage"))
+local real has_time = LoadReal(FS, Ix, StringHash("KrakenShell|LastTime"))
+local real loc_time = TimerGetElapsed(all_timer)
+if IsUnitAlly(Iv, GetOwningPlayer(CE)) == false then
 
-// set has_time=(TimerGetElapsed(all_timer))
-// set has_damage=has_damage+loc_damage
+if(has_time+6)< loc_time then
+set has_damage=0
+endif
+
+set has_time=loc_time
+set has_damage=has_damage+loc_damage
 // call textToPlayer(GetOwningPlayer(Iv), 0, 0, "已收到的伤害：" + R2S(has_damage))
-// if has_damage>800  then
-// set has_damage=0
-// // call I_I1_1_I(Iv,false,true)
-// call UnitRemoveBuffs(Iv,false,true)
+if has_damage>800  then
+set has_damage=0
+// call I_I1_1_I(Iv,false,true)
+call UnitRemoveBuffs(Iv,false,true)
+call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl",Iv,"origin"))
+endif
+call SaveReal(FS, Ix, StringHash("KrakenShell|Damage") , has_damage)
+call SaveReal(FS,Ix,StringHash("KrakenShell|LastTime"),has_time)
+endif
+set CS=null
+set Iv=null
+return false
+endfunction
 
-// call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl",Iv,"origin"))
-// endif
-// call SaveReal(FS, Ix, StringHash("KrakenShell|Damage") , has_damage)
-// call SaveReal(FS,Ix,StringHash("KrakenShell|LastTime"),has_time)
-// endif
-// set CS=null
-// set Iv=null
-
-// endfunction
-
-
-
-
-// function liurui_w takes unit loc_u returns nothing
-// local trigger CS=CreateTrigger()
-// local integer Ix=GetHandleId(CS)
-// local real loc_time = TimerGetElapsed(all_timer)
-// call TriggerRegisterUnitEvent(CS,loc_u,EVENT_UNIT_DAMAGED)
-// // call TriggerAddCondition(CS,Condition(function liurui_w_action2))
-
-// call SaveUnitHandle(FS,Ix,StringHash("Source"),loc_u)
-
-// call SaveReal(FS,Ix,StringHash("KrakenShell|Damage"),0)
-
-// call SaveReal(FS,Ix,StringHash("KrakenShell|LastTime"),loc_time)
-// call textToPlayer(GetOwningPlayer(loc_u), 0, 0,"移除")
-
-// set CS=null
-// set loc_u=null
-// endfunction
+function liurui_w takes unit loc_u returns nothing
+local trigger CS=CreateTrigger()
+local integer Ix=GetHandleId(CS)
+local real loc_time = TimerGetElapsed(all_timer)
+call TriggerRegisterUnitEvent(CS,loc_u,EVENT_UNIT_DAMAGED)
+call TriggerAddCondition(CS,Condition(function liurui_w_action2))
+call SaveUnitHandle(FS,Ix,StringHash("Source"),loc_u)
+call SaveReal(FS,Ix,StringHash("KrakenShell|Damage"),0)
+call SaveReal(FS,Ix,StringHash("KrakenShell|LastTime"),loc_time)
+call textToPlayer(GetOwningPlayer(loc_u), 0, 0,"移除")
+set CS=null
+set loc_u=null
+endfunction
 
 function liurui_w_action takes nothing returns nothing
 local unit Iv = LoadUnitHandle(FS, GetHandleId(GetExpiredTimer()) , StringHash("hero"))
 // // 计时器时间
-call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Naga\NagaDeath\\NagaDeath.mdl",Iv,"origin"))
+if Iv != null then
+// call textToPlayer(GetOwningPlayer(Iv), 0, 0,"移除")
+ 
+call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl",Iv,"origin"))
 call UnitRemoveBuffs(Iv,false,true)
+endif
+
 
 // set Iv=null
 endfunction
@@ -6558,9 +6557,9 @@ local timer CS = CreateTimer()
 if loc_i=='Ab4j' and IsUnitIllusion(loc_u)==false and GetUnitAbilityLevel(loc_u,'Ab4j')==1 then
 call UnitAddAbility(loc_u,'Ab4n')
 call UnitMakeAbilityPermanent(loc_u,true,'Ab4n')
-// call liurui_w(loc_u)
+call liurui_w(loc_u)
 call SaveUnitHandle(FS, GetHandleId(CS), StringHash("hero"), loc_u)
-call TimerStart(CS, 6, true,function liurui_w_action)
+call TimerStart(CS, 6.0, true,function liurui_w_action)
 
 endif
 // set CS = null
@@ -7662,7 +7661,7 @@ local integer Ix=GetHandleId(CS)
 call SaveUnitHandle(Ia,Ix,$6865726F,Iv)
 call TimerStart(CS,1.,true,function cO)
 endfunction
-// 攻击时触发函数
+// 额外伤害触发函数
 function cQ takes unit JW,unit Ig returns nothing
 local integer Je=0
 local real attackTime =0
@@ -8620,7 +8619,7 @@ exitwhen true
 endif
 set Ix=Ix+1
 // 按钮判断范围,皮肤可选范围
-exitwhen Ix>26
+exitwhen Ix>27
 endloop
 call DialogDisplay(CC,IM[LF],false)
 set CC=null
@@ -8763,6 +8762,11 @@ elseif GetUnitTypeId(Iv)=='HA01' then
 call DialogSetMessage(IM[LF],"选择替换精卫皮肤")
 set LG[26] = DialogAddButton(IM[LF], "女帝-精卫", 1)
 set LH[26]='HA06'
+set LI=true
+elseif GetUnitTypeId(Iv)=='HA09' then
+call DialogSetMessage(IM[LF],"选择替换精卫皮肤")
+set LG[27] = DialogAddButton(IM[LF], "约德尔人-高翔", 1)
+set LH[27]='H007'
 set LI=true
 endif
 if LI then
@@ -18281,7 +18285,7 @@ call UnitAddItemToSlotById(juFu,$72646531,0)
 call UnitAddItemToSlotById(juFu,$636C666D,1)
 call UnitAddItemToSlotById(juFu,$70656E72,2)
 // 高翔
-set gaoxiang=CreateUnit(CC,$48303037,-3563.4,-7119.5,273.26)
+set gaoxiang=CreateUnit(CC,'HA09',-3563.4,-7119.5,273.26)
 call SetUnitState(gaoxiang,UNIT_STATE_MANA,220)
 call UnitAddItemToSlotById(gaoxiang,$6576746C,0)
 // call UnitAddItemToSlotById(gaoxiang,$69743069,0)
@@ -19516,7 +19520,19 @@ endif
 else
 endif
 
-
+// 
+if GetUnitAbilityLevel(Ih, 'Ab4l') >0 then
+    if YDWEIsEventAttackDamage() then
+    call SaveInteger(Ia, GetHandleId(Ih), StringHash("Ab4l"), LoadInteger(Ia, GetHandleId(Ih), StringHash("Ab4l")) + 1)
+    if LoadInteger(Ia, GetHandleId(Ih), StringHash("Ab4l")) > 3 then
+    call SaveInteger(Ia, GetHandleId(Ih), StringHash("Ab4l"),0)
+    call UnitDamageTarget(Ih, Ig, GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+    if GetUnitLifePercent(Ih) >20 then
+    call setUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) -GetUnitState(Ih, UNIT_STATE_MAX_LIFE) * 0.1)
+    endif
+    endif
+    endif
+endif
 
 // 张角被动
 if Ih == zhangjiao and GetUnitAbilityLevel(Ih, 'Ab3y') > 0 and IsUnitType(Ih, UNIT_TYPE_HERO) then
@@ -30690,7 +30706,19 @@ elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab3v',Iv)==2 then
 call IncUnitAbilityLevel(Iv,'Ab3v')
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00万雷天牢的等级已经提升了！")
 endif
-
+// 刘睿大招
+elseif Iv == liurui then
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab4m',Iv)<1  then
+call UnitAddAbilityBJ('Ab4m',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab4m')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00大灭！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab4m',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab4m')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00大灭的等级已经提升了！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab4m',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab4m')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00大灭的等级已经提升了！")
+endif
 
 endif
 set Iv=null
@@ -35376,7 +35404,7 @@ if GetUnitTypeId(GetTriggerUnit())==$48303035 then
 call IncUnitAbilityLevelSwapped($41623134,GetTriggerUnit())
 else
     // 高翔大招
-if GetUnitTypeId(GetTriggerUnit())==$48303037 then
+if GetUnitTypeId(GetTriggerUnit())=='H007' or GetUnitTypeId(GetTriggerUnit())== 'HA09' then
 call IncUnitAbilityLevelSwapped($41623166,GetTriggerUnit())
 else
     // 陈到大招
@@ -35402,8 +35430,13 @@ else
  // 张角大招
 if GetUnitTypeId(GetTriggerUnit())=='HA04' then
 call IncUnitAbilityLevelSwapped('Ab3v',GetTriggerUnit())
+else
+// 刘睿大招
+if GetUnitTypeId(GetTriggerUnit())=='HA07' then
+call IncUnitAbilityLevelSwapped('Ab4m',GetTriggerUnit())
 
 else
+endif
 endif
 endif
 endif
