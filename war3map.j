@@ -80,6 +80,8 @@ group udg_AnnihilateABlackHoleGruop2=null
 unit udg_TriggerUnit=null
 location udg_TemporaryCreatedPoint=null
 group udg_GetUnitsInRectAllGroup=null
+// 全局定时器
+timer all_timer = null
 // 熔铸事件
 trigger rongzhu_trig=null
 button array rongzhu_btn
@@ -6488,6 +6490,87 @@ function InitTrig_tiao takes nothing returns nothing
 endfunction
 // 陈到技能结束
 
+
+// 刘睿-见龙卸甲被动
+// function liurui_w_action2 takes nothing returns nothing
+// local trigger CS=GetTriggeringTrigger()
+// local integer Ix=GetHandleId(CS)
+// local unit Iv = LoadUnitHandle(FS, Ix, StringHash("Source"))
+// local unit CE=GetEventDamageSource()
+// local real loc_damage=GetEventDamage()
+// local real has_damage = LoadReal(FS, Ix, "KrakenShell|Damage")
+// local real has_time = LoadReal(FS, Ix, "KrakenShell|LastTime")
+// if IsUnitAlly(Iv, CE) ==false then
+// if(has_time+6)<(TimerGetElapsed(all_timer)) then
+// set has_damage=0
+// endif
+
+// set has_time=(TimerGetElapsed(all_timer))
+// set has_damage=has_damage+loc_damage
+// call textToPlayer(GetOwningPlayer(Iv), 0, 0, "已收到的伤害：" + R2S(has_damage))
+// if has_damage>800  then
+// set has_damage=0
+// // call I_I1_1_I(Iv,false,true)
+// call UnitRemoveBuffs(Iv,false,true)
+
+// call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl",Iv,"origin"))
+// endif
+// call SaveReal(FS, Ix, StringHash("KrakenShell|Damage") , has_damage)
+// call SaveReal(FS,Ix,StringHash("KrakenShell|LastTime"),has_time)
+// endif
+// set CS=null
+// set Iv=null
+
+// endfunction
+
+
+
+
+// function liurui_w takes unit loc_u returns nothing
+// local trigger CS=CreateTrigger()
+// local integer Ix=GetHandleId(CS)
+// local real loc_time = TimerGetElapsed(all_timer)
+// call TriggerRegisterUnitEvent(CS,loc_u,EVENT_UNIT_DAMAGED)
+// // call TriggerAddCondition(CS,Condition(function liurui_w_action2))
+
+// call SaveUnitHandle(FS,Ix,StringHash("Source"),loc_u)
+
+// call SaveReal(FS,Ix,StringHash("KrakenShell|Damage"),0)
+
+// call SaveReal(FS,Ix,StringHash("KrakenShell|LastTime"),loc_time)
+// call textToPlayer(GetOwningPlayer(loc_u), 0, 0,"移除")
+
+// set CS=null
+// set loc_u=null
+// endfunction
+
+function liurui_w_action takes nothing returns nothing
+local unit Iv = LoadUnitHandle(FS, GetHandleId(GetExpiredTimer()) , StringHash("hero"))
+// // 计时器时间
+call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Naga\NagaDeath\\NagaDeath.mdl",Iv,"origin"))
+call UnitRemoveBuffs(Iv,false,true)
+
+// set Iv=null
+endfunction
+
+function liurui_study_w takes unit loc_u,integer loc_i returns nothing
+local timer CS = CreateTimer()
+if loc_i=='Ab4j' and IsUnitIllusion(loc_u)==false and GetUnitAbilityLevel(loc_u,'Ab4j')==1 then
+call UnitAddAbility(loc_u,'Ab4n')
+call UnitMakeAbilityPermanent(loc_u,true,'Ab4n')
+// call liurui_w(loc_u)
+call SaveUnitHandle(FS, GetHandleId(CS), StringHash("hero"), loc_u)
+call TimerStart(CS, 6, true,function liurui_w_action)
+
+endif
+// set CS = null
+endfunction
+// 初始化全局计时器
+function timerInit takes nothing returns nothing
+set all_timer = CreateTimer()
+call TimerStart(all_timer,99999.00,false,null)
+endfunction
+
 function rongzhu_ability_choose_1 takes nothing returns nothing
 local button loc_btn=GetClickedButton()
 local integer loc_index = 0
@@ -6937,7 +7020,7 @@ function InitCustomTriggers takes nothing returns nothing
     call Trig_listen_sos()
     call YDWEItemAbilitySystemInit()
     call init_rongzhu()
-
+    call timerInit()
     // 
     call InitTrig_AnnihilateABlackHole()
     call InitTrig_AnnihilateABlackHole2()
@@ -18136,7 +18219,7 @@ call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
 // 刘璿
-set liurui=CreateUnit(CC,'Hapm',-3422.2,-7867.1,277.77)
+set liurui=CreateUnit(CC,'HA07',-3422.2,-7867.1,277.77)
 call UnitAddItemToSlotById(liurui,'frgd',0)
 call UnitAddItemToSlotById(liurui,$636C666D,1)
 call UnitAddItemToSlotById(liurui,$70656E72,2)
@@ -28992,6 +29075,10 @@ call TriggerAddAction(QB,function p9)
 endfunction
 function qC takes nothing returns nothing
     // 学习技能监听
+    // 见龙卸甲
+    if GetLearnedSkillBJ() == 'Ab4j' and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab4j') == 1 then 
+        call liurui_study_w(GetTriggerUnit(),'Ab4j')
+    endif 
     // 如果学习的是沙场豪情
     if GetLearnedSkillBJ()== 'Ab1p' then 
         call SetUnitState(GetTriggerUnit(), ConvertUnitState(32), GetUnitState(GetTriggerUnit(), ConvertUnitState(32)) +10)
