@@ -47,7 +47,7 @@ real yd_MapMinY= 0
 
 hashtable YDHT
 hashtable YDLOC
-
+hashtable hero_hash
 real Lx=1000
 real Ly=1
 boolean L1=false
@@ -89,6 +89,7 @@ integer array rongzhu_ability_pool
 integer array rongzhu_extra_pool
 integer xuan_yuan = GetRandomInt(101,107)
 unit rongzhu_factory =null
+trigger liurui_R_trig
 // shifa
 trigger trig_shifa =null
 // 奇趣蛋事件
@@ -4079,7 +4080,7 @@ endif
 // 自然之力
 if bC(Ij, $6974306B) == true then
 // call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00自然之怒")
-set Ix = LoadInteger(Ia, GetHandleId(Ij), $130B62E6)
+set Ix = LoadInteger(Ia, GetHandleId(Ij), StringHash("ziranhunzhu"))
 // set JT=JT*(1.25+I2R(Ix)*.065)
 set extra = extra + 0.5 + I2R(Ix)*.07
 endif
@@ -4098,7 +4099,7 @@ if GetUnitAbilityLevel(Ij,$41304542)>0 then
 // set JT=JT*1.1
 set extra = extra +0.2
 endif
-// 姜维重修系数每级0.2
+// 姜维重修系数每级0.3
 if awakeTime>0 then
     if GetUnitTypeId(Ij)==$486B616C or GetUnitTypeId(Ij)==$484A5731 then
         set extra = extra +awakeTime*.3
@@ -6489,7 +6490,67 @@ function InitTrig_tiao takes nothing returns nothing
     call TriggerAddAction(gg_trg_tiao, function Trig_tiaoActions)
 endfunction
 // 陈到技能结束
+// 刘睿-鲜血魔井被动
+function liurui_r_reborn_end takes nothing returns nothing
+local timer CS = GetExpiredTimer()
+local unit Iv = LoadUnitHandle(hero_hash,GetHandleId(CS), StringHash("reborn"))
 
+call SaveReal(hero_hash, GetHandleId(CS), StringHash("reborn_time"), LoadReal(hero_hash, GetHandleId(CS), StringHash("reborn_time")) -0.1)
+if LoadReal(hero_hash, GetHandleId(CS), StringHash("reborn_time")) <0 then
+call ShowUnit(Iv, false)
+call UnitRemoveAbility(Iv,'Aloc')
+call ShowUnit(Iv, true)   
+
+call DestroyTimer(CS)
+endif
+
+endfunction
+function liurui_r_reborn takes unit Iv returns nothing
+local timer CS = CreateTimer()
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("reborn"),Iv)
+call SaveReal(hero_hash, GetHandleId(CS), StringHash("reborn_time"),5)
+call UnitAddAbility(Iv,'Aloc')
+call SetUnitState(Iv,ConvertUnitState(1),GetUnitState(Iv,ConvertUnitState(1))+500)
+
+
+call TimerStart(CS,0.1,true,function liurui_r_reborn_end)
+// set CS=null
+endfunction
+
+function liurui_r_condition takes nothing returns boolean
+return GetLearnedSkill()=='Ab4k'
+endfunction
+function liurui_r_time_action takes nothing returns nothing
+call SetUnitX(LoadUnitHandle(hero_hash,GetHandleId(GetExpiredTimer()),$58339142),GetUnitX(LoadUnitHandle(hero_hash,GetHandleId(GetExpiredTimer()),$84F3E160))-0.)
+call SetUnitY(LoadUnitHandle(hero_hash,GetHandleId(GetExpiredTimer()),$58339142),GetUnitY(LoadUnitHandle(hero_hash,GetHandleId(GetExpiredTimer()),$84F3E160)))
+call SetUnitAnimationByIndex(LoadUnitHandle(hero_hash,GetHandleId(GetExpiredTimer()),$58339142),HK[GetConvertedPlayerId(GetOwningPlayer(LoadUnitHandle(hero_hash,GetHandleId(GetExpiredTimer()),$84F3E160)))]/2+2)
+endfunction
+function liurui_r_action takes nothing returns nothing
+local timer MG
+local integer QY=LoadInteger(hero_hash,GetHandleId(GetTriggeringTrigger()),$CFDE6C76)
+    // call textToPlayer(GetTriggerPlayer(), 0, 0, "正确进入触发了")
+
+set QY=QY+3
+call SaveInteger(hero_hash,GetHandleId(GetTriggeringTrigger()),$CFDE6C76,QY)
+call SaveInteger(hero_hash,GetHandleId(GetTriggeringTrigger()),$ECE825E7,QY)
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(18),GetUnitState(GetTriggerUnit(),ConvertUnitState(18))+30.)
+if LoadUnitHandle(hero_hash,GetHandleId(GetTriggeringTrigger())*QY,$58339142)==null then
+set MG=CreateTimer()
+call SaveUnitHandle(hero_hash,GetHandleId(MG),$58339142,CreateUnit(GetOwningPlayer(GetTriggerUnit()),$65303154,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()),0))
+call SaveUnitHandle(hero_hash,GetHandleId(MG),$84F3E160,GetTriggerUnit())
+call SetUnitTimeScale(LoadUnitHandle(hero_hash,GetHandleId(GetTriggeringTrigger())*QY,$58339142),100.)
+call SetUnitAnimationByIndex(LoadUnitHandle(hero_hash,GetHandleId(GetTriggeringTrigger())*QY,$58339142),2)
+call TimerStart(MG,.03,true,function liurui_r_time_action)
+else
+endif
+call FlushChildHashtable(hero_hash,GetHandleId(GetTriggeringTrigger())*QY)
+set MG=null
+endfunction
+// function liurui_R_init takes nothing returns nothing
+// set liurui_R_trig=CreateTrigger()
+// call TriggerAddCondition(liurui_R_trig,Condition(function liurui_r_condition))
+// call TriggerAddAction(liurui_R_trig,function liurui_r_action)
+// endfunction
 
 // 刘睿-见龙卸甲被动
 function liurui_w_action2 takes nothing returns boolean
@@ -6575,21 +6636,23 @@ local button loc_btn=GetClickedButton()
 local integer loc_index = 0
 local integer loc_ab 
 local integer loc_ab_level 
-local item loc_item= LoadItemHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
-local unit Iv = LoadUnitHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
+local item loc_item= LoadItemHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
+local unit Iv = LoadUnitHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
    loop 
     exitwhen rongzhu_btn[GetPlayerId(GetTriggerPlayer()) * 100 + loc_index] == loc_btn
-    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, I2S(loc_index) + "--查找的技能1：" + GetAbilityName(LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()), GetPlayerId(GetTriggerPlayer()) * 100 + loc_index)))
+    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, I2S(loc_index) + "--查找的技能1：" + GetAbilityName(LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), GetPlayerId(GetTriggerPlayer()) * 100 + loc_index)))
 
     set loc_index = loc_index +1
 
     endloop
 
-set loc_ab = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
-set loc_ab_level = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
+set loc_ab = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
+set loc_ab_level = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能：" + GetAbilityName(loc_ab))
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能等级：" + I2S(loc_ab_level))
+if loc_ab !=0 then
 call setItemAbilityStorage(GetItemTypeId(loc_item), loc_ab, Iv,loc_ab_level)
+endif
 call DestroyTrigger(GetTriggeringTrigger())
 call DialogDestroy(GetClickedDialog())
 set loc_btn =null
@@ -6598,7 +6661,7 @@ endfunction
 function rongzhu_foreach_1 takes player loc_player returns nothing 
     local dialog loc_dialog=DialogCreate()
     local trigger loc_trig = CreateTrigger()
-    local integer loc_level = LoadInteger(Ia, GetPlayerId(loc_player), StringHash("rongzhu_times"))
+    local integer loc_level = LoadInteger(hero_hash, GetPlayerId(loc_player), StringHash("rongzhu_times"))
     local integer loc_time1 = GetRandomInt(0,1)
     local integer loc_time2
     local integer loc_time3
@@ -6608,6 +6671,9 @@ function rongzhu_foreach_1 takes player loc_player returns nothing
     set loc_time2 = GetRandomInt(1,21) 
     set loc_time3 = GetRandomInt(1,21)
     set loc_time4 = GetRandomInt(1,21)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = null
     loop 
     exitwhen loc_time2 != loc_time3
     set loc_time3 = GetRandomInt(1,21)
@@ -6623,8 +6689,8 @@ function rongzhu_foreach_1 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(1,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),  loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),  loc_time1)
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
@@ -6632,8 +6698,8 @@ function rongzhu_foreach_1 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(1,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
@@ -6641,8 +6707,8 @@ function rongzhu_foreach_1 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(1,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), LoadInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + loc_time1)
     call TriggerRegisterDialogEvent(loc_trig,loc_dialog)
     call TriggerAddAction(loc_trig,function rongzhu_ability_choose_1)
     call DialogDisplay(loc_player,loc_dialog,true)
@@ -6656,19 +6722,21 @@ local button loc_btn=GetClickedButton()
 local integer loc_index = 0
 local integer loc_ab 
 local integer loc_ab_level 
-local item loc_item= LoadItemHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
-local unit Iv = LoadUnitHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
+local item loc_item= LoadItemHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
+local unit Iv = LoadUnitHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
    loop 
     exitwhen rongzhu_btn[GetPlayerId(GetTriggerPlayer()) * 100 + loc_index] == loc_btn
     set loc_index = loc_index +1
-    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0,  I2S(loc_index) + "--查找的技能2：" + GetAbilityName(LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)))
+    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0,  I2S(loc_index) + "--查找的技能2：" + GetAbilityName(LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)))
 
     endloop
-set loc_ab = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
-set loc_ab_level = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
+set loc_ab = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
+set loc_ab_level = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能：" + GetAbilityName(loc_ab))
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能等级：" + I2S(loc_ab_level))
+if loc_ab !=0 then
 call setItemAbilityStorage(GetItemTypeId(loc_item), loc_ab, Iv,loc_ab_level)
+endif
 call DestroyTrigger(GetTriggeringTrigger())
 call DialogDestroy(GetClickedDialog())
 set loc_btn =null
@@ -6678,7 +6746,7 @@ endfunction
 function rongzhu_foreach_2 takes player loc_player returns nothing 
     local dialog loc_dialog=DialogCreate()
     local trigger loc_trig = CreateTrigger()
-    local integer loc_level = LoadInteger(Ia, GetPlayerId(loc_player), StringHash("rongzhu_times"))
+    local integer loc_level = LoadInteger(hero_hash, GetPlayerId(loc_player), StringHash("rongzhu_times"))
     local integer loc_time1 = GetRandomInt(0,1)
     local integer loc_time2
     local integer loc_time3
@@ -6688,6 +6756,9 @@ function rongzhu_foreach_2 takes player loc_player returns nothing
     set loc_time2 = GetRandomInt(1,21) 
     set loc_time3 = GetRandomInt(1,21)
     set loc_time4 = GetRandomInt(1,21)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = null
     loop 
     exitwhen loc_time2 != loc_time3
     set loc_time3 = GetRandomInt(1,21)
@@ -6703,8 +6774,8 @@ function rongzhu_foreach_2 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(2,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),  loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),  loc_time1)
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
@@ -6712,8 +6783,8 @@ function rongzhu_foreach_2 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(2,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
@@ -6721,8 +6792,8 @@ function rongzhu_foreach_2 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(2,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), LoadInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), LoadInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4]))) + loc_time1)
     call TriggerRegisterDialogEvent(loc_trig,loc_dialog)
     call TriggerAddAction(loc_trig,function rongzhu_ability_choose_2)
     call DialogDisplay(loc_player,loc_dialog,true)
@@ -6737,20 +6808,22 @@ local button loc_btn=GetClickedButton()
 local integer loc_index = 0
 local integer loc_ab 
 local integer loc_ab_level 
-local item loc_item= LoadItemHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
-local unit Iv = LoadUnitHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
+local item loc_item= LoadItemHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
+local unit Iv = LoadUnitHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
    loop 
     exitwhen rongzhu_btn[GetPlayerId(GetTriggerPlayer()) * 100 + loc_index] == loc_btn
     set loc_index = loc_index +1
-     call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, I2S(loc_index) + "--查找的技能3：" + GetAbilityName(LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)))
+     call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, I2S(loc_index) + "--查找的技能3：" + GetAbilityName(LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)))
 
     endloop
-set loc_ab = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
-set loc_ab_level = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
+set loc_ab = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
+set loc_ab_level = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能：" + GetAbilityName(loc_ab))
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能等级：" + I2S(loc_ab_level))
 
+if loc_ab !=0 then
 call setItemAbilityStorage(GetItemTypeId(loc_item), loc_ab, Iv,loc_ab_level)
+endif
 call DestroyTrigger(GetTriggeringTrigger())
 call DialogDestroy(GetClickedDialog())
 set loc_btn =null
@@ -6760,7 +6833,7 @@ endfunction
 function rongzhu_foreach_3 takes player loc_player returns nothing 
     local dialog loc_dialog=DialogCreate()
     local trigger loc_trig = CreateTrigger()
-    local integer loc_level = LoadInteger(Ia, GetPlayerId(loc_player), StringHash("rongzhu_times"))
+    local integer loc_level = LoadInteger(hero_hash, GetPlayerId(loc_player), StringHash("rongzhu_times"))
     local integer loc_time1 = GetRandomInt(0,1)
     local integer loc_time2
     local integer loc_time3
@@ -6770,6 +6843,9 @@ function rongzhu_foreach_3 takes player loc_player returns nothing
     set loc_time2 = GetRandomInt(1,21) 
     set loc_time3 = GetRandomInt(1,21)
     set loc_time4 = GetRandomInt(1,21)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = null
     loop 
     exitwhen loc_time2 != loc_time3
     set loc_time3 = GetRandomInt(1,21)
@@ -6785,8 +6861,8 @@ function rongzhu_foreach_3 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(3,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])), loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])), loc_time1)
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
@@ -6794,8 +6870,8 @@ function rongzhu_foreach_3 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(3,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])), loc_time1)
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
@@ -6803,8 +6879,8 @@ function rongzhu_foreach_3 takes player loc_player returns nothing
     set loc_time1=GetRandomInt(3,loc_level)
     endif
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])), loc_time1)
     call TriggerRegisterDialogEvent(loc_trig,loc_dialog)
     call TriggerAddAction(loc_trig,function rongzhu_ability_choose_3)
     call DialogDisplay(loc_player,loc_dialog,true)
@@ -6819,19 +6895,21 @@ local button loc_btn=GetClickedButton()
 local integer loc_index = 0
 local integer loc_ab 
 local integer loc_ab_level 
-local item loc_item= LoadItemHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
-local unit Iv = LoadUnitHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
+local item loc_item= LoadItemHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"))
+local unit Iv = LoadUnitHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_unit"))
    loop 
     exitwhen rongzhu_btn[GetPlayerId(GetTriggerPlayer()) * 100 + loc_index] == loc_btn
     set loc_index = loc_index +1
-    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0,  I2S(loc_index) + "--查找的技能4：" + GetAbilityName(LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)))
+    call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0,  I2S(loc_index) + "--查找的技能4：" + GetAbilityName(LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)))
     endloop
-set loc_ab = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
-set loc_ab_level = LoadInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
+set loc_ab = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()),GetPlayerId(GetTriggerPlayer()) * 100 +loc_index)
+call textToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能code码：" + I2S(loc_ab))
+set loc_ab_level = LoadInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash(GetAbilityName(loc_ab))) 
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能：" + GetAbilityName(loc_ab))
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "选择的技能等级：" + I2S(loc_ab_level))
-
+if loc_ab !=0 then
 call setItemAbilityStorage(GetItemTypeId(loc_item), loc_ab, Iv,loc_ab_level)
+endif
 // call UnitAddAbility(Iv, loc_ab)
 // call UnitMakeAbilityPermanent(Iv, true, loc_ab)
 // call SetUnitAbilityLevel(Iv, loc_ab,loc_ab_level)   
@@ -6845,11 +6923,14 @@ endfunction
 function rongzhu_foreach_4 takes player loc_player returns nothing 
     local dialog loc_dialog=DialogCreate()
     local trigger loc_trig = CreateTrigger()
-    local integer loc_level = LoadInteger(Ia, GetPlayerId(loc_player), StringHash("rongzhu_times"))
+    local integer loc_level = LoadInteger(hero_hash, GetPlayerId(loc_player), StringHash("rongzhu_times"))
     local integer loc_time1 = GetRandomInt(0,1)
     local integer loc_time2
     local integer loc_time3
     local integer loc_time4
+    local integer ability_1
+    local integer ability_2
+    local integer ability_3
     call DialogSetMessage(loc_dialog,"请选择熔铸技能")
     // set rongzhu_btn[1] = DialogAddButton(loc_dialog, "测试",1)
     if loc_time1 == 1 then
@@ -6865,21 +6946,27 @@ function rongzhu_foreach_4 takes player loc_player returns nothing
     exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
     set loc_time4 = GetRandomInt(1,7)
     endloop
+    set ability_1 = rongzhu_extra_pool[loc_time2]
+    set ability_2 = rongzhu_extra_pool[loc_time3]
+    set ability_3 = rongzhu_extra_pool[loc_time4]
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = null
+     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = null
     // I2S(GetAbilityName(rongzhu_extra_pool[1])) + "(1)"
-    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time2]) + "(1)", 1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(ability_1) + "(1)", 1)
     // 将对应技能存起来 
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_extra_pool[loc_time2])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time2])),1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,ability_1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(ability_1)),1)
     
-    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time3]) + "(1)", 1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(ability_2) + "(1)", 1)
     // 将对应技能存起来
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_extra_pool[loc_time3])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time3])),1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,ability_2)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(ability_2)),1)
     
-    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_extra_pool[loc_time4]) + "(1)", 1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(ability_3) + "(1)", 1)
     // 将对应技能存起来
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_extra_pool[loc_time4])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_extra_pool[loc_time4])),1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,ability_3)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(ability_3)),1)
     else
     set loc_time2 = GetRandomInt(1,21) 
     set loc_time3 = GetRandomInt(1,21)
@@ -6892,33 +6979,36 @@ function rongzhu_foreach_4 takes player loc_player returns nothing
     exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
     set loc_time4 = GetRandomInt(1,21)
     endloop
+    set ability_1 = rongzhu_ability_pool[loc_time2]
+    set ability_2 = rongzhu_ability_pool[loc_time3]
+    set ability_3 = rongzhu_ability_pool[loc_time4]
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
     else
     set loc_time1=GetRandomInt(4,loc_level)
     endif
-    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time2]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,rongzhu_ability_pool[loc_time2])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time2])),loc_time1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = DialogAddButton(loc_dialog, GetAbilityName(ability_1) + "(" + I2S(loc_time1) + ")", loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 1,ability_1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(ability_1)),loc_time1)
     // 
    if loc_level == 5 then
     set loc_time1 = 4   
     else
     set loc_time1=GetRandomInt(4,loc_level)
     endif
-    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time3]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,rongzhu_ability_pool[loc_time3])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time3])),loc_time1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = DialogAddButton(loc_dialog, GetAbilityName(ability_2) + "(" + I2S(loc_time1) + ")", loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 2,ability_2)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(ability_2)),loc_time1)
     // 
     if loc_level == 5 then
     set loc_time1 = 4   
     else
     set loc_time1=GetRandomInt(4,loc_level)
     endif
-    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(rongzhu_ability_pool[loc_time4]) + "(" + I2S(loc_time1) + ")", loc_time1)
-    call SaveInteger(Ia, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,rongzhu_ability_pool[loc_time4])
-    call SaveInteger(Ia, GetPlayerId(loc_player), StringHash(GetAbilityName(rongzhu_ability_pool[loc_time4])),loc_time1)
+    set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = DialogAddButton(loc_dialog, GetAbilityName(ability_3) + "(" + I2S(loc_time1) + ")", loc_time1)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,ability_3)
+    call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(ability_3)),loc_time1)
     endif
     call TriggerRegisterDialogEvent(loc_trig,loc_dialog)
     call TriggerAddAction(loc_trig,function rongzhu_ability_choose_4)
@@ -6932,29 +7022,29 @@ function rongzhu_start takes unit Iv, item loc_item,boolean loc_bool returns not
     // 分别传入打造人、被打造的物品，是否可以使用第四级打造
     local integer loc_num = 0
     call removeItemAbilityStorage(GetItemTypeId(loc_item),Iv)
-    call SaveUnitHandle(Ia, GetPlayerId(GetTriggerPlayer()),StringHash("rongzhu_unit"),Iv)
-    call SaveItemHandle(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"),loc_item)
+    call SaveUnitHandle(hero_hash, GetPlayerId(GetTriggerPlayer()),StringHash("rongzhu_unit"),Iv)
+    call SaveItemHandle(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_item"),loc_item)
     if bC(Iv, 'it14') == true then
-    call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 5)
-    // call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
+    call SaveInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 5)
+    // call SaveInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
     call RemoveItem(aj(Iv,'it14'))
     call rongzhu_foreach_4(GetTriggerPlayer())
 
     elseif bC(Iv, 'it12') == true and loc_bool then
 
-    call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
+    call SaveInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 4)
     call RemoveItem(aj(Iv,'it12'))
     call rongzhu_foreach_4(GetTriggerPlayer())
     elseif bC(Iv, 'it11') == true then
-    call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 3)
+    call SaveInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 3)
     call RemoveItem(aj(Iv,'it11'))
     call rongzhu_foreach_3(GetTriggerPlayer())
     elseif bC(Iv, 'it10') == true then
-    call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 2)
+    call SaveInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 2)
     call RemoveItem(aj(Iv,'it10'))
     call rongzhu_foreach_2(GetTriggerPlayer())
     elseif bC(Iv, 'rat9') == true then
-    call SaveInteger(Ia, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 1)
+    call SaveInteger(hero_hash, GetPlayerId(GetTriggerPlayer()), StringHash("rongzhu_times"), 1)
     call RemoveItem(aj(Iv,'rat9'))
     call rongzhu_foreach_1(GetTriggerPlayer())
     else
@@ -7024,6 +7114,7 @@ function InitCustomTriggers takes nothing returns nothing
     call InitTrig_AnnihilateABlackHole()
     call InitTrig_AnnihilateABlackHole2()
     call InitTrig_S_DummyUnitDeath()
+    // call liurui_R_init()
     // 
     call zhangjiao_Q_death_init()
     set udg_AnnihilateBlackHoleSLv=0
@@ -7826,12 +7917,12 @@ if GetUnitAbilityLevel(JW,$41303735)>0  then
 if GetRandomInt(1,4)==3 then
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$4143666E,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852226,Ig)
 if bC(JW, $676F626D) == true then 
-call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))) * 0.7, 4, 0) 
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + IMinBJ(GetItemCharges(bW(JW, $676F626D)),10)) * 0.7, 4, 0) 
 call textToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, $676F626D))))) 
 endif 
 
 if bC(JW, 'it0z') == true then 
-call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + GetItemCharges(bW(JW, 'it0z'))) * 0.7, 4, 0) 
+call bs(JW, GetUnitX(Ig), GetUnitY(Ig), 330., bk(JW, 0, 1 + IMinBJ(GetItemCharges(bW(JW, 'it0z')),10)) * 0.7, 4, 0) 
 call textToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00青钢如虹！伤害：" + R2S(bk(JW, 0, 1 + GetItemCharges(bW(JW, 'it0z'))))) 
 endif 
 endif
@@ -18224,8 +18315,9 @@ call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
 // 刘璿
 set liurui=CreateUnit(CC,'HA07',-3422.2,-7867.1,277.77)
+call UnitMakeAbilityPermanent(liurui, true,'S005')
 call UnitAddItemToSlotById(liurui,'frgd',0)
-call UnitAddItemToSlotById(liurui,$636C666D,1)
+call UnitAddItemToSlotById(liurui,$736F7231,1)
 call UnitAddItemToSlotById(liurui,$70656E72,2)
 // call UnitAddItemToSlotById(liurui,'fgun',0)
 // call UnitAddItemToSlotById(liurui,'oflg',1)
@@ -18921,6 +19013,7 @@ function gU takes nothing returns nothing
 local group KB
 local unit KC
 call ff()
+set hero_hash=InitHashtable()
 // 初始化YDWE哈希表
 set YDHT=InitHashtable()
 set YDLOC=InitHashtable()
@@ -19475,6 +19568,8 @@ function gy takes nothing returns nothing
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前攻击速度  |cff00ff00"+R2S(GetUnitState(Ib[GetConvertedPlayerId(GetTriggerPlayer())],ConvertUnitState(81))))
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前攻击间隔  |cff00ff00"+R2S(GetUnitState(Ib[GetConvertedPlayerId(GetTriggerPlayer())],ConvertUnitState(37))))
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前移动速度  |cff00ff00"+R2S(GetUnitMoveSpeed(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前英雄ID:  |cff00ff00" + I2S(GetUnitTypeId(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
+
 endfunction
 function gz takes nothing returns nothing
 set Kx=CreateTrigger()
@@ -19521,21 +19616,7 @@ else
 endif
 
 // 
-if GetUnitAbilityLevel(Ih, 'Ab4l') >0 then
-   call textToPlayer(GetOwningPlayer(Ih), 0, 0, "次攻击伤害计数：" + R2S( GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l')))
 
-    if YDWEIsEventAttackDamage() then
-    call SaveInteger(Ia, GetHandleId(Ih), StringHash("Ab4l"), LoadInteger(Ia, GetHandleId(Ih), StringHash("Ab4l")) + 1)
-    if LoadInteger(Ia, GetHandleId(Ih), StringHash("Ab4l")) > 3 then
-    call SaveInteger(Ia, GetHandleId(Ih), StringHash("Ab4l"),0)
-    call UnitDamageTarget(Ih, Ig, GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
-    call textToPlayer(GetOwningPlayer(Ih), 0, 0, "第四次攻击伤害：" + R2S( GetUnitState(Ih, ConvertUnitState(18)) * GetUnitAbilityLevel(Ih, 'Ab4l')))
-    // if GetUnitLifePercent(Ih) >20 then
-    // call setUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) -GetUnitState(Ih, UNIT_STATE_MAX_LIFE) * 0.1)
-    // endif
-    endif
-    endif
-endif
 
 // 张角被动
 if Ih == zhangjiao and GetUnitAbilityLevel(Ih, 'Ab3y') > 0 and IsUnitType(Ih, UNIT_TYPE_HERO) then
@@ -19730,6 +19811,29 @@ call SetUnitPosition(GetTriggerUnit(),-1000.,-7700.)
 call UnitAddItem(GetTriggerUnit(),CreateItem($49303053,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 else
 endif
+// 鲜血魔井被动
+if GetUnitAbilityLevel(Ig, 'S005') >0 and GetUnitAbilityLevel(Ig, 'Ab4k') >0 then
+// call textToPlayer(GetOwningPlayer(Ig), 0, 0, "鲜血魔井对应攻击等级:" + I2S(GetUnitAbilityLevel(Ig, $41304C50)))
+// call textToPlayer(GetOwningPlayer(Ig), 0, 0, "鲜血魔井对应技能等级:" + I2S(GetUnitAbilityLevel(Ig, 'S005')))
+if GetUnitAbilityLevel(Ig, $41304C50) == 0 then
+    call UnitAddAbility(Ig, $41304C50)
+    call UnitMakeAbilityPermanent(Ig, true, $41304C50)
+endif
+call XX(Ig,$41304C50,1,108,GetUnitState(Ig, ConvertUnitState(18))* ((GetUnitState(Ig, UNIT_STATE_MAX_LIFE) -GetUnitState(Ig, UNIT_STATE_LIFE)) / GetUnitState(Ig, UNIT_STATE_MAX_LIFE)))
+call IncUnitAbilityLevel(Ig,$41304C50)
+call DecUnitAbilityLevel(Ig,$41304C50)
+if Ii >= GetUnitState(Ig, UNIT_STATE_LIFE) and HK[GetConvertedPlayerId(GetOwningPlayer(Ig))] >45 then
+    if LoadReal(hero_hash, GetHandleId(Ig), StringHash("reborn_endtime")) + 60 < TimerGetElapsed(all_timer) then
+        call SaveReal(hero_hash, GetHandleId(Ig), StringHash("reborn_endtime"),TimerGetElapsed(all_timer))
+        call liurui_r_reborn(Ig)
+    endif
+
+set HK[GetConvertedPlayerId(GetOwningPlayer(Ig))]=0
+else
+endif
+else
+endif
+// 蛮子怒气
 if GetUnitTypeId(Ig)==$4F303036 or GetUnitTypeId(Ig)==$4841484E then
 call XX(Ig,$41304C50,1,108,10.*(100.*((GetUnitState(Ig,UNIT_STATE_MAX_LIFE)-GetUnitState(Ig,UNIT_STATE_LIFE))/GetUnitState(Ig,UNIT_STATE_MAX_LIFE))))
 call IncUnitAbilityLevel(Ig,$41304C50)
@@ -22658,16 +22762,27 @@ elseif bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),'oli2')==tru
     call UnitAddItem(GetTriggerUnit(),CreateItem('it0q',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
     call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了真龙铠甲")
   
-// 蚩尤套+蚩尤披风打造魔龙刀
-// 蚩尤护手、蚩尤魔甲、蚩尤魔头、蚩尤战靴、蚩尤披风
-elseif bC(GetTriggerUnit(),$49303245)==true or bC(GetTriggerUnit(),$49303341)==true and bC(GetTriggerUnit(),$49303235)==true and bC(GetTriggerUnit(),$49303234)==true and bC(GetTriggerUnit(),$49303236)==true and bC(GetTriggerUnit(),$49303237)==true then
+// 蚩尤套+蚩尤披风+蚩尤魔刀打造魔龙刀
+// 蚩尤护手、蚩尤魔甲、蚩尤魔头、蚩尤战靴、蚩尤披风、I023
+elseif bC(GetTriggerUnit(),$49303245)==true or bC(GetTriggerUnit(),$49303341)==true and bC(GetTriggerUnit(),$49303235)==true and bC(GetTriggerUnit(),$49303234)==true and bC(GetTriggerUnit(),$49303236)==true and bC(GetTriggerUnit(),$49303237)==true and bC(GetTriggerUnit(),'I023')==true  then
    call RemoveItem(aj(GetTriggerUnit(),$49303341))
    call RemoveItem(aj(GetTriggerUnit(),$49303234))
    call RemoveItem(aj(GetTriggerUnit(),$49303235))
    call RemoveItem(aj(GetTriggerUnit(),$49303236))
    call RemoveItem(aj(GetTriggerUnit(),$49303237))
-   call UnitAddItem(GetTriggerUnit(),CreateItem($69743068,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+   call RemoveItem(aj(GetTriggerUnit(),'I023'))
+   call UnitAddItem(GetTriggerUnit(),CreateItem('it0h',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了鸩魔龙刀")
+// 蚩尤套+蚩尤披风打造蚩尤面具
+elseif bC(GetTriggerUnit(),$49303245)==true or bC(GetTriggerUnit(),$49303341)==true and bC(GetTriggerUnit(),$49303235)==true and bC(GetTriggerUnit(),$49303234)==true and bC(GetTriggerUnit(),$49303236)==true and bC(GetTriggerUnit(),$49303237)==true  then
+   call RemoveItem(aj(GetTriggerUnit(),$49303341))
+   call RemoveItem(aj(GetTriggerUnit(),$49303234))
+   call RemoveItem(aj(GetTriggerUnit(),$49303235))
+   call RemoveItem(aj(GetTriggerUnit(),$49303236))
+   call RemoveItem(aj(GetTriggerUnit(),$49303237))
+   call UnitAddItem(GetTriggerUnit(),CreateItem('IT16',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了蚩尤面具")
+// 神鬼天惊
 elseif bC(GetTriggerUnit(),'I003')==true or bC(GetTriggerUnit(),'I01E')==true and bC(GetTriggerUnit(),'pspd')==true and bC(GetTriggerUnit(),'I006')==true and bC(GetTriggerUnit(),'gsou')==true and bC(GetTriggerUnit(),'cosl')==true and (bC(GetTriggerUnit(),'it0d')==true or bC(GetTriggerUnit(),'I00B')==true ) then
  call RemoveItem(aj(GetTriggerUnit(),'I003'))
    call RemoveItem(aj(GetTriggerUnit(),'I01E'))
@@ -26777,8 +26892,8 @@ call ModifyHeroStat(bj_HEROSTAT_AGI,gambleUnit,bj_MODIFYMETHOD_SUB,20)
 call ModifyHeroStat(bj_HEROSTAT_INT,gambleUnit,bj_MODIFYMETHOD_SUB,20)
 call DisplayTextToForce(GetPlayersAll(),"|cffff0000"+(GetUnitName(gambleUnit)+":伯约，汝莫要辜负丞相栽培！额外扣除你20点全属性！"))
 call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00姜维获得觉醒技能：志继！ |cffff0000当姜维修炼到100级时，保留所有属性自动回退到1级，并额外获得50射程和20法术强度，每次重修经验获取增加5%并减少0.03攻击间隔")
-call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00姜维额外获得20%经验获取！")
-call SetPlayerHandicapXPBJ(GetOwningPlayer(gambleUnit),100)
+call DisplayTextToForce(GetPlayersAll(),GetUnitName(gambleUnit)+"|Cff00ff00姜维额外获得30%经验获取！")
+call SetPlayerHandicapXPBJ(GetOwningPlayer(gambleUnit), GetPlayerHandicapXPBJ(GetOwningPlayer(gambleUnit)) +30)
 set isJWawake=true
 endif
 if gambleTime==50 then
@@ -27748,13 +27863,13 @@ endif
 else
 endif
 
-if GetItemTypeId(GetManipulatedItem())==$6A64726E or GetItemTypeId(GetManipulatedItem())==$6D6E7366 or GetItemTypeId(GetManipulatedItem())==$49303251 or GetItemTypeId(GetManipulatedItem())==$6D6C7374 or GetItemTypeId(GetManipulatedItem())==$6D67746B or GetItemTypeId(GetManipulatedItem())==$49303342 or GetItemTypeId(GetManipulatedItem())==$666C6167 or GetItemTypeId(GetManipulatedItem())==$676F626D or GetItemTypeId(GetManipulatedItem())==$49303233 or GetItemTypeId(GetManipulatedItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 then
-if GetItemCharges(GetManipulatedItem())>0 then
-call SetUnitState(GetTriggerUnit(),ConvertUnitState(18),GetUnitState(GetTriggerUnit(),ConvertUnitState(18))+120.*I2R(GetItemCharges(GetManipulatedItem())))
-else
-endif
-else
-endif
+// if GetItemTypeId(GetManipulatedItem())==$6A64726E or GetItemTypeId(GetManipulatedItem())==$6D6E7366 or GetItemTypeId(GetManipulatedItem())==$49303251 or GetItemTypeId(GetManipulatedItem())==$6D6C7374 or GetItemTypeId(GetManipulatedItem())==$6D67746B or GetItemTypeId(GetManipulatedItem())==$49303342 or GetItemTypeId(GetManipulatedItem())==$666C6167 or GetItemTypeId(GetManipulatedItem())==$676F626D or GetItemTypeId(GetManipulatedItem())==$49303233 or GetItemTypeId(GetManipulatedItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 then
+// if GetItemCharges(GetManipulatedItem())>0 then
+// call SetUnitState(GetTriggerUnit(),ConvertUnitState(18),GetUnitState(GetTriggerUnit(),ConvertUnitState(18))+120.*I2R(GetItemCharges(GetManipulatedItem())))
+// else
+// endif
+// else
+// endif
 // 如果捡起的是心之钢
 if GetItemTypeId(GetManipulatedItem()) == $69743069 and LoadReal(FS, GetHandleId(GetTriggerUnit()), $130B62E5) != GetUnitState(GetTriggerUnit(), ConvertUnitState(22))  then
 call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
@@ -28019,13 +28134,13 @@ call SetPlayerAbilityAvailable(GetOwningPlayer(GetTriggerUnit()),$41303555,false
 else
 call DoNothing()
 endif
-if GetItemTypeId(GetManipulatedItem())==$6A64726E or GetItemTypeId(GetManipulatedItem())==$6D6E7366 or GetItemTypeId(GetManipulatedItem())==$49303251 or GetItemTypeId(GetManipulatedItem())==$6D6C7374 or GetItemTypeId(GetManipulatedItem())==$6D67746B or GetItemTypeId(GetManipulatedItem())==$49303342 or GetItemTypeId(GetManipulatedItem())==$666C6167 or GetItemTypeId(GetManipulatedItem())==$676F626D or GetItemTypeId(GetManipulatedItem())==$49303233 or GetItemTypeId(GetManipulatedItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 then
-if GetItemCharges(GetManipulatedItem())>0 then
-call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))-120.*I2R(GetItemCharges(GetManipulatedItem())))
-else
-endif
-else
-endif
+// if GetItemTypeId(GetManipulatedItem())==$6A64726E or GetItemTypeId(GetManipulatedItem())==$6D6E7366 or GetItemTypeId(GetManipulatedItem())==$49303251 or GetItemTypeId(GetManipulatedItem())==$6D6C7374 or GetItemTypeId(GetManipulatedItem())==$6D67746B or GetItemTypeId(GetManipulatedItem())==$49303342 or GetItemTypeId(GetManipulatedItem())==$666C6167 or GetItemTypeId(GetManipulatedItem())==$676F626D or GetItemTypeId(GetManipulatedItem())==$49303233 or GetItemTypeId(GetManipulatedItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 then
+// if GetItemCharges(GetManipulatedItem())>0 then
+// call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))-120.*I2R(GetItemCharges(GetManipulatedItem())))
+// else
+// endif
+// else
+// endif
 set Iv=null
 endfunction
 function oj takes nothing returns nothing
@@ -29095,6 +29210,9 @@ call TriggerAddAction(QB,function p9)
 endfunction
 function qC takes nothing returns nothing
     // 学习技能监听
+    if GetLearnedSkillBJ() == 'Ab4k' then
+    call liurui_r_action()
+    endif
     // 见龙卸甲
     if GetLearnedSkillBJ() == 'Ab4j' and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab4j') == 1 then 
         call liurui_study_w(GetTriggerUnit(),'Ab4j')
@@ -31912,6 +32030,8 @@ endfunction
 function tD takes nothing returns nothing
 endfunction
 function tE takes nothing returns boolean
+call textToPlayer(GetTriggerPlayer(), 0, 0, "学习技能了:" + GetAbilityName(GetLearnedSkill()))
+
 return GetLearnedSkill()==$41304C4C
 endfunction
 function tF takes nothing returns nothing
@@ -32297,6 +32417,11 @@ endif
 if CE != Iv and IsUnitAlly(CE, GetOwningPlayer(Iv)) ==false and(UnitHasBuffBJ(CE, $42303054) == true or GetUnitAbilityLevel(CE, 'A06Y') > 0) and GetSpellAbilityId() != 'A0DA' then
 call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000目标单位拥有抵抗！")
 return
+endif
+// 刘睿变身存一下基础攻击
+if GetSpellAbilityId() == 'Ab4m' then
+call SaveReal(Ia, GetHandleId(Iv), StringHash("baseAttack"),GetUnitState(Iv, ConvertUnitState(18)))
+
 endif
 // 张角E被动效果
 if (GetSpellAbilityId() == 'Ab3u' or GetSpellAbilityId() == 'Ab3r' or GetSpellAbilityId() == 'Ab3v') and GetUnitAbilityLevel(Iv, 'Ab3s') > 0 then
@@ -33070,6 +33195,39 @@ elseif GetItemTypeId(GetSpellTargetItem())==$6C6E726E then
     // 如果物品是雌雄对剑lnrn，移除相应物品 然后添加雌雄I03B
 call RemoveItem(GetSpellTargetItem())
 call UnitAddItem(Iv,CreateItem($49303342,0,0))
+
+// 魔龙刀
+elseif GetItemTypeId(GetSpellTargetItem())=='it0h' then
+if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
+    // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("molongdao")))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("molongdao")))*2)*100)
+else
+     // 否则，则强化成功概率为装备等级：100- level*500/ ((20 + level)*5)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("molongdao")))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("molongdao")))*5)*100)
+endif
+if GetRandomInt(0,100)>FZ then
+
+// 如果有幸运币，则将幸运币的次数+1
+if bC(Iv,$69743067) then
+call SetItemCharges(aj(Iv, $69743067), GetItemCharges(aj(Iv, $69743067)) +1)
+// 如果幸运币次数大于4，则摧毁幸运币
+if GetItemCharges(aj(Iv, $69743067)) >=4 then
+    call RemoveItem(aj(GetTriggerUnit(),$69743067))
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cff808000幸运币承受不住这份因果，碎裂了")
+endif
+endif
+call SaveInteger(Ia, GetHandleId(Iv), StringHash("molongdao"), LoadInteger(Ia, GetHandleId(Iv), StringHash("molongdao")) +1)
+call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))+150)
+
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), StringHash("molongdao"))))
+else
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
+
+endif
+
+// 自然魂珠强化结束
+
 // 真龙铠甲
 elseif GetItemTypeId(GetSpellTargetItem())=='it0q' then
 if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
@@ -33093,7 +33251,7 @@ endif
 call SaveInteger(Ia, GetHandleId(Iv), $130B62E8, LoadInteger(Ia, GetHandleId(Iv), $130B62E8) +1)
 call SetUnitState(Iv,UNIT_STATE_MAX_LIFE,GetUnitState(Iv,UNIT_STATE_MAX_LIFE)+3000)
 call SetUnitState(Iv,ConvertUnitState(32),GetUnitState(Iv,ConvertUnitState(32))+7)
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00恭喜你，你成功能将装备强化！基础护甲+7，最大生命+3000|r")
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), $130B62E8)))
 else
     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
@@ -33104,10 +33262,10 @@ endif
 elseif GetItemTypeId(GetSpellTargetItem())=='it0n' then
 if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
     // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
-set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*2)*100)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("shenguitianjing")))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("shenguitianjing")))*2)*100)
 else
      // 否则，则强化成功概率为装备等级：100- level*500/ ((20 + level)*5)
-set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E7))*5)*100)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("shenguitianjing")))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("shenguitianjing")))*5)*100)
 endif
 if GetRandomInt(0,100)>FZ then
 
@@ -33120,11 +33278,11 @@ if GetItemCharges(aj(Iv, $69743067)) >=4 then
     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cff808000幸运币承受不住这份因果，碎裂了")
 endif
 endif
-call SaveInteger(Ia, GetHandleId(Iv), $130B62E7, LoadInteger(Ia, GetHandleId(Iv), $130B62E7) +1)
+call SaveInteger(Ia, GetHandleId(Iv), StringHash("shenguitianjing"), LoadInteger(Ia, GetHandleId(Iv), StringHash("shenguitianjing")) +1)
 call SetUnitState(Iv,UNIT_STATE_MAX_LIFE,GetUnitState(Iv,UNIT_STATE_MAX_LIFE)+2000)
 call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))+60)
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), $130B62E7)))
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00恭喜你，你成功能将装备强化！基础攻击+60，最大生命+2000|r")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), StringHash("shenguitianjing"))))
 else
     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
 
@@ -33134,10 +33292,10 @@ endif
 elseif GetItemTypeId(GetSpellTargetItem())=='it0k' then
 if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
     // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
-set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*2)*100)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu")))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu")))*2)*100)
 else
      // 否则，则强化成功概率为装备等级：100- level*500/ ((20 + level)*5)
-set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), $130B62E6))*5)*100)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu")))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu")))*5)*100)
 endif
 if GetRandomInt(0,100)>FZ then
 
@@ -33150,14 +33308,13 @@ if GetItemCharges(aj(Iv, $69743067)) >=4 then
     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cff808000幸运币承受不住这份因果，碎裂了")
 endif
 endif
-call SaveInteger(Ia, GetHandleId(Iv), $130B62E6, LoadInteger(Ia, GetHandleId(Iv), $130B62E6) +1)
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), $130B62E6)))
+call SaveInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu"), LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu")) +1)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00恭喜你，你成功能将装备强化！额外法强+0.07|r")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu"))))
 else
     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
 
 endif
-
 
 // 自然魂珠强化结束
 elseif GetItemCharges(GetSpellTargetItem())<200 or GetUnitAbilityLevel(Iv,$41304641)>0 or true then
@@ -33347,6 +33504,7 @@ endfunction
 function attack_event takes nothing returns nothing
 local unit Iv=GetAttacker()
 local unit CE=GetAttackedUnitBJ()
+// call textToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00攻击开始|r")
 // 双剑被动计数
 if GetUnitAbilityLevel(Iv, 'Ab4f') >0  then
 
@@ -33356,6 +33514,12 @@ if LoadInteger(Ia, GetHandleId(Iv), StringHash("shuangjian")) > 0 then
 if GetUnitAbilityLevel(Iv,$41623076) > 0 then
 call SaveInteger(Ia,GetHandleId(Iv),$41623076,LoadInteger(Ia,GetHandleId(Iv),$41623076)+1)
 endif
+// 剑气
+if GetUnitAbilityLevel(Iv,'Ab4l') > 0 then
+call SaveInteger(Ia, GetHandleId(Iv), StringHash("Ab4l"), LoadInteger(Ia, GetHandleId(Iv), StringHash("Ab4l")) + 1)
+// call SaveInteger(Ia,GetHandleId(Iv),$41623076,LoadInteger(Ia,GetHandleId(Iv),$41623076)+1)
+endif
+
 // 夺命枪计数
 if GetUnitAbilityLevel(Iv,$41594C35) > 0 then
 call SaveInteger(Ia,GetHandleId(Iv),$41594C35,LoadInteger(Ia,GetHandleId(Iv),$41594C35)+1)
@@ -33374,6 +33538,49 @@ else
 call SaveInteger(Ia, GetHandleId(Iv), StringHash("shuangjian"),1)
 endif
 endif
+// 龙血沸腾被动
+if GetUnitAbilityLevel(Iv, 'Ab4l') >0 then
+  
+    if GetUnitState(Iv, ConvertUnitState(18)) < LoadReal(Ia, GetHandleId(Iv), StringHash("baseAttack")) then
+     call SetUnitState(Iv, ConvertUnitState(18), LoadReal(Ia, GetHandleId(Iv), StringHash("baseAttack")))
+    endif
+
+     call SaveInteger(Ia, GetHandleId(Iv), StringHash("Ab4l"), LoadInteger(Ia, GetHandleId(Iv), StringHash("Ab4l")) + 1)
+    if LoadInteger(Ia, GetHandleId(Iv), StringHash("Ab4l")) > 2 then
+    call SaveInteger(Ia, GetHandleId(Iv), StringHash("Ab4l"),0)
+    // 如果携带双刃，会额外附带全属性两倍的伤害
+    if GetUnitAbilityLevel(Iv, 'Ab4f') >0  then 
+    call UnitDamageTarget(Iv, CE, bk(Iv, 0, 4) +GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l'), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S( bk(Iv, 0, 4) +GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l')))
+    
+    else
+    call UnitDamageTarget(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S( GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l')))
+
+    endif
+    
+    if GetUnitLifePercent(Iv) >20 then
+    call SetUnitState(Iv, UNIT_STATE_LIFE, GetUnitState(Iv, UNIT_STATE_LIFE) -(GetUnitState(Iv, UNIT_STATE_MAX_LIFE) * 0.1))
+
+    if HK[GetConvertedPlayerId(GetOwningPlayer(Iv))]<100 then
+    set HK[GetConvertedPlayerId(GetOwningPlayer(Iv))]=HK[GetConvertedPlayerId(GetOwningPlayer(Iv))]+5
+    call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,I2S(HK[GetConvertedPlayerId(GetOwningPlayer(Iv))]))
+    endif
+
+    endif
+    endif
+    
+endif
+
+// 鲜血魔井被动
+if GetUnitAbilityLevel(Iv, 'S005') >0 and GetUnitAbilityLevel(Iv, 'Ab4k') >0 then
+    // call textToPlayer(GetOwningPlayer(Iv), 0, 0,"鲜血魔井攻击！")
+call XX(Iv,$41304C50,1,108,GetUnitState(Iv, ConvertUnitState(18))* ((GetUnitState(Iv, UNIT_STATE_MAX_LIFE) -GetUnitState(Iv, UNIT_STATE_LIFE)) / GetUnitState(Iv, UNIT_STATE_MAX_LIFE)))
+call IncUnitAbilityLevel(Iv,$41304C50)
+call DecUnitAbilityLevel(Iv,$41304C50)
+
+endif
+
 endfunction
 function attack_init takes nothing returns nothing
 set attack_trig=CreateTrigger()
@@ -35780,6 +35987,20 @@ endfunction
 function v6 takes nothing returns nothing
     local integer loc_random_num =0
 call RemoveItem(aj(GetTriggerUnit(),$6B74726D))
+if GetTriggerUnit()==liurui then
+set loc_random_num = GetRandomInt(1,3)
+if loc_random_num == 1 then
+    // 倚天剑
+call UnitAddItemByIdSwapped('shcw',GetTriggerUnit())
+elseif loc_random_num ==2 then
+    // 真龙护手
+call UnitAddItemByIdSwapped('tels',GetTriggerUnit())
+else
+    // 玄光之翼
+call UnitAddItemByIdSwapped('bfhr',GetTriggerUnit())
+endif
+return
+endif
 if GetTriggerUnit()==zhangjiao then
 set loc_random_num = GetRandomInt(1,3)
 if loc_random_num == 1 then
@@ -35878,9 +36099,11 @@ call UnitAddItemByIdSwapped($49303034,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(Cx) or GetUnitTypeId(GetTriggerUnit())==$484A5731 or GetUnitTypeId(GetTriggerUnit())==$486B616C then
-    // 震天弓和穿云箭
-call UnitAddItemByIdSwapped($72616D34,GetTriggerUnit())
-call UnitAddItemByIdSwapped($6F76656E,GetTriggerUnit())
+//    伏羲琴
+call UnitAddItemByIdSwapped($49303049,GetTriggerUnit())
+ // 震天弓和穿云箭
+// call UnitAddItemByIdSwapped($72616D34,GetTriggerUnit())
+// call UnitAddItemByIdSwapped($6F76656E,GetTriggerUnit())
 return
 else
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(C3) then
