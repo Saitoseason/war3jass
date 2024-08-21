@@ -87,7 +87,9 @@ trigger rongzhu_trig=null
 button array rongzhu_btn
 integer array rongzhu_ability_pool
 integer array rongzhu_extra_pool
+// 轩辕和雷霆掉落判定
 integer xuan_yuan = GetRandomInt(101,107)
+integer lei_ting = 0
 unit rongzhu_factory =null
 trigger liurui_R_trig
 // shifa
@@ -2152,7 +2154,7 @@ set hight_level_item_pool[63]=$49303033
 // 高级玄铁
 set hight_level_item_pool[64]='it10'
 // 超级玄铁
-set hight_level_item_pool[65]='it13'
+set hight_level_item_pool[65]='it11'
 // 强化石
 set hight_level_item_pool[66]='dkfw'
 // 优质兽皮
@@ -2167,16 +2169,16 @@ set hight_level_item_pool[70]='it0u'
 set hight_level_item_pool[71]=$70737064
 // 魔神之翼
 set hight_level_item_pool[72]=$49303036
-// 玄光之翼
-set hight_level_item_pool[73]=$62666872
+// 火神盾
+set hight_level_item_pool[73]=$726F7473
 // 魔魂盔
 set hight_level_item_pool[74]=$49303033
 // 镇魂甲
 set hight_level_item_pool[75]=$49303032
 // 镇魂杖
 set hight_level_item_pool[76]=$49303031
-// 麒麟弓
-set hight_level_item_pool[77]=$49303144
+// 雷神冠
+set hight_level_item_pool[77]=$49303142
 // 刑天斧
 set hight_level_item_pool[78]=$67736F75
 // 刑天盾
@@ -3934,225 +3936,240 @@ endfunction
 function bj takes unit CE returns boolean
 return GetWidgetLife(CE)>.405 and (IsUnitType(CE,UNIT_TYPE_ANCIENT)==false and IsUnitType(CE,UNIT_TYPE_GIANT)==false and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false) and GetUnitDefaultMoveSpeed(CE)>1.
 endfunction
-function bk takes unit Ij,integer Ik,integer JS returns real
-local integer Ix=0
-// 额外装备伤害系数，法强系数
-local real extra =0
-// IJ是伤害来源，IK是技能类型，JS是技能等级
-local real JT=I2R(JS*200)
-// 如果IK == 0 则设置JT的初始值为英雄单位的三维 *js*0.75+初始JT
-if Ik==0 then
-set JT=I2R((GetHeroStr(Ij,true)+GetHeroAgi(Ij,true)+GetHeroInt(Ij,true))*JS)*.75+JT
-// 力量伤害技能系数
-elseif Ik == 1  then
-    if IsUnitEnemy(Ij, Player(8)) ==false then
-        set JT=I2R(GetHeroStr(Ij,true)*(JS+1))+JT+I2R(JS+1)*.02*GetUnitState(Ij,ConvertUnitState(1))
-    else  
-        set JT=I2R(GetHeroStr(Ij,true)*(JS+1))
+function magicLevel takes unit Iv returns real 
+    local real extra = 1 
+    local integer Ix =0
+    // 攻击科技每级+5%的技能伤害(修改为7%)     
+    // set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Iv),$52686D65,true))*.05)+JT     
+    set extra = extra + I2R(GetPlayerTechCount(GetOwningPlayer(Iv), $52686D65, true)) * .05 
+    // 伏羲琴伤害系数1.1，即10点法强(修改为1.25)     
 
-    endif
+    if GetUnitAbilityLevel(Iv, $41303552) > 0 then 
+        // set JT=JT*1.15     
+        set extra = extra + 0.25 
+    endif 
+    //如果带了的卢     
+    if GetUnitAbilityLevel(Iv, $41304256) > 0 then 
+        // set JT=JT*1.2     
+        set extra = extra + 0.3 
+    endif 
+    //如果带了烛龙刀     
+    if GetUnitAbilityLevel(Iv, $41623031) > 0 then 
+        // set JT=JT*1.8     
+        set extra = extra + 1 
+    endif 
+    //如果带了极八蛇矛     
+    if GetUnitAbilityLevel(Iv, $41303042) > 0 then 
+        // set JT=JT*1.5     
+        set extra = extra + 0.7 
+    endif 
+    //如果带了青钢     
+    if GetUnitAbilityLevel(Iv, $41303735) > 0 then 
+        // set JT=JT*1.2     
+        set extra = extra + 0.3 
+    endif 
+    // 镇魂套伤害系数1.3     
+    if GetUnitAbilityLevel(Iv, $41303149) > 0 then 
+        set extra = extra + 0.6 
+        // set JT=JT*1.5     
+    endif 
+    // 自然套伤害1.6     
+    if GetUnitAbilityLevel(Iv, $4130444D) > 0 then 
+        set extra = extra + 0.6 
+        // set JT=JT*1.4     
+    endif 
+    // 蚩尤套伤害系数1.5     
+    if GetUnitAbilityLevel(Iv, $4130444B) > 0 then 
+        set extra = extra + 0.8 
+        // set JT=JT*1.7     
+    endif 
+    // 朱雀修真1.35     
+    if GetUnitAbilityLevel(Iv, $41303458) > 0 then 
+        // set JT=JT*1.3     
+        set extra = extra + 0.35 
+    endif 
+    // 自修系数1.3（自改）     
+    if GetUnitAbilityLevel(Iv, $41304238) > 0 then 
+        // set JT=JT*1.15     
+        set extra = extra + 0.15 
+    endif 
 
-// set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.03)+JT
-// set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.05
+    // 青龙套伤害系数1.45（存疑，可能被删除）     
+    if GetUnitAbilityLevel(Iv, $4130464E) > 0 or GetUnitAbilityLevel(Iv, $41304657) > 0 then 
+        // set JT=JT*1.45     
+        set extra = extra + 0.8 
+    endif 
+    // 机关车+30法强     
+    if GetUnitAbilityLevel(Iv, $41303237) > 0 then 
+        // set JT=JT*1.5     
+        set extra = extra + 0.3 
+    endif 
+    // 朱雀套系数1.5     
+    if GetUnitAbilityLevel(Iv, $41304241) > 0 then 
+        // set JT=JT*1.5     
+        set extra = extra + 0.6 
+    endif 
+    // 太极阵（姜维Q）、鼎文杖、末日星陨（星彩大招）、剑意（王越）、昊天塔、效果增伤1.2     
+    if GetUnitAbilityLevel(Iv, $41497365) > 0 then 
+        // set JT=JT*1.2     
+        set extra = extra + 0.2 
+    endif 
+    // 打造10点法强效果     
 
-// 敏捷伤害技能系数
-elseif Ik==2 then
-set JT=I2R(GetHeroAgi(Ij,true)*(JS+1))+JT
-// 敏捷英雄每级防御科技增加0.05法强系数
-set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686163,true))*.05
-// 智力伤害技能系数
-elseif Ik==3 then
-set JT=I2R(GetHeroInt(Ij,true)*(JS+1))*.9+I2R(JS+1)*.03*GetUnitState(Ij,ConvertUnitState(3))+JT
-elseif Ik==4 then
-set JT=I2R(GetHeroStr(Ij,true))+I2R(GetHeroAgi(Ij,true))+I2R(GetHeroInt(Ij,true)*(JS+1))*.5+I2R(JS)*.02*GetUnitState(Ij,ConvertUnitState(3))+JT
-endif
-// call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00基础技能伤害：" + R2S(JT))
-// 五虎每级+5%的技能伤害
-set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$526F7374,true))*.05)+JT
-// 攻击科技每级+5%的技能伤害(修改为7%)
-// set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.05)+JT
-set extra = extra +I2R(GetPlayerTechCount(GetOwningPlayer(Ij),$52686D65,true))*.05
-// 伏羲琴伤害系数1.1，即10点法强(修改为1.25)
+    if GetUnitAbilityLevel(Iv, 'K003') > 0 then 
+        set Ix = GetUnitAbilityLevel(Iv, 'K003') 
+        set extra = extra + I2R(Ix) * .1 
+        // set JT=JT*(1.05+I2R(Ix)*.05)     
+    endif 
+    // 青倚双剑效果     
+    if GetUnitAbilityLevel(Iv, 'Ab4f') > 0 then 
+        set Ix = GetItemCharges(bW(Iv, 'it0z')) 
+        set extra = extra + 0.2 + I2R(Ix) * .05 
+        // set JT=JT*(1.05+I2R(Ix)*.05)     
+    endif 
+    //苍玄之书     
+    if bC(Iv, 'it0s') == true then 
+        set extra = extra + 0.7 
+    endif 
+    //羽渡尘     
+    if bC(Iv, 'it0r') == true then 
+        set extra = extra + 0.6 
+    endif 
+    // 七星灯效果增伤 基础1.05 + 每级灯0.05     
+    if GetUnitAbilityLevel(Iv, $41303231) > 0 then 
+        set Ix = GetItemCharges(bW(Iv, $7372746C)) 
+        set extra = extra + 0.2 + I2R(Ix) * .07 
+        // set JT=JT*(1.05+I2R(Ix)*.05)     
+    endif 
 
-if GetUnitAbilityLevel(Ij,$41303552)>0 then
-// set JT=JT*1.15
-set extra = extra +0.25
-endif
-//如果带了的卢
-if GetUnitAbilityLevel(Ij,$41304256)>0 then
-// set JT=JT*1.2
-set extra = extra +0.3
-endif
-//如果带了烛龙刀
-if GetUnitAbilityLevel(Ij,$41623031)>0 then
-// set JT=JT*1.8
-set extra = extra +1
-endif
-//如果带了极八蛇矛
-if GetUnitAbilityLevel(Ij,$41303042)>0 then
-// set JT=JT*1.5
-set extra = extra +0.7
-endif
-//如果带了青钢
-if GetUnitAbilityLevel(Ij,$41303735)>0 then
-// set JT=JT*1.2
-set extra = extra +0.3
-endif
-// 镇魂套伤害系数1.3
-if GetUnitAbilityLevel(Ij,$41303149)>0 then
-set extra = extra +0.6
-// set JT=JT*1.5
-endif
-// 自然套伤害1.6
-if GetUnitAbilityLevel(Ij,$4130444D)>0 then
-set extra = extra +0.6
-// set JT=JT*1.4
-endif
-// 蚩尤套伤害系数1.5
-if GetUnitAbilityLevel(Ij,$4130444B)>0 then
-    set extra = extra +0.8
-// set JT=JT*1.7
-endif
-// 朱雀修真1.35
-if GetUnitAbilityLevel(Ij,$41303458)>0 then 
-// set JT=JT*1.3
-set extra = extra +0.35
-endif
-// 自修系数1.3（自改）
-if GetUnitAbilityLevel(Ij,$41304238)>0 then
-// set JT=JT*1.15
-set extra = extra +0.15
-endif
+    // 自然之力     
+    if bC(Iv, $6974306B) == true then 
+        // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00自然之怒")     
+        set Ix = LoadInteger(Ia, GetHandleId(Iv), $130B62E6) 
+        // set JT=JT*(1.25+I2R(Ix)*.065)     
+        set extra = extra + 0.5 + I2R(Ix) * .09 
+    endif 
+    // 入魔系数1.1     
+    if GetUnitAbilityLevel(Iv, $4130354E) > 0 then 
+        set extra = extra + 0.2 
+        // set JT=JT*1.2     
+    endif 
+    // 升仙系数1.2     
+    if GetUnitAbilityLevel(Iv, $4130354D) > 0 then 
+        // set JT=JT*1.3     
+        set extra = extra + 0.4 
+    endif 
+    // 和氏璧等其他法强装系数1.2     
+    if GetUnitAbilityLevel(Iv, $41304542) > 0 then 
+        // set JT=JT*1.1     
+        set extra = extra + 0.2 
+    endif 
+    // 姜维重修系数每级0.2     
+    if awakeTime > 0 then 
+        if GetUnitTypeId(Iv) == $486B616C or GetUnitTypeId(Iv) == $484A5731 then 
+            set extra = extra + awakeTime * .3 
+            // set JT=JT*(1+awakeTime*.2)     
+        endif 
+    endif 
+    // 落宝铜钱+法强     
+    if GetUnitAbilityLevel(Iv, $41623078) > 0 then 
+        // set JT=JT*1.2     
+        set extra = extra + 0.4 
+    endif 
+    // 太平令法强     
+    if GetUnitAbilityLevel(Iv, 'Ab40') > 0 then 
+        set extra = extra + 0.3 
+    endif 
+    // 天书法强     
+    if GetUnitAbilityLevel(Iv, 'Ab42') > 0 then 
+        set extra = extra + 0.8 
+    endif 
 
-// 青龙套伤害系数1.45（存疑，可能被删除）
-if GetUnitAbilityLevel(Ij,$4130464E)>0 or GetUnitAbilityLevel(Ij,$41304657)>0 then
-// set JT=JT*1.45
-set extra = extra +0.8
-endif 
-// 机关车+30法强
-if GetUnitAbilityLevel(Ij,$41303237)>0 then
-// set JT=JT*1.5
-set extra = extra +0.3
-endif
-// 三国志法强+30
-if GetUnitAbilityLevel(Ij,$4130314C)>0 then
-// set JT=JT*1.5
-set extra = extra +0.3
-endif
-// 朱雀套系数1.5
-if GetUnitAbilityLevel(Ij,$41304241)>0 then
-// set JT=JT*1.5
-set extra = extra +0.6
-endif
-// 太极阵（姜维Q）、鼎文杖、末日星陨（星彩大招）、剑意（王越）、昊天塔、效果增伤1.2
-if GetUnitAbilityLevel(Ij,$41497365)>0 then
-// set JT=JT*1.2
-set extra = extra +0.2
-endif
-// 打造10点法强效果
+    // 霸王套伤害系数2     
+    if GetUnitAbilityLevel(Iv, $41304730) > 0 then 
+        // set JT=JT*2     
+        set extra = extra * 1.8 
+    endif 
 
-if GetUnitAbilityLevel(Ij, 'K003') > 0  then
-set Ix= GetUnitAbilityLevel(Ij, 'K003')
-set extra = extra  + I2R(Ix)*.1
-// set JT=JT*(1.05+I2R(Ix)*.05)
-endif
-// 青倚双剑效果
-if GetUnitAbilityLevel(Ij, 'Ab4f') > 0  then
-set Ix=GetItemCharges(bW(Ij,'it0z'))
-set extra = extra + 0.2 + I2R(Ix)*.04
-// set JT=JT*(1.05+I2R(Ix)*.05)
-endif
-//苍玄之书
-if bC(Ij, 'it0s') == true then
-set extra = extra +0.7
-endif 
-//羽渡尘
-if bC(Ij, 'it0r') == true then
-set extra = extra +0.6
-endif 
-// 七星灯效果增伤 基础1.05 + 每级灯0.05
-if GetUnitAbilityLevel(Ij, $41303231) > 0  then
-set Ix=GetItemCharges(bW(Ij,$7372746C))
-set extra = extra + 0.2 + I2R(Ix)*.05
-// set JT=JT*(1.05+I2R(Ix)*.05)
-endif
 
-// 自然之力
-if bC(Ij, $6974306B) == true then
-// call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00自然之怒")
-set Ix = LoadInteger(Ia, GetHandleId(Ij), StringHash("ziranhunzhu"))
-// set JT=JT*(1.25+I2R(Ix)*.065)
-set extra = extra + 0.5 + I2R(Ix)*.07
-endif
-// 入魔系数1.1
-if GetUnitAbilityLevel(Ij,$4130354E)>0 then
-set extra = extra +0.2 
-// set JT=JT*1.2
-endif
-// 升仙系数1.2
-if GetUnitAbilityLevel(Ij,$4130354D)>0 then
-// set JT=JT*1.3
-set extra = extra +0.4 
-endif
-// 和氏璧等其他法强装系数1.2
-if GetUnitAbilityLevel(Ij,$41304542)>0 then
-// set JT=JT*1.1
-set extra = extra +0.2
-endif
-// 姜维重修系数每级0.3
-if awakeTime>0 then
-    if GetUnitTypeId(Ij)==$486B616C or GetUnitTypeId(Ij)==$484A5731 then
-        set extra = extra +awakeTime*.3
-    // set JT=JT*(1+awakeTime*.2)
-    endif
-endif
+    // 轩辕剑60法强     
+    if GetUnitAbilityLevel(Iv, 'Ab3o') > 0 then 
+        set extra = extra * 1.6 
+    endif 
 
-// 太平令法强
-if GetUnitAbilityLevel(Ij,'Ab40')>0 then 
-set extra = extra +0.3
-endif
-// 天书法强
-if GetUnitAbilityLevel(Ij,'Ab42')>0 then 
-set extra = extra +0.8
-endif
+    if GetUnitAbilityLevel(Iv, 'KA05') > 0 then 
+        set extra = extra * 1.5 
+    endif 
 
-// 霸王套伤害系数2
-if GetUnitAbilityLevel(Ij,$41304730)>0 then
-// set JT=JT*2
-set extra = extra * 1.8
-endif
+    if GetUnitAbilityLevel(Iv, 'Ab42') > 0 then 
 
-// 如果是玩家8，系数0.2
-if IsUnitEnemy(Ij,Player(8)) then
-set JT=JT*.2
-endif
+        if GetRandomInt(1, 10) < 3 then 
+            set extra = extra * 2 
+        endif 
+    endif 
+    return extra 
+endfunction 
+function bk takes unit Ij, integer Ik, integer JS returns real 
+    local integer Ix = 0 
+    // 额外装备伤害系数，法强系数     
+    local real extra = 0 
+    // IJ是伤害来源，IK是技能类型，JS是技能等级     
+    local real JT = I2R(JS * 200) 
+    // 如果IK == 0 则设置JT的初始值为英雄单位的三维 *js*0.75+初始JT     
+    if Ik == 0 then 
+        set JT = I2R((GetHeroStr(Ij, true) + GetHeroAgi(Ij, true) + GetHeroInt(Ij, true)) * JS) * .75 + JT 
+        // 力量伤害技能系数     
+    elseif Ik == 1 then 
+        if IsUnitEnemy(Ij, Player(8)) == false then 
+            set JT = I2R(GetHeroStr(Ij, true) * (JS + 1)) + JT + I2R(JS + 1) * .02 * GetUnitState(Ij, ConvertUnitState(1)) 
+        else 
+            set JT = I2R(GetHeroStr(Ij, true) * (JS + 1)) 
+        endif 
+        // 敏捷伤害技能系数     
+    elseif Ik == 2 then 
+        set JT = I2R(GetHeroAgi(Ij, true) * (JS + 1)) + JT 
+        // 敏捷英雄每级防御科技增加0.05法强系数     
+        set extra = extra + I2R(GetPlayerTechCount(GetOwningPlayer(Ij), $52686163, true)) * .05 
+        // 智力伤害技能系数     
+    elseif Ik == 3 then 
+        set JT = I2R(GetHeroInt(Ij, true) * (JS + 1)) * .9 + I2R(JS + 1) * .03 * GetUnitState(Ij, ConvertUnitState(3)) + JT 
+    elseif Ik == 4 then 
+        set JT = I2R(GetHeroStr(Ij, true)) + I2R(GetHeroAgi(Ij, true)) + I2R(GetHeroInt(Ij, true) * (JS + 1)) * .5 + I2R(JS) * .02 * GetUnitState(Ij, ConvertUnitState(3)) + JT 
+    endif 
+    // call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00基础技能伤害：" + R2S(JT))     
+    // 五虎每级+5%的技能伤害     
+    set JT = JT * (I2R(GetPlayerTechCount(GetOwningPlayer(Ij), $526F7374, true)) * .05) + JT 
+    set extra = magicLevel(Ij) 
+    set JT = JT * (1 + extra) 
+    call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT)) 
+        // 如果是玩家8，系数0.2     
+    if IsUnitEnemy(Ij, Player(8)) then 
+        set JT = JT * .2 
+    endif 
+    return JT 
+endfunction 
+// 魔法抗性计算公式
+function magicDefendLevel takes unit Iv returns real 
+    local real int_MD = 0 
+    local real percent_decrease
+    // 雁翎甲魔抗+100
+    if GetUnitAbilityLevel(Iv, 'A0EH') > 0 then 
+      set int_MD = int_MD +100
+    endif 
+    // 巨象魔抗+60
+    if bC(Iv, 'I007') > 0 then 
+      set int_MD = int_MD +100
+    endif 
+    // // 雁翎甲魔抗+100
+    // if GetUnitAbilityLevel(Iv, 'A0EH') > 0 then 
+    //   set int_MD = int_MD +100
+    // endif 
+    set percent_decrease = (int_MD) / (100 +int_MD)
+    return percent_decrease
+endfunction 
 
-// 落宝铜钱+法强
-if GetUnitAbilityLevel(Ij,$41623078)>0 then
-// set JT=JT*1.2
-set extra = extra *1.3
-endif
-
-// 轩辕剑60法强
-if GetUnitAbilityLevel(Ij,'Ab3o')>0 then
-set extra=extra*1.6
-endif
-
-if GetUnitAbilityLevel(Ij,'KA05')>0 then
-set extra=extra*1.5
-endif
-
-if GetUnitAbilityLevel(Ij,'Ab42')>0 then 
-
-    if GetRandomInt(1, 10) <3 then
-        set extra=extra*2
-    endif
-endif
-set JT = JT * (1 +extra)
-call textToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT))
-// call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT))
-return JT
-endfunction
+function take_magic_damage takes unit Iv, unit CE, real amout, boolean attack, boolean ranged, attacktype attack_type, damagetype damage_type,weapontype weapon_type returns nothing 
+endfunction 
 // 根据英雄智力和法强返回相应值
 function getMasterServent takes unit Ij returns real
 local real JT=0
@@ -23285,7 +23302,11 @@ function jF takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$6B79626C and bC(GetTriggerUnit(),$6D6C7374)==true and IsItemInvulnerable(aj(GetTriggerUnit(),$6D6C7374))==true and bC(GetTriggerUnit(),$636E686E)==true and GetItemUserData(aj(GetTriggerUnit(),$6D6C7374))==0
 endfunction
 function jG takes nothing returns nothing
-local integer Ix=GetRandomInt(101,107)
+local integer Ix=xuan_yuan
+set xuan_yuan = xuan_yuan +1
+if xuan_yuan > 107 then
+set xuan_yuan = 101
+endif
 call SetItemUserData(aj(GetTriggerUnit(),$6D6C7374),Ix)
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"完成打造,获得技能:")
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,GetAbilityName(M9[Ix]))
@@ -23491,7 +23512,7 @@ set LJ[63]=$49303033
 // 高级玄铁
 set LJ[64]='it10'
 // 超级玄铁
-set LJ[65]='it13'
+set LJ[65]='it11'
 // 强化石
 set LJ[66]='dkfw'
 // 优质兽皮
@@ -23970,7 +23991,7 @@ else
 endif
 endif
 // 1/6概率出雷霆之力
-if GetRandomInt(0,6)==5 then
+if GetRandomInt(0,5)==5 then
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
@@ -24025,9 +24046,11 @@ if GetRandomInt(0,3)==3 then
 call CreateItem($49303057,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
-if GetRandomInt(0,6)==5 then
+if lei_ting > 5 then
+    set lei_ting = 0
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
+set lei_ting = lei_ting+1
 endif
 if GetRandomInt(0,5)==0 then
 call CreateItem('it12',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
@@ -33504,6 +33527,7 @@ endfunction
 function attack_event takes nothing returns nothing
 local unit Iv=GetAttacker()
 local unit CE=GetAttackedUnitBJ()
+local real loc_dmg =0
 // call textToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00攻击开始|r")
 // 双剑被动计数
 if GetUnitAbilityLevel(Iv, 'Ab4f') >0  then
@@ -33550,8 +33574,9 @@ if GetUnitAbilityLevel(Iv, 'Ab4l') >0 then
     call SaveInteger(Ia, GetHandleId(Iv), StringHash("Ab4l"),0)
     // 如果携带双刃，会额外附带全属性两倍的伤害
     if GetUnitAbilityLevel(Iv, 'Ab4f') >0  then 
-    call UnitDamageTarget(Iv, CE, bk(Iv, 0, 4) +GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l'), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
-    call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S( bk(Iv, 0, 4) +GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l')))
+    call UnitDamageTarget(Iv, CE, I2R((GetHeroAgi(Iv, true) + GetHeroStr(Iv, true)) * 5) + bk(Iv, 0, 6) + GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l'), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+    call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S(I2R((GetHeroAgi(Iv, true) + GetHeroStr(Iv, true)) * 5) + bk(Iv, 0, 6) + GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l')))
     
     else
     call UnitDamageTarget(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
@@ -34201,16 +34226,16 @@ set ON[22]=EU
 set LJ[71]=$70737064
 // 魔神之翼
 set LJ[72]=$49303036
-// 玄光之翼
-set LJ[73]=$62666872
+// 火神盾
+set LJ[73]=$726F7473
 // 魔魂盔
 set LJ[74]=$49303033
 // 镇魂甲
 set LJ[75]=$49303032
 // 镇魂杖
 set LJ[76]=$49303031
-// 麒麟弓
-set LJ[77]=$49303144
+// 雷神冠
+set LJ[77]=$49303142
 // 刑天斧
 set LJ[78]=$67736F75
 // 刑天盾
