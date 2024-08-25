@@ -4310,7 +4310,6 @@ function magicPercentStrikeLevel takes unit Iv,integer loc_num returns integer
      if GetUnitAbilityLevel(Iv, 'Ab52') > 0 then 
       set int_MD = int_MD - int_MD *0.4
     endif 
-
     return R2I(int_MD)
 endfunction
 
@@ -14022,8 +14021,6 @@ call SelectHeroSkill(D8,'A0G6')
 call SelectHeroSkill(D8,'A0G6')
 call SelectHeroSkill(D8,'A0G6')
 call SelectHeroSkill(D8,'A0G6')
-
-// 
 call SelectHeroSkill(D8,$41303359)
 call SelectHeroSkill(D8,$41303359)
 call SelectHeroSkill(D8,$41303359)
@@ -15013,7 +15010,6 @@ endfunction
 function f3 takes nothing returns nothing
 local player CC=Player(10)
 local trigger CS
-// 司马昭
 set EW=CreateUnit(CC,$55656172,12314.8,-9666.4,269.73)
 call SetHeroLevel(EW,148,false)
 call SetUnitState(EW,UNIT_STATE_MANA,4720)
@@ -20249,9 +20245,10 @@ if GetUnitAbilityLevel(Ih,$41304534)==1 or GetUnitAbilityLevel(Ih,'Ab4f')==1 the
 call SetUnitState(Ih,UNIT_STATE_LIFE,GetUnitState(Ih,UNIT_STATE_LIFE)+GetEventDamage()*.5)
 else
 endif
+// 星辰爆伤害
 if GetUnitAbilityLevel(Ih,$4130314B)>0 then
 if GetRandomInt(1,3)==3 then
-call bs(Ih,GetUnitX(Ig),GetUnitY(Ig),220,bk(Ih,3,GetUnitAbilityLevel(Ih,$4130314B)),5,0)
+call bs(Ih, GetUnitX(Ig), GetUnitY(Ig), 220, bk(Ih, 3, GetUnitAbilityLevel(Ih, $4130314B)) *0.7, 5, 0)
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\NightElf\\Starfall\\StarfallTarget.mdl",GetUnitX(Ig),GetUnitY(Ig)))
 else
 endif
@@ -20307,6 +20304,7 @@ call take_magic_damage(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(1)))*.001,false,f
 endif
 else
 endif
+// 魔法回应
 if GetUnitAbilityLevel(Ih,$41304736)>=1 then
 call take_magic_damage(Ih,Ig,bk(Ih,3,GetUnitAbilityLevel(Ih,$41304736))*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 // call take_magic_damage(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304736))*200.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
@@ -33725,7 +33723,7 @@ call take_magic_damage(Iv,CE,I2R(GetHeroInt(Iv,true)*JS),false,false,ATTACK_TYPE
 endif
 // 发力燃烧伤害
 elseif GetSpellAbilityId()==$4130364A then
-call take_magic_damage(Iv,CE,bk(Iv,3,JS)*0.8,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv, CE, bk(Iv, 3, JS) *0.8, false, false, K, N, WEAPON_TYPE_WHOKNOWS)
 elseif GetSpellAbilityId()==$41485A52 then
 call dT(Iv)
 elseif GetSpellAbilityId()==$41575131 then
