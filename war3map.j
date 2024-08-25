@@ -60,6 +60,7 @@ item up_item =null
 integer up_num =0
 trigger text_show_trig 
 boolean array text_show 
+string array text_damage_str
 // 单位选中事件
 trigger select_listen
 unit pet_unit
@@ -88,7 +89,7 @@ button array rongzhu_btn
 integer array rongzhu_ability_pool
 integer array rongzhu_extra_pool
 // 轩辕和雷霆掉落判定
-integer xuan_yuan = GetRandomInt(101,107)
+integer xuan_yuan = GetRandomInt(101,109)
 integer lei_ting = 0
 unit rongzhu_factory =null
 trigger liurui_R_trig
@@ -1999,6 +2000,7 @@ set rongzhu_ability_pool[18] = 'K00I'
 set rongzhu_ability_pool[19] = 'K00J'
 set rongzhu_ability_pool[20] = 'K00K'
 set rongzhu_ability_pool[21] = 'K00L'
+set rongzhu_ability_pool[22] = 'K00M'
 // 天外陨铁额外技能池子
 set rongzhu_extra_pool[1] = 'KA01'
 set rongzhu_extra_pool[2] = 'KA02'
@@ -2007,6 +2009,7 @@ set rongzhu_extra_pool[4] = 'KA04'
 set rongzhu_extra_pool[5] = 'KA05'
 set rongzhu_extra_pool[6] = 'KA06'
 set rongzhu_extra_pool[7] = 'KA07'
+set rongzhu_extra_pool[8] = 'KA08'
 endfunction
     // 宠物宝宝池子
 function set_pet_pool takes nothing returns nothing
@@ -3820,7 +3823,7 @@ if FZ<=0 or LoadUnitHandle(Ia,Is,$756E6974)==null then
 call SetUnitFlyHeight(LoadUnitHandle(Ia,Is,$756E6974),0,0.)
 call UnitRemoveType(LoadUnitHandle(Ia,Is,$756E6974),UNIT_TYPE_GIANT)
 call SetUnitPosition(LoadUnitHandle(Ia,Is,$756E6974),GetUnitX(LoadUnitHandle(Ia,Is,$756E6974)),GetUnitY(LoadUnitHandle(Ia,Is,$756E6974)))
-call UnitDamageTarget(LoadUnitHandle(Ia,Is,$6865726F),LoadUnitHandle(Ia,Is,$756E6974),LoadReal(Ia,Is,$3064656D),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(LoadUnitHandle(Ia,Is,$6865726F),LoadUnitHandle(Ia,Is,$756E6974),LoadReal(Ia,Is,$3064656D),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call DestroyTimer(GetExpiredTimer())
 call FlushChildHashtable(Ia,Is)
 endif
@@ -3845,7 +3848,7 @@ if FZ<=0 or LoadUnitHandle(Ia,Is,$756E6974)==null then
 call SetUnitFlyHeight(LoadUnitHandle(Ia,Is,$756E6974),0,0.)
 call UnitRemoveType(LoadUnitHandle(Ia,Is,$756E6974),UNIT_TYPE_GIANT)
 call SetUnitPosition(LoadUnitHandle(Ia,Is,$756E6974),GetUnitX(LoadUnitHandle(Ia,Is,$756E6974)),GetUnitY(LoadUnitHandle(Ia,Is,$756E6974)))
-call UnitDamageTarget(LoadUnitHandle(Ia,Is,$6865726F),LoadUnitHandle(Ia,Is,$756E6974),LoadReal(Ia,Is,$3064656D),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call UnitDamageTarget(LoadUnitHandle(Ia,Is,$6865726F),LoadUnitHandle(Ia,Is,$756E6974),LoadReal(Ia,Is,$3064656D),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call DestroyTimer(GetExpiredTimer())
 call FlushChildHashtable(Ia,Is)
 endif
@@ -4101,7 +4104,7 @@ function magicLevel takes unit Iv returns real
         set extra = extra * 1.5 
     endif 
 
-    if GetUnitAbilityLevel(Iv, 'Ab42') > 0 then 
+    if GetUnitAbilityLevel(Iv, 'Ab42') > 0 or GetUnitAbilityLevel(Iv, 'Ab02') > 0 then 
 
         if GetRandomInt(1, 10) < 3 then 
             set extra = extra * 2 
@@ -4141,34 +4144,236 @@ function bk takes unit Ij, integer Ik, integer JS returns real
     set JT = JT * (I2R(GetPlayerTechCount(GetOwningPlayer(Ij), $526F7374, true)) * .05) + JT 
     set extra = magicLevel(Ij) 
     set JT = JT * (1 + extra) 
-    call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00额外法强系数：" + R2S(extra) + " 总伤害：" + R2S(JT)) 
         // 如果是玩家8，系数0.2     
     if IsUnitEnemy(Ij, Player(8)) then 
-        set JT = JT * .2 
+        set JT = JT * .4 
     endif 
     return JT 
 endfunction 
 // 魔法抗性计算公式
-function magicDefendLevel takes unit Iv returns real 
-    local real int_MD = 0 
-    local real percent_decrease
+function magicDefendLevel takes unit Iv returns integer 
+    local integer int_MD = 0 
+
     // 雁翎甲魔抗+100
     if GetUnitAbilityLevel(Iv, 'A0EH') > 0 then 
       set int_MD = int_MD +100
+    endif  
+    // 刑天盾魔抗+45
+    if GetUnitAbilityLevel(Iv, 'A03N') > 0 then 
+      set int_MD = int_MD +45
     endif 
-    // 巨象魔抗+60
-    if bC(Iv, 'I007') > 0 then 
+     // 玄铁套魔抗+45
+    if GetUnitAbilityLevel(Iv, 'A03G') > 0 then 
+      set int_MD = int_MD +35
+    endif 
+    // 的卢魔抗+25
+    if GetUnitAbilityLevel(Iv, 'A0BV') > 0 then 
+      set int_MD = int_MD +35
+    endif 
+    // 神农鼎魔抗+50
+    if GetUnitAbilityLevel(Iv, 'A02I') > 0 then 
+      set int_MD = int_MD +50
+    endif 
+   
+    // 神农鼎魔抗+50
+    if GetUnitAbilityLevel(Iv, 'A02I') > 0 then 
+      set int_MD = int_MD +50
+    endif 
+    // 兵法24篇魔抗+75
+    if GetUnitAbilityLevel(Iv, 'A060') > 0 then 
+      set int_MD = int_MD +50
+    endif
+    // 玄武套魔抗+80
+    if GetUnitAbilityLevel(Iv, 'A07N') > 0 then 
+      set int_MD = int_MD +80
+    endif 
+    // 真武战甲魔抗额外+40
+    if GetUnitAbilityLevel(Iv, 'Ab4h') > 0 then 
+      set int_MD = int_MD +40
+    endif 
+    // 霸王套魔抗+100
+    if GetUnitAbilityLevel(Iv, 'A0G0') > 0 then 
       set int_MD = int_MD +100
     endif 
-    // // 雁翎甲魔抗+100
-    // if GetUnitAbilityLevel(Iv, 'A0EH') > 0 then 
-    //   set int_MD = int_MD +100
+    // 东皇钟魔抗+80
+    if GetUnitAbilityLevel(Iv, 'A055') > 0 then 
+      set int_MD = int_MD +80
+    endif 
+     // 遁甲天书魔抗+50
+    if GetUnitAbilityLevel(Iv, 'Aspb') > 0 then 
+      set int_MD = int_MD +50
+    endif 
+     // 风神衣魔抗+75
+    if GetUnitAbilityLevel(Iv, 'A02R') > 0 then 
+      set int_MD = int_MD +75
+    endif 
+    // 和氏璧魔抗+30
+     if GetUnitAbilityLevel(Iv, 'Adt1') > 0 then 
+      set int_MD = int_MD +30
+    endif 
+    // 昆仑镜魔抗+75
+     if GetUnitAbilityLevel(Iv, 'Adis') > 0 then 
+      set int_MD = int_MD +75
+    endif 
+    // 圣者之衣+35魔抗
+     if GetUnitAbilityLevel(Iv, 'A0WD') > 0 then 
+      set int_MD = int_MD +35
+    endif 
+     // 白翅膀+25
+     if GetUnitAbilityLevel(Iv, 'AEbl') > 0 then 
+      set int_MD = int_MD +25
+    endif 
+     // 真龙护手+25
+     if GetUnitAbilityLevel(Iv, 'ANss') > 0 then 
+      set int_MD = int_MD +25
+    endif 
+     // 心之钢+50
+     if GetUnitAbilityLevel(Iv, 'Ab1g') > 0 then 
+      set int_MD = int_MD +50
+    endif 
+     // +50
+     if GetUnitAbilityLevel(Iv, 'Ab53') > 0 then 
+      set int_MD = int_MD +50
+    endif // +50
+     if GetUnitAbilityLevel(Iv, 'AT0Q') > 0 then 
+      set int_MD = int_MD +100
+    endif // +50
+     if GetUnitAbilityLevel(Iv, 'AT0R') > 0 then 
+      set int_MD = int_MD +150
+    endif 
+     // 铜墙铁壁+10魔抗
+     if GetUnitAbilityLevel(Iv, 'Assk') > 0 then 
+      set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Assk') *10
+    endif 
+    // 龙血沸腾+10魔抗
+     if GetUnitAbilityLevel(Iv, 'Ab4l') > 0 then 
+      set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Ab4l') *10
+    endif 
+    // 难度魔抗 41304139
+  if GetUnitAbilityLevel(Iv, 'A0A9') > 0 then 
+      set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'A0A9') *10
+    endif 
+    // 法术抗性+75
+    // if GetUnitAbilityLevel(Iv, 'Ab1') > 0 then 
+    //   set int_MD = int_MD +75
     // endif 
-    set percent_decrease = (int_MD) / (100 +int_MD)
-    return percent_decrease
+     // 蚩尤披风、面具，魔抗+60
+    if bC(Iv, 'I027') == true or bC(Iv, 'IT16') ==true then 
+      set int_MD = int_MD +60
+    endif 
+     // 奇谋魔抗+100
+    if bC(Iv, 'I01P') == true  then 
+      set int_MD = int_MD +100
+    endif 
+    // 无字天书魔抗+75
+    if bC(Iv, 'rej2') == true  then 
+      set int_MD = int_MD +75
+    endif 
+     // 大宛马+25
+    if bC(Iv, 'blba') == true  then 
+      set int_MD = int_MD +25
+    endif 
+     // // 巨象魔抗+60
+    if bC(Iv, 'I007') == true then 
+      set int_MD = int_MD +60
+    endif 
+    // 玄天盾魔抗+50%
+    if bC(Iv, 'it09') == true then 
+      set int_MD = R2I(int_MD *1.5)
+    endif 
+    // // 雁翎甲魔抗+100
+
+    return int_MD
 endfunction 
 
-function take_magic_damage takes unit Iv, unit CE, real amout, boolean attack, boolean ranged, attacktype attack_type, damagetype damage_type,weapontype weapon_type returns nothing 
+// 百分比法术穿透计算
+function magicPercentStrikeLevel takes unit Iv,integer loc_num returns integer 
+     local real int_MD = I2R(loc_num)
+     local real de_perecent =0
+    //  鼎文杖+20%法穿
+     if GetUnitAbilityLevel(Iv, 'AIse') > 0 then 
+      set int_MD = int_MD - int_MD *0.2
+    endif  
+    //  伏羲琴+25%法穿
+     if GetUnitAbilityLevel(Iv, 'A05E') > 0 then 
+      set int_MD = int_MD - int_MD *0.25
+    endif 
+     //  霸龙刀+50%法穿
+     if GetUnitAbilityLevel(Iv, 'Ab02') > 0 then 
+      set int_MD = int_MD - int_MD *0.5
+    endif 
+     //  熔铸+35%法穿
+     if GetUnitAbilityLevel(Iv, 'KA08') > 0 then 
+      set int_MD = int_MD - int_MD *0.35
+    endif 
+      //  轩辕剑+40%
+     if GetUnitAbilityLevel(Iv, 'Ab52') > 0 then 
+      set int_MD = int_MD - int_MD *0.4
+    endif 
+
+    return R2I(int_MD)
+endfunction
+
+// 固定法术穿透计算
+function magicStrikeLevel takes unit Iv,integer loc_num returns integer 
+     local integer int_MD = loc_num 
+    //  镇魂杖法术穿透+30
+       if GetUnitAbilityLevel(Iv, 'A01O') > 0 then 
+      set int_MD = int_MD - 30
+    endif 
+     //  的卢法术穿透+25
+       if GetUnitAbilityLevel(Iv, 'A0BV') > 0 then 
+      set int_MD = int_MD - 25
+    endif 
+    //  七星灯法术穿透+30
+       if GetUnitAbilityLevel(Iv, 'A0BV') > 0 then 
+      set int_MD = int_MD - 30
+    endif
+     //  蚩尤套法术穿透+50
+       if GetUnitAbilityLevel(Iv, 'A0DK') > 0 then 
+      set int_MD = int_MD - 50
+    endif
+     //  孟德书法术穿透+35
+       if GetUnitAbilityLevel(Iv, 'AIae') > 0 then 
+      set int_MD = int_MD - 35
+    endif
+    // 烛龙刀+50法穿
+    if GetUnitAbilityLevel(Iv, 'Ab05') > 0 then 
+      set int_MD = int_MD - 50
+    endif
+
+     // 轩辕剑+75
+    if GetUnitAbilityLevel(Iv, 'Ab51') > 0 then 
+      set int_MD = int_MD - 75
+    endif
+    
+     // 熔铸每级+10
+    if GetUnitAbilityLevel(Iv, 'K00M') > 0 then 
+      set int_MD = int_MD - 10 *GetUnitAbilityLevel(Iv, 'K00M')
+    endif
+    return int_MD
+endfunction
+
+// 通用伤害可以伤害虚无，强化伤害无视护甲魔抗，不能伤害虚无
+function take_magic_damage takes unit Iv, unit CE, real amout, boolean loc_attack, boolean loc_ranged, attacktype attack_type, damagetype damage_type,weapontype weapon_type returns nothing 
+local real defend_percent =1
+local integer magic_defend_amout = magicDefendLevel(CE)
+local integer magic_infact_amout =magicDefendLevel(CE)
+local real really_amout=amout
+    if damage_type != DAMAGE_TYPE_UNIVERSAL then
+        // 先计算百分比法穿
+        set magic_infact_amout = magicPercentStrikeLevel(Iv,magic_defend_amout)
+        // 再计算固定法穿
+        set magic_infact_amout = magicStrikeLevel(Iv,magic_infact_amout)
+
+        set defend_percent = 1 - (magic_infact_amout / I2R(magic_infact_amout + 100))
+        set really_amout = really_amout *defend_percent
+        call textToPlayer(GetOwningPlayer(Iv), 0, 0, "面板伤害：" + R2S(amout) + "--目标魔抗:" + I2S(magic_defend_amout) + "--穿透后魔抗："+I2S(magic_infact_amout) +"--实际伤害：" + R2S(really_amout))
+
+    endif
+  
+call UnitDamageTarget(Iv, CE,  really_amout, loc_attack, loc_ranged, attack_type, damage_type, weapon_type)
+
 endfunction 
 // 根据英雄智力和法强返回相应值
 function getMasterServent takes unit Ij returns real
@@ -4290,7 +4495,7 @@ if Ij != CE and GetUnitState(CE, UNIT_STATE_LIFE) > .405 and IsUnitEnemy(CE, Get
     if IsUnitType(CE, UNIT_TYPE_HERO) == true and GetUnitPointValue(CE) == 100 then
         return
     endif
-call UnitDamageTarget(Ij,CE,Iz,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Iz,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 set CE=null
@@ -4306,7 +4511,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call UnitDamageTarget(Ij,CE,Iz+GetUnitState(CE,UNIT_STATE_LIFE)*Jf,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Iz+GetUnitState(CE,UNIT_STATE_LIFE)*Jf,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 set CE=null
@@ -4322,7 +4527,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call UnitDamageTarget(Ij,CE,Iz+GetUnitState(CE,UNIT_STATE_MAX_LIFE)*Jf,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Iz+GetUnitState(CE,UNIT_STATE_MAX_LIFE)*Jf,false,false,I3[I0],I4[I1],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 set CE=null
@@ -4349,7 +4554,7 @@ set JP=It+JO*1.*Cos(Im*bj_DEGTORAD)
 set JQ=Iu+JO*1.*Sin(Im*bj_DEGTORAD)
 set JR=SquareRoot(Pow(JP-GetUnitX(CE),2.)+Pow(JQ-GetUnitY(CE),2.))
 if JO<=50. or JR<=JM then
-call UnitDamageTarget(Iv,CE,Ii,false,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Other\\Stampede\\StampedeMissileDeath.mdl",CE,"origin"))
 endif
 endif
@@ -4687,7 +4892,7 @@ call DestroyEffect(AddSpecialEffect("zhangjiao_F_texiao.mdl",GetUnitX(CE),GetUni
 if GetUnitAbilityLevel(Iv, 'Ab41') >0 then
 call SaveInteger(Ia, GetHandleId(CE), 103, LoadInteger(Ia, GetHandleId(CE), 103) +1)
 endif
-call UnitDamageTarget(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 
@@ -4870,14 +5075,14 @@ function maliangE_Action takes nothing returns nothing
     local unit CE=LoadUnitHandle(Ia, GetHandleId(maliang),0)
 
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(maliang)), $65303939, $4162326A, 1, GetUnitX(maliang), GetUnitY(maliang), bj_UNIT_FACING, 0.5), 852125, CE)
-call UnitDamageTarget(maliang,CE,bk(maliang, 3, GetUnitAbilityLevel(maliang, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(maliang,CE,bk(maliang, 3, GetUnitAbilityLevel(maliang, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 
     if GetRandomInt(1, 100) > 2 * GetUnitAbilityLevel(maliang, 'Ab2m') then
         call DestroyTimer(CS)
     else
 call DisplayTextToPlayer(GetOwningPlayer(maliang), 0, 0, "暗影追魂" )
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(maliang)), $65303939, $4162326A, 1, GetUnitX(maliang), GetUnitY(maliang), bj_UNIT_FACING, 0.5), 852125, CE)
-call UnitDamageTarget(maliang,CE,bk(maliang, 3, GetUnitAbilityLevel(maliang, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(maliang,CE,bk(maliang, 3, GetUnitAbilityLevel(maliang, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 
     endif
 endfunction
@@ -5595,25 +5800,7 @@ call TriggerAddCondition(select_listen, Condition(function Trig_select_condition
 call TriggerAddAction(select_listen,function Trig_select_action)
 endfunction
 // 速度监听
-// function Trig_listen_speed_action takes nothing returns nothing
-//     if( bC(Ib[GetConvertedPlayerId(GetTriggerPlayer())], 'it0o') == true) then
-//     call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "累计已掘墓:" + I2S(found_time) +" 次") 
-//     else
-//     call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0,"你没有洛书河图！")
-//     endif
-// endfunction
-// function Trig_listen_speed takes nothing returns nothing
-// set speed_listen=CreateTrigger()
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(0),"-speed",true)
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(1),"-speed",true)
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(2),"-speed",true)
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(3),"-speed",true)
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(4),"-speed",true)
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(5),"-speed",true)
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(6),"-speed",true)
-// call TriggerRegisterPlayerChatEvent(speed_listen,Player(7),"-speed",true)
-// call TriggerAddAction(speed_listen,function Trig_listen_map_action)
-// endfunction
+
 // 
     // 掘墓对应事件
 function found_event takes nothing returns nothing
@@ -5702,7 +5889,7 @@ function zongyu_W_Action takes nothing returns nothing
         // 如果跳跃的目标是敌人则造成眩晕
         if IsUnitEnemy(CE, GetOwningPlayer(Iv)) == true then
         call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
-        call UnitDamageTarget(Iv, CE, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+        call take_magic_damage(Iv, CE, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
         endif
     else
     endif
@@ -5747,7 +5934,7 @@ function zongyu_W_Action takes nothing returns nothing
                         call GroupRemoveUnit(ydl_group, ydl_unit)
                         if IsUnitEnemy(ydl_unit, GetOwningPlayer(Iv)) == true and ydl_unit !=Iv then
                             // call IssueTargetOrder(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x384C9D86), "slow", ydl_unit)
-                        call UnitDamageTarget(Iv, ydl_unit, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+                        call take_magic_damage(Iv, ydl_unit, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab25')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
                         else
                         endif
                     endloop
@@ -5853,10 +6040,10 @@ function zongyu_Q_Action takes nothing returns nothing
           
             if bC(Iv, $69743061) ==true then 
                   call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,'Ab2a',1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
-                  call UnitDamageTarget(Iv, CE, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24') +2), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+                  call take_magic_damage(Iv, CE, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24') +2), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
             else
                   call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,1),852095,CE)
-                  call UnitDamageTarget(Iv, CE,  bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+                  call take_magic_damage(Iv, CE,  bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab24')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
             endif
         else
         endif
@@ -5979,8 +6166,8 @@ function Trig_Xuyi1Func015Func011Func004A takes nothing returns nothing
         if((IsUnitEnemy(ydl_unit, GetOwningPlayer(LoadUnitHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0x458B7DE9))) == true) and(IsUnitInGroup(ydl_unit, LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460)) == false)) and ydl_unit != chendao then
             call GroupAddUnit(LoadGroupHandle(YDLOC, GetHandleId(GetExpiredTimer()), 0xD13A3460), ydl_unit)
             // 蓄意伤害
-            call UnitDamageTarget(chendao, ydl_unit, GetUnitState(chendao, ConvertUnitState(18)) * (1 + GetUnitState(chendao, UNIT_STATE_MAX_LIFE) * 0.00005), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
-            call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1t') * 300 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+            call take_magic_damage(chendao, ydl_unit, GetUnitState(chendao, ConvertUnitState(18)) * (1 + GetUnitState(chendao, UNIT_STATE_MAX_LIFE) * 0.00005), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+            call take_magic_damage(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1t') * 300 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
             call YDWETimerDestroyEffect(2 , AddSpecialEffectTarget("Abilities\\Spells\\Items\\StaffOfPurification\\PurificationTarget.mdl", ydl_unit, "origin"))
         else
@@ -6134,8 +6321,8 @@ function Trig_llFunc005T takes nothing returns nothing
             call YDWEJumpTimer(ydl_unit , ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) - ( 90.00 ) ) , LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38AB9941) , 0.15 , 0.01 , 100.00)
             call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Abilities\\Spells\\Orc\\FeralSpirit\\feralspiritdone.mdl", GetUnitX(ydl_unit), GetUnitY(ydl_unit)))
             // 强手裂颅伤害
-            call UnitDamageTarget(chendao, ydl_unit,bk(chendao,1,GetUnitAbilityLevel(chendao,'Ab1r')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
-                   call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1r') * 200 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+            call take_magic_damage(chendao, ydl_unit,bk(chendao,1,GetUnitAbilityLevel(chendao,'Ab1r')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+                   call take_magic_damage(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1r') * 200 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
         else
         endif
     endloop
@@ -6154,8 +6341,8 @@ function Trig_llFunc005T takes nothing returns nothing
             call YDWEJumpTimer(ydl_unit , ( ( LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0xA3098AE2) ) + ( 90.00 ) ) , LoadReal(YDLOC, GetHandleId(GetExpiredTimer()), 0x38AB9941) , 0.15 , 0.01 , 100.00)
             call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Abilities\\Spells\\Orc\\FeralSpirit\\feralspiritdone.mdl", GetUnitX(ydl_unit), GetUnitY(ydl_unit)))
             // 强手裂颅伤害
-            call UnitDamageTarget(chendao, ydl_unit,  bk(chendao, 1, GetUnitAbilityLevel(chendao, 'Ab1r')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
-            call UnitDamageTarget(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1r') * 200 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+            call take_magic_damage(chendao, ydl_unit,  bk(chendao, 1, GetUnitAbilityLevel(chendao, 'Ab1r')), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+            call take_magic_damage(chendao, ydl_unit, GetUnitAbilityLevel(chendao, 'Ab1r') * 200 , true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
         else
         endif
@@ -6287,7 +6474,7 @@ function Trig_mmConditions takes nothing returns boolean
 endfunction
 function Trig_mmActions takes nothing returns nothing
     // set udg_CS=( ( udg_CS ) + ( 1 ) )
-    // // call UnitDamageTarget(chendao, GetTriggerUnit(),  GetUnitState(chendao, ConvertUnitState(18)) * 3, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+    // // call take_magic_damage(chendao, GetTriggerUnit(),  GetUnitState(chendao, ConvertUnitState(18)) * 3, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
     // // call DisplayTextToPlayer(GetOwningPlayer(chendao), 0, 0, "正在强化攻击：" + I2S(udg_CS))
     // if ( ( udg_CS == GetUnitAbilityLevel(chendao,'Ab1u') ) ) then
     //     call UnitRemoveBuffBJ($42303257, GetEventDamageSource())
@@ -6339,8 +6526,8 @@ function Trig_lllfffActions takes nothing returns nothing
         call TriggerExecute(gg_trg_hy)
         call TriggerSleepAction(0.5)
         // 右勾拳伤害
-        // call UnitDamageTarget(chendao, GetTriggerUnit(), GetUnitAbilityLevel(chendao, 'Ab1u') * 200, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
-        call UnitDamageTarget(chendao, GetTriggerUnit(), GetEventDamage() *2, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        // call take_magic_damage(chendao, GetTriggerUnit(), GetUnitAbilityLevel(chendao, 'Ab1u') * 200, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call take_magic_damage(chendao, GetTriggerUnit(), GetEventDamage() *2, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
         call YDWETimerDestroyEffect(0.30 , AddSpecialEffectTarget("Abilities\\Spells\\Items\\AIfb\\AIfbSpecialArt.mdl", GetAttacker(), "hand left"))
 
     endif
@@ -6422,7 +6609,7 @@ function Trig_tiaoFunc014T takes nothing returns nothing
                     if ( ( IsUnitEnemy(ydl_unit, GetOwningPlayer(loc_self)) == true ) ) then
                         // 叹为观止伤害
                         call IssueTargetOrder(LoadUnitHandle(YDLOC,loc_id, 0x384C9D86), "thunderbolt", ydl_unit)
-                        call UnitDamageTarget(loc_self, ydl_unit,GetUnitState(loc_self, ConvertUnitState(18))  * (1 + GetUnitState(loc_self, UNIT_STATE_MAX_LIFE) * 0.00005) + GetUnitState(loc_target, UNIT_STATE_MAX_LIFE) * 0.07, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+                        call take_magic_damage(loc_self, ydl_unit,GetUnitState(loc_self, ConvertUnitState(18))  * (1 + GetUnitState(loc_self, UNIT_STATE_MAX_LIFE) * 0.00005) + GetUnitState(loc_target, UNIT_STATE_MAX_LIFE) * 0.07, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
                         // call YDWETimerDestroyEffect(1.00 , AddSpecialEffect("Objects\\Spawnmodels\\Orc\\OrcLargeDeathExplode\\OrcLargeDeathExplode.mdl", GetUnitX(ydl_unit), GetUnitY(ydl_unit)))
                          call range_stunEffect(chendao, GetUnitX(chendao), GetUnitY(chendao), 500, 3,true)
                     else
@@ -6685,19 +6872,19 @@ function rongzhu_foreach_1 takes player loc_player returns nothing
     local integer loc_time4
     call DialogSetMessage(loc_dialog,"请选择熔铸技能")
     // set rongzhu_btn[1] = DialogAddButton(loc_dialog, "测试",1)
-    set loc_time2 = GetRandomInt(1,21) 
-    set loc_time3 = GetRandomInt(1,21)
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time2 = GetRandomInt(1,22) 
+    set loc_time3 = GetRandomInt(1,22)
+    set loc_time4 = GetRandomInt(1,22)
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = null
      set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = null
      set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = null
     loop 
     exitwhen loc_time2 != loc_time3
-    set loc_time3 = GetRandomInt(1,21)
+    set loc_time3 = GetRandomInt(1,22)
     endloop
     loop 
     exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time4 = GetRandomInt(1,22)
     endloop
     // 
    if loc_level == 5 then
@@ -6770,19 +6957,19 @@ function rongzhu_foreach_2 takes player loc_player returns nothing
     local integer loc_time4
     call DialogSetMessage(loc_dialog,"请选择熔铸技能")
     // set rongzhu_btn[1] = DialogAddButton(loc_dialog, "测试",1)
-    set loc_time2 = GetRandomInt(1,21) 
-    set loc_time3 = GetRandomInt(1,21)
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time2 = GetRandomInt(1,22) 
+    set loc_time3 = GetRandomInt(1,22)
+    set loc_time4 = GetRandomInt(1,22)
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = null
      set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = null
      set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = null
     loop 
     exitwhen loc_time2 != loc_time3
-    set loc_time3 = GetRandomInt(1,21)
+    set loc_time3 = GetRandomInt(1,22)
     endloop
     loop 
     exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time4 = GetRandomInt(1,22)
     endloop
     // 
     if loc_level == 5 then
@@ -6857,19 +7044,19 @@ function rongzhu_foreach_3 takes player loc_player returns nothing
     local integer loc_time4
     call DialogSetMessage(loc_dialog,"请选择熔铸技能")
     // set rongzhu_btn[1] = DialogAddButton(loc_dialog, "测试",1)
-    set loc_time2 = GetRandomInt(1,21) 
-    set loc_time3 = GetRandomInt(1,21)
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time2 = GetRandomInt(1,22) 
+    set loc_time3 = GetRandomInt(1,22)
+    set loc_time4 = GetRandomInt(1,22)
     set rongzhu_btn[GetPlayerId(loc_player) * 100 + 1] = null
      set rongzhu_btn[GetPlayerId(loc_player) * 100 + 2] = null
      set rongzhu_btn[GetPlayerId(loc_player) * 100 + 3] = null
     loop 
     exitwhen loc_time2 != loc_time3
-    set loc_time3 = GetRandomInt(1,21)
+    set loc_time3 = GetRandomInt(1,22)
     endloop
     loop 
     exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time4 = GetRandomInt(1,22)
     endloop
     // 
      if loc_level == 5 then
@@ -6952,16 +7139,16 @@ function rongzhu_foreach_4 takes player loc_player returns nothing
     // set rongzhu_btn[1] = DialogAddButton(loc_dialog, "测试",1)
     if loc_time1 == 1 then
     //  取随机数
-    set loc_time2 = GetRandomInt(1,7) 
-    set loc_time3 = GetRandomInt(1,7)
-    set loc_time4 = GetRandomInt(1,7)
+    set loc_time2 = GetRandomInt(1,8) 
+    set loc_time3 = GetRandomInt(1,8)
+    set loc_time4 = GetRandomInt(1,8)
     loop 
     exitwhen loc_time2 != loc_time3
-    set loc_time3 = GetRandomInt(1,7)
+    set loc_time3 = GetRandomInt(1,8)
     endloop
     loop 
     exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
-    set loc_time4 = GetRandomInt(1,7)
+    set loc_time4 = GetRandomInt(1,8)
     endloop
     set ability_1 = rongzhu_extra_pool[loc_time2]
     set ability_2 = rongzhu_extra_pool[loc_time3]
@@ -6985,16 +7172,16 @@ function rongzhu_foreach_4 takes player loc_player returns nothing
     call SaveInteger(hero_hash, GetPlayerId(loc_player), GetPlayerId(loc_player) * 100 + 3,ability_3)
     call SaveInteger(hero_hash, GetPlayerId(loc_player), StringHash(GetAbilityName(ability_3)),1)
     else
-    set loc_time2 = GetRandomInt(1,21) 
-    set loc_time3 = GetRandomInt(1,21)
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time2 = GetRandomInt(1,22) 
+    set loc_time3 = GetRandomInt(1,22)
+    set loc_time4 = GetRandomInt(1,22)
     loop 
     exitwhen loc_time2 != loc_time3
-    set loc_time3 = GetRandomInt(1,21)
+    set loc_time3 = GetRandomInt(1,22)
     endloop
     loop 
     exitwhen loc_time2 != loc_time4 and loc_time3 != loc_time4
-    set loc_time4 = GetRandomInt(1,21)
+    set loc_time4 = GetRandomInt(1,22)
     endloop
     set ability_1 = rongzhu_ability_pool[loc_time2]
     set ability_2 = rongzhu_ability_pool[loc_time3]
@@ -7363,7 +7550,7 @@ if GetUnitAbilityLevel(Iv,$41304844)>0 then
 call UnitRemoveAbility(Iv,$41304844)
 endif
 if Ii<0 then
-call UnitDamageTarget(CE,Iv,-Ii,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(CE,Iv,-Ii,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 call b5(I2S(R2I(LoadReal(Ia,Ix,0))),Iv,.05,10,255,255,255,255)
@@ -7396,7 +7583,7 @@ if GetUnitAbilityLevel(Iv,$41413034)>0 then
 call UnitRemoveAbility(Iv,$41413034)
 endif
 if Ii<0 then
-call UnitDamageTarget(CE,Iv,-Ii,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(CE,Iv,-Ii,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 endif
 call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\0098.mdl",Iv,"chest"))
 call bs(DB,GetUnitX(Iv),GetUnitY(Iv),500,LoadReal(Ia,GetHandleId(Iv),$6864616D),5,0)
@@ -7429,7 +7616,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if RAbsBJ(bN(Ij,CE)-Im)>=270. or RAbsBJ(bN(Ij,CE)-Im)<=90. and GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call UnitDamageTarget(Ij,CE,Iz,false,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Iz,false,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 set CE=null
@@ -7467,7 +7654,7 @@ call DestroyEffect(AddSpecialEffect("dekan_lol_yasuo_stomp.mdx",GetUnitX(LoadUni
 loop
 set CE=FirstOfGroup(I2)
 exitwhen CE==null
-call UnitDamageTarget(Iv,CE,bk(Iv,0,GetUnitAbilityLevel(Iv,$41415352)+5)*5,false,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,0,GetUnitAbilityLevel(Iv,$41415352)+5)*5,false,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call GroupRemoveUnit(I2,CE)
 call PauseUnit(CE,false)
 call SetUnitFlyHeight(CE,0.,0.)
@@ -7595,7 +7782,7 @@ endloop
 call DestroyGroup(I2)
 endif
 else
-call UnitDamageTarget(Iv,LoadUnitHandle(Ia,Ix,$756E6974),LoadReal(Ia,Ix,$64616D30)*2,true,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,LoadUnitHandle(Ia,Ix,$756E6974),LoadReal(Ia,Ix,$64616D30)*2,true,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 endif
 call EXSetUnitMoveType(Iv,2)
 call SetUnitTimeScale(Iv,1.)
@@ -7675,7 +7862,7 @@ set JP=It+JO*1.*Cos(Im*bj_DEGTORAD)
 set JQ=Iu+JO*1.*Sin(Im*bj_DEGTORAD)
 set JR=SquareRoot(Pow(JP-GetUnitX(CE),2.)+Pow(JQ-GetUnitY(CE),2.))
 if JO<=50. or JR<=110 then
-call UnitDamageTarget(Iv,CE,LoadReal(Ia,Ix,$64616D30),true,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,LoadReal(Ia,Ix,$64616D30),true,false,ConvertAttackType(5),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Other\\Stampede\\StampedeMissileDeath.mdl",CE,"origin"))
 set SC=1
 endif
@@ -7781,7 +7968,7 @@ if GetUnitAbilityLevel(JW, 'Ab2r') >0 and IsUnitType(Ig, UNIT_TYPE_FLYING) == fa
 endif
 
 if  GetUnitAbilityLevel(JW, 'Ab26') >0 then
-    call UnitDamageTarget(JW, Ig, (GetHeroAgi(JW, true))+(GetHeroInt(JW, true))+(GetHeroStr(JW, true)), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(JW, Ig, (GetHeroAgi(JW, true))+(GetHeroInt(JW, true))+(GetHeroStr(JW, true)), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
     //如果当前攻击的单位不是
     if Ig != LoadUnitHandle(Ia, GetHandleId(JW), $30304846) then
         // call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "" )
@@ -7793,13 +7980,13 @@ if  GetUnitAbilityLevel(JW, 'Ab26') >0 then
          call SaveReal(Ia, GetHandleId(JW), $30304847, LoadReal(Ia, GetHandleId(JW), $30304847) +1)
          
          set attackTime = LoadReal(Ia, GetHandleId(JW), $30304847) 
-        call UnitDamageTarget(JW, Ig, 50 * (GetUnitAbilityLevel(JW, 'Ab26') +zongyu_R_enchance) * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call take_magic_damage(JW, Ig, 50 * (GetUnitAbilityLevel(JW, 'Ab26') +zongyu_R_enchance) * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
-        // call UnitDamageTarget(JW, Ig, 50 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        // call take_magic_damage(JW, Ig, 50 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
         if bC(JW, $69743061) ==true then
         call SaveReal(Ia, GetHandleId(JW), $30304847, LoadReal(Ia, GetHandleId(JW), $30304847) +2)
         set attackTime = LoadReal(Ia, GetHandleId(JW), $30304847)  
-        call UnitDamageTarget(JW, Ig, 50 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call take_magic_damage(JW, Ig, 50 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
         call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "累计攻击伤害:" + R2S(50 * GetUnitAbilityLevel(JW, 'Ab26') * attackTime))
      
     endif
@@ -7826,7 +8013,7 @@ endif
 // 陈到Q伤害
 if UnitHasBuffBJ(JW, $42303257) == true then
 // call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "过来挨打：" )
-call UnitDamageTarget(JW, Ig, GetUnitAbilityLevel(chendao, 'Ab1u') * 400 + GetUnitState(JW, ConvertUnitState(18)) * 3, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(JW, Ig, GetUnitAbilityLevel(chendao, 'Ab1u') * 400 + GetUnitState(JW, ConvertUnitState(18)) * 3, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 set udg_CS=( ( udg_CS ) + ( 1 ) )
 if ( ( udg_CS == GetUnitAbilityLevel(chendao,'Ab1u') ) ) then
 call UnitRemoveBuffBJ($42303257, GetEventDamageSource())
@@ -7838,7 +8025,7 @@ endif
 if bW(JW, $69743069) != null and LoadBoolean(FS,GetHandleId(JW),$130B62E4) == true  then
 call PlaySoundOnUnitBJ(gang,150,JW)
 // call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00心之钢攻击！" )
-call UnitDamageTarget(JW, Ig, LoadReal(FS,GetHandleId(Ig),$130B62E3) * .5, false, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(JW, Ig, LoadReal(FS,GetHandleId(Ig),$130B62E3) * .5, false, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
 call SetUnitState(JW,ConvertUnitState(22),LoadReal(FS,GetHandleId(JW),$130B62E5))
 call SetItemCharges(aj(JW,$69743069), GetItemCharges(aj(JW,$69743069)) + R2I(GetUnitState(JW, UNIT_STATE_MAX_LIFE) * 0.01))
 call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.01)
@@ -7854,9 +8041,6 @@ call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$4162307
 // call XinzhigangAttack()
 endif
 // 高翔反伤
-// if Ig == gaoxiang and IsUnitAlly(JW, Player(8)) == false and GetUnitAbilityLevel(Ig, $41623163) >0 then 
-// call UnitDamageTarget(Ig, JW, LoadReal(FS,GetHandleId(Ig),$130B62E3) * .01 *GetUnitAbilityLevel(Ig, $41623163), false, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
-// call DisplayTextToPlayer(GetOwningPlayer(Ig), 0, 0, "|Cff00ff00反伤！" + R2S(LoadReal(FS,GetHandleId(Ig),$130B62E3) * .01 * GetUnitAbilityLevel(Ig, $41623163)) + "角色生命值：" + R2S( LoadReal(FS,GetHandleId(Ig),$130B62E3)))
 
 // endif
 // 天使被动-登神长阶伤害
@@ -7892,7 +8076,7 @@ if GetRandomInt(0,12)<GetUnitAbilityLevel(JW,$414E6567) then
 call bv(JW,GetEventDamage()*.1+bk(JW,1,GetUnitAbilityLevel(JW,$41303342)),bN(JW,Ig),1200,320)
 call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$41303342,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
 endif
-// call UnitDamageTarget(JW,Ig,bk(JW,2,GetUnitAbilityLevel(JW,$414E6567)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+// call take_magic_damage(JW,Ig,bk(JW,2,GetUnitAbilityLevel(JW,$414E6567)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 // 黄忠触发技能效果
 if GetUnitTypeId(JW) == GetUnitTypeId(huntingUnit) and GetRandomInt(1,10)>8 then
@@ -7986,7 +8170,7 @@ endif
 elseif GetUnitAbilityLevel(JW,$41304C31)>0 and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and bW(JW,$6D6C7374)!=null or bW(JW,$676F626D)!=null then
 if GetRandomInt(2,5)==5 then
 set Jd[10]=GetUnitLoc(JW)
-call UnitDamageTargetBJ(JW, Ig, I2R(GetHeroAgi(JW, true) + GetHeroStr(JW,true)) * GetRandomReal(2., 6.), ATTACK_TYPE_CHAOS, DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(JW, Ig, I2R(GetHeroAgi(JW, true) + GetHeroStr(JW,true)) * GetRandomReal(2., 6.), ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED)
 call CreateTextTagLocBJ("冲锋之志",Jd[10],1.,15.,100.,100,40.,20.)
 set Jc[4]=bj_lastCreatedTextTag
 call SetTextTagVelocity(Jc[4],64*.071/128*Cos(90*bj_DEGTORAD),64*.071/128*Sin(90*bj_DEGTORAD))
@@ -7997,7 +8181,7 @@ endif
 elseif bW(JW,$6C6E726E)!=null and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and JW==C0 then
 if GetRandomInt(GetUnitAbilityLevel(JW,$41303645),20)==20 then
     // 刘湛冲击波伤害
-call UnitDamageTarget(JW,Ig,GetEventDamage()+I2R((GetHeroAgi(JW, true) +GetHeroStr(JW,true))*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(JW,Ig,GetEventDamage()+I2R((GetHeroAgi(JW, true) +GetHeroStr(JW,true))*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
 if IsUnitAlly(JW,Player(8))==true and IsUnitType(JW,UNIT_TYPE_HERO)==true then
@@ -8129,7 +8313,7 @@ endif
 call bh(Ix)
 else
 call bV(Pv[Ix],Gy[Ix],Gz[Ix],Gu[Ix]*20,150)
-call UnitDamageTarget(Pv[Ix],Pw[Ix],Gx[Ix],false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Pv[Ix],Pw[Ix],Gx[Ix],false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Other\\Stampede\\StampedeMissileDeath.mdl",Pw[Ix],"origin"))
 call SetUnitAnimation(Pv[Ix],"spin")
 endif
@@ -8414,7 +8598,7 @@ call SetUnitVertexColor(UV,255,255,255,100)
 call bV(Iv,GetUnitX(Iv),GetUnitY(Iv),LoadReal(Ia,Ix,$616E6730),50)
 if LoadInteger(Ia,Ix,1)==6 then
 call SetUnitAnimation(CE,"Death")
-call UnitDamageTarget(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Human\\HumanBlood\\HumanBloodSorceress.mdl",CE,"chest"))
 endif
 endif
@@ -8478,7 +8662,7 @@ local unit Iv=LoadUnitHandle(Ia,Ix,$6865726F)
 local unit CE=LoadUnitHandle(Ia,Ix,$756E6974)
 local real Io=LoadReal(Ia,Ix,$64656D30)
 call SaveInteger(Ia,Ix,0,LoadInteger(Ia,Ix,0)-1)
-call UnitDamageTarget(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call bV(Iv,GetUnitX(CE),GetUnitY(CE),I2R(3-GetRandomInt(0,6))*60+180,150)
 call EXSetUnitFacing(Iv,bN(Iv,CE))
 if LoadInteger(Ia,Ix,0)<2 then
@@ -8517,7 +8701,7 @@ call SaveReal(Ia,VG,$64656D30,Io)
 call SaveInteger(Ia,VG,0,6)
 call SetUnitPosition(Iv,GetUnitX(CE),GetUnitY(CE))
 call SetUnitAnimationByIndex(Iv,2)
-call UnitDamageTarget(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call SetUnitAnimation(CE,"Death")
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Human\\HumanBlood\\BloodElfSpellThiefBlood.mdl",CE,"chest"))
 call SaveEffectHandle(Ia,VG,$65666630,LoadEffectHandle(Ia,Ix,$65666630))
@@ -8552,7 +8736,7 @@ local unit CE=LoadUnitHandle(Ia,Ix,$756E6974)
 local real Io=LoadReal(Ia,Ix,$64656D30)
 call SaveInteger(Ia,Ix,0,LoadInteger(Ia,Ix,0)-1)
 call EXSetUnitFacing(Iv,bN(Iv,CE))
-call UnitDamageTarget(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 if LoadInteger(Ia,Ix,0)>2 then
 call SetUnitAnimationByIndex(Iv,2)
 elseif LoadInteger(Ia,Ix,0)==2 then
@@ -8587,7 +8771,7 @@ call SaveInteger(Ia,VG,0,8)
 call bS(Iv,GetUnitX(CE),GetUnitY(CE),0,128)
 call EXSetUnitFacing(Iv,bN(Iv,CE))
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Undead\\VampiricAura\\VampiricAura.mdl",GetUnitX(CE),GetUnitY(CE)))
-call UnitDamageTarget(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call SetUnitAnimation(Iv,"Attack")
 call SetUnitAnimation(CE,"Death")
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Orc\\Orcblood\\BattrollBlood.mdl",CE,"chest"))
@@ -8636,7 +8820,7 @@ call bS(Iv,GetUnitX(Jg),GetUnitY(Jg),I2R(GetRandomInt(1,15)*24),128)
 call SetUnitAnimationByIndex(Iv,2)
 call EXSetUnitFacing(Iv,bN(Iv,Jg))
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",GetUnitX(Jg),GetUnitY(Jg)))
-call UnitDamageTarget(Iv,Jg,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,Jg,Io,false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(Jg),GetUnitY(Jg),bj_UNIT_FACING,3),852095,Jg)
 else
 call SaveInteger(Ia,Ix,0,0)
@@ -8686,7 +8870,7 @@ call SaveEffectHandle(Ia,VG,2,LoadEffectHandle(Ia,Ix,2))
 call bS(Iv,GetUnitX(CE),GetUnitY(CE),I2R(GetRandomInt(1,15)*24),128)
 call EXSetUnitFacing(Iv,bN(Iv,CE))
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",GetUnitX(CE),GetUnitY(CE)))
-call UnitDamageTarget(Iv,CE,LoadReal(Ia,Ix,$64656D30),false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,LoadReal(Ia,Ix,$64656D30),false,false,ConvertAttackType(6),ConvertDamageType(26),WEAPON_TYPE_WHOKNOWS)
 call TimerStart(VF,.5,true,function cr)
 call DestroyTimer(CS)
 call FlushChildHashtable(Ia,Ix)
@@ -8945,7 +9129,7 @@ if LoadStr(Ia,Ix,$65666673)!="" then
 call DestroyEffect(AddSpecialEffect(LoadStr(Ia,Ix,$65666673),GetUnitX(Iv),GetUnitY(Iv)))
 endif
 if LoadReal(Ia,Ix,$3064616D)>0 then
-call UnitDamageTarget(Iv,LoadUnitHandle(Ia,Ix,$756E6974),LoadReal(Ia,Ix,$3064616D),true,false,ConvertAttackType(3),ConvertDamageType(5),WEAPON_TYPE_WOOD_HEAVY_BASH)
+call take_magic_damage(Iv,LoadUnitHandle(Ia,Ix,$756E6974),LoadReal(Ia,Ix,$3064616D),true,false,ConvertAttackType(3),ConvertDamageType(5),WEAPON_TYPE_WOOD_HEAVY_BASH)
 call IssueTargetOrderById(Iv,851983,LoadUnitHandle(Ia,Ix,$756E6974))
 endif
 endif
@@ -9078,7 +9262,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and (IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false) and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call UnitDamageTarget(Ij,CE,HO[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,HO[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 set CE=null
 endloop
@@ -9155,7 +9339,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Iv and CE!=UV and GetWidgetLife(CE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitDefaultMoveSpeed(CE)>0. and IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetUnitAbilityLevel(CE,$416C6F63)==0 and GetUnitAbilityLevel(CE,$4176756C)==0 then
 call SetUnitPosition(CE,GetUnitX(UV),GetUnitY(UV))
-call UnitDamageTarget(Iv,CE,LoadReal(Ia,Ix,0),false,false,G,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,LoadReal(Ia,Ix,0),false,false,G,N,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 call DestroyGroup(I2)
@@ -9200,7 +9384,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitInGroup(CE,UX)==false and CE!=Iv and CE!=UV and GetWidgetLife(CE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetUnitAbilityLevel(CE,$416C6F63)==0 and GetUnitAbilityLevel(CE,$4176756C)==0 then
-call UnitDamageTarget(Iv,CE,LoadReal(Ia,Ix,0),false,false,G,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,LoadReal(Ia,Ix,0),false,false,G,N,WEAPON_TYPE_WHOKNOWS)
 call bb(CE,3)
 call GroupAddUnit(UX,CE)
 endif
@@ -9218,7 +9402,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Iv and CE!=UV and GetWidgetLife(CE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetUnitAbilityLevel(CE,$416C6F63)==0 and GetUnitAbilityLevel(CE,$4176756C)==0 then
-call UnitDamageTarget(Iv,CE,LoadReal(Ia,Ix,0),false,false,G,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,LoadReal(Ia,Ix,0),false,false,G,N,WEAPON_TYPE_WHOKNOWS)
 call bb(CE,3)
 call GroupAddUnit(UX,CE)
 endif
@@ -9289,7 +9473,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitEnemy(CE,GetOwningPlayer(Iv))==true and GetUnitAbilityLevel(CE,$416C6F63)<1 and GetUnitAbilityLevel(CE,$4176756C)<1 and GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
 set Ii=GetUnitState(CE,ConvertUnitState(0))*.02+US
-call UnitDamageTarget(Iv,CE,Ii,false,false,I3[4],I4[0],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,I3[4],I4[0],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 call DestroyGroup(I2)
@@ -9471,7 +9655,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>1 and IsUnitEnemy(CE,GetOwningPlayer(Iv))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call UnitDamageTarget(Iv,CE,Iz,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Iz,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if GetUnitState(CE,UNIT_STATE_LIFE)>1 and CE!=Jg then
 call IssueTargetOrderById(UV,852502,CE)
 endif
@@ -9592,7 +9776,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetWidgetLife(CE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Other\\Monsoon\\MonsoonBoltTarget.mdl",GetUnitX(CE),GetUnitY(CE)))
-call UnitDamageTarget(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 call DestroyGroup(I2)
@@ -9708,7 +9892,7 @@ set UO=GetUnitState(CE,UNIT_STATE_MAX_LIFE)*.2
 if UM>UO then
 set UO=UM
 endif
-call UnitDamageTarget(Ij,CE,UO,true,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,UO,true,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 set CE=null
@@ -9772,7 +9956,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>0 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Undead\\UndeadDissipate\\UndeadDissipate.mdl",CE,"overhead"))
-call UnitDamageTarget(Ij,CE,Iz,false,false,I3[3],I4[0],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Iz,false,false,I3[3],I4[0],WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 set CE=null
@@ -9806,7 +9990,7 @@ call SaveReal(Ia,Ix,$30616E67,bN(Iv,CE))
 call SetUnitX(Iv,GetUnitX(CE))
 call SetUnitY(Iv,GetUnitY(CE))
 call SaveInteger(Ia,Ix,1,25)
-call UnitDamageTarget(Iv,CE,Ii,false,false,I3[4],I4[0],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,I3[4],I4[0],WEAPON_TYPE_WHOKNOWS)
 call TimerStart(CS,.02,true,function dk)
 set CS=null
 endfunction
@@ -9832,7 +10016,7 @@ call SaveInteger(FS,StringHash(KT),StringHash("Switch"),2)
 call SaveUnitHandle(FS,StringHash(KT),StringHash("Target"),J2)
 if IsUnitEnemy(J2,GetOwningPlayer(Ub)) then
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Human\\HumanBlood\\BloodElfSpellThiefBlood.mdl",J2,"origin"))
-call UnitDamageTarget(Ub,J2,Uh,true,false,Us,Ut,Uu)
+call take_magic_damage(Ub,J2,Uh,true,false,Us,Ut,Uu)
 endif
 call IssueImmediateOrderById(J2,851972)
 call GroupAddUnit(C,J2)
@@ -10103,7 +10287,7 @@ local real Ii=LoadReal(Ia,Ix,1)
 if Ii>0 then
 if Ik>0 and GetWidgetLife(CE)>.405 and IsUnitType(CE,UNIT_TYPE_ETHEREAL) then
 call SaveInteger(Ia,Ix,1,Ik)
-call UnitDamageTarget(Iv,CE,Ii,false,false,F,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,F,N,WEAPON_TYPE_WHOKNOWS)
 else
 call FlushChildHashtable(Ia,Ix)
 call DestroyTimer(CS)
@@ -10153,9 +10337,9 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitInGroup(CE,UX)==false and CE!=Iv and CE!=UV and GetWidgetLife(CE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetUnitAbilityLevel(CE,$416C6F63)==0 and GetUnitAbilityLevel(CE,$4176756C)==0 then
 if IsUnitType(CE,UNIT_TYPE_ETHEREAL) then
-call UnitDamageTarget(Iv,CE,Ii,false,false,F,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,F,N,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Iv,CE,Ii,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 endif
 call GroupAddUnit(UX,CE)
 endif
@@ -10256,7 +10440,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitEnemy(CE,GetOwningPlayer(Ir))==true and GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Orc\\FeralSpirit\\feralspirittarget.mdl",CE,"chest"))
-call UnitDamageTarget(Ir,CE,LoadReal(Ia,Is,$3064656D)/10,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ir,CE,LoadReal(Ia,Is,$3064656D)/10,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call bd(Ir,CE,33,10.,0,0,LoadReal(Ia,Is,$3064656D),3.)
 endif
 endloop
@@ -10314,7 +10498,7 @@ exitwhen Jg==null
 call GroupRemoveUnit(I2,Jg)
 if IsUnitEnemy(Jg,GetOwningPlayer(Ij))==true and GetUnitState(Jg,UNIT_STATE_LIFE)>0 then
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Other\\Stampede\\StampedeMissileDeath.mdl",Jg,"chest"))
-call UnitDamageTarget(Ij,Jg,Io,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,Jg,Io,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 if JT>=Iw*Iw then
@@ -10351,7 +10535,7 @@ exitwhen Jg==null
 call GroupRemoveUnit(I2,Jg)
 if IsUnitEnemy(Jg,GetOwningPlayer(Ij))==true and GetUnitState(Jg,UNIT_STATE_LIFE)>0 then
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Other\\Stampede\\StampedeMissileDeath.mdl",Jg,"chest"))
-// call UnitDamageTarget(Ij,Jg,Io,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+// call take_magic_damage(Ij,Jg,Io,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 if JT>=Iw*2 then
@@ -11085,7 +11269,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if IsUnitEnemy(CE,GetOwningPlayer(Iv))==true and GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call UnitDamageTarget(Iv,CE,Io,false,false,L,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Io,false,false,L,N,WEAPON_TYPE_WHOKNOWS)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 then
 call SetUnitPosition(CE,LoadReal(Ia,Ix,$30303078),LoadReal(Ia,Ix,$30303079))
 endif
@@ -11476,7 +11660,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(Iv,UNIT_STATE_LIFE)>=.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)!=true and IsUnitEnemy(CE,GetOwningPlayer(Iv))==true then
 call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\RW_QXY.mdx",CE,"origin"))
-call UnitDamageTarget(Iv,CE,LoadReal(Ia,Ix,$3064616D)*.15,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_METAL_HEAVY_CHOP)
+call take_magic_damage(Iv,CE,LoadReal(Ia,Ix,$3064616D)*.15,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_CHOP)
 endif
 endloop
 call DestroyGroup(I2)
@@ -11549,7 +11733,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(Iv,UNIT_STATE_LIFE)>=.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)!=true and IsUnitEnemy(CE,GetOwningPlayer(Iv))==true then
 call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\RW_QXY.mdx",CE,"origin"))
-call UnitDamageTarget(Iv,CE,LoadReal(Ia,Ix,$3064616D)*.15,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_METAL_HEAVY_CHOP)
+call take_magic_damage(Iv,CE,LoadReal(Ia,Ix,$3064616D)*.15,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_CHOP)
 endif
 endloop
 call DestroyGroup(I2)
@@ -11698,7 +11882,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Iv and CE!=UV and GetWidgetLife(CE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Iv)) and GetUnitDefaultMoveSpeed(CE)>0. and GetUnitAbilityLevel(CE,$416C6F63)==0 and GetUnitAbilityLevel(CE,$4176756C)==0 then
-call UnitDamageTarget(Iv,CE,Ii,false,false,L,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,L,N,WEAPON_TYPE_WHOKNOWS)
 if GetWidgetLife(CE)>.405 then
 call SetUnitPosition(CE,It,Iu)
 endif
@@ -11751,7 +11935,7 @@ local timer CS=CreateTimer()
 local integer Ix=GetHandleId(CS)
 call SetUnitPosition(LE,GetUnitX(CE),GetUnitY(CE))
 call IssueTargetOrderById(LE,851983,CE)
-call UnitDamageTarget(Iv,CE,GetUnitState(Iv,ConvertUnitState(21))*5,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,GetUnitState(Iv,ConvertUnitState(21))*5,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 call SaveUnitHandle(Ia,Ix,$6865726F,Iv)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),$41594A31,false)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),$41594A39,true)
@@ -11775,7 +11959,7 @@ call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and GetUnitAbilityLevel(CE,$4176756C)<1 and (IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)) then
 set Im=bj_RADTODEG*Atan2(Hk[FN]-GetUnitY(CE),Hj[FN]-GetUnitX(CE))
 call SetUnitPosition(CE,GetUnitX(CE)+30.*CosBJ(Im),GetUnitY(CE)+30.*SinBJ(Im))
-call UnitDamageTarget(Ij,CE,Gx[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Gx[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 set CE=null
 endloop
@@ -11811,7 +11995,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and GetUnitAbilityLevel(CE,$4176756C)<1 and (IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)) then
-call UnitDamageTarget(Ij,CE,HO[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,HO[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 set CE=null
 endloop
@@ -11846,7 +12030,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and GetUnitAbilityLevel(CE,$4176756C)<1 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true then
-call UnitDamageTarget(Ij,CE,HO[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,HO[FN],false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 set CE=null
 endloop
@@ -11997,7 +12181,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Iv and IsUnitEnemy(CE,GetOwningPlayer(Iv))==true and GetWidgetLife(CE)>.405 and GetUnitAbilityLevel(CE,$416C6F63)==0 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
 call SetUnitPosition(CE,It,Iu)
-call UnitDamageTarget(Iv,CE,Ii,false,false,I,M,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,I,M,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 call DestroyGroup(I2)
@@ -13791,6 +13975,7 @@ call UnitAddItemToSlotById(D7,$70737064,1)
 call UnitAddItemToSlotById(D7,$68627468,2)
 call UnitAddItemToSlotById(D7,$66677267,3)
 call UnitAddItemToSlotById(D7,$72616D32,4)
+// 司马师
 set D8=CreateUnit(CC,$55776172,12522.9,-9656.6,269.56)
 call SetHeroLevel(D8,115,false)
 call SetUnitState(D8,UNIT_STATE_MANA,3150)
@@ -13827,9 +14012,18 @@ call SelectHeroSkill(D8,$41616B62)
 call SelectHeroSkill(D8,$4148626E)
 call SelectHeroSkill(D8,$4148626E)
 call SelectHeroSkill(D8,$4148626E)
-call SelectHeroSkill(D8,$4145666B)
-call SelectHeroSkill(D8,$4145666B)
-call SelectHeroSkill(D8,$4145666B)
+// 魔法损坏
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+call SelectHeroSkill(D8,'A0G6')
+
+// 
 call SelectHeroSkill(D8,$41303359)
 call SelectHeroSkill(D8,$41303359)
 call SelectHeroSkill(D8,$41303359)
@@ -13858,11 +14052,18 @@ call SelectHeroSkill(D8,$416D6466)
 call SelectHeroSkill(D8,$416D6466)
 call SelectHeroSkill(D8,$416D6466)
 call SelectHeroSkill(D8,$416D6466)
-call UnitAddItemToSlotById(D8,$72616D34,0)
-call UnitAddItemToSlotById(D8,$72646530,1)
-call UnitAddItemToSlotById(D8,$7370726E,2)
+// 青倚双刃
+call UnitAddItemToSlotById(D8,'it0z', 0)
+// 羽渡尘
+call UnitAddItemToSlotById(D8,'it0r',1)
+// 天书古卷
+call UnitAddItemToSlotById(D8,'it0t',2)
+// 昊天塔
 call UnitAddItemToSlotById(D8,$4930304C,3)
+// 伏羲琴
 call UnitAddItemToSlotById(D8,$49303049,4)
+// 落宝
+call UnitAddItemToSlotById(D8,'it0e',5)
 set D9=CreateUnit(CC,$55746963,11888.2,-9582.1,266.99)
 call SetHeroLevel(D9,110,false)
 call SetUnitState(D9,UNIT_STATE_MANA,2380)
@@ -14812,6 +15013,7 @@ endfunction
 function f3 takes nothing returns nothing
 local player CC=Player(10)
 local trigger CS
+// 司马昭
 set EW=CreateUnit(CC,$55656172,12314.8,-9666.4,269.73)
 call SetHeroLevel(EW,148,false)
 call SetUnitState(EW,UNIT_STATE_MANA,4720)
@@ -14869,12 +15071,18 @@ call SelectHeroSkill(EW,$41303750)
 call SelectHeroSkill(EW,$41303750)
 call SelectHeroSkill(EW,$41303750)
 call IssueImmediateOrder(EW,"")
-call UnitAddItemToSlotById(EW,$72756D70,0)
-call UnitAddItemToSlotById(EW,$73686377,1)
-call UnitAddItemToSlotById(EW,$49303033,2)
-call UnitAddItemToSlotById(EW,$726F7473,3)
+// 雁翎金甲
+call UnitAddItemToSlotById(EW,$72756D70)
+// 盘龙刀
+call UnitAddItemToSlotById(EW,'it07',1)
+// 幸运币
+call UnitAddItemToSlotById(EW,'it0g',2)
+// 兵法24卷
+call UnitAddItemToSlotById(EW,'scul',3)
+// 九天算尺
 call UnitAddItemToSlotById(EW,$49303043,4)
-call UnitAddItemToSlotById(EW,$49303039,5)
+// 巨象
+call UnitAddItemToSlotById(EW,'I007',5)
 set EX=CreateUnit(CC,$4F676C64,12844.,-9825.1,265.82)
 call SetHeroLevel(EX,149,false)
 call SetUnitState(EX,UNIT_STATE_MANA,7020)
@@ -14926,11 +15134,17 @@ call SelectHeroSkill(EX,$41303130)
 call SelectHeroSkill(EX,$41303130)
 call SelectHeroSkill(EX,$41303130)
 call IssueImmediateOrder(EX,"")
+// 赤霄剑
 call UnitAddItemToSlotById(EX,$49303252,0)
-call UnitAddItemToSlotById(EX,$49303145,1)
-call UnitAddItemToSlotById(EX,$72756D70,2)
-call UnitAddItemToSlotById(EX,$49303146,3)
+// 神鬼天惊
+call UnitAddItemToSlotById(EX,'it0n',1)
+// 真武战甲
+call UnitAddItemToSlotById(EX,'it13',2)
+// 巨象
+call UnitAddItemToSlotById(EX,'I007',3)
+// 三国志
 call UnitAddItemToSlotById(EX,$6C656467,4)
+// 伏羲琴
 call UnitAddItemToSlotById(EX,$49303049,5)
 set EY=CreateUnit(CC,$55766E67,12740.,-9620.2,260.37)
 call SetHeroLevel(EY,120,false)
@@ -15254,6 +15468,7 @@ call UnitAddItemToSlotById(Ee,$49303037,0)
 call UnitAddItemToSlotById(Ee,$67736F75,1)
 call UnitAddItemToSlotById(Ee,$7368656E,3)
 call UnitAddItemToSlotById(Ee,$6F666C67,4)
+// BOSS魏延
 set Ef=CreateUnit(CC,$45303031,12781.2,-10182.,264.3)
 call SetHeroLevel(Ef,150,false)
 call SetUnitState(Ef,UNIT_STATE_MANA,180)
@@ -15266,6 +15481,7 @@ call SelectHeroSkill(Ef,$41487462)
 call SelectHeroSkill(Ef,$41487462)
 call SelectHeroSkill(Ef,$41487462)
 call SelectHeroSkill(Ef,$41487462)
+// 血刃
 call SelectHeroSkill(Ef,$41556176)
 call SelectHeroSkill(Ef,$41556176)
 call SelectHeroSkill(Ef,$41556176)
@@ -15275,24 +15491,27 @@ call SelectHeroSkill(Ef,$41556176)
 call SelectHeroSkill(Ef,$41556176)
 call SelectHeroSkill(Ef,$41556176)
 call SelectHeroSkill(Ef,$41556176)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$4155696D)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
-call SelectHeroSkill(Ef,$41487463)
+// 裂空斩-龙血沸腾
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+call SelectHeroSkill(Ef,'Ab4l')
+// 雷霆一击-见龙卸甲
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+call SelectHeroSkill(Ef,'Ab4j')
+// 雷霆飞斧
 call SelectHeroSkill(Ef,$414E7362)
 call SelectHeroSkill(Ef,$414E7362)
 call SelectHeroSkill(Ef,$414E7362)
@@ -15310,11 +15529,17 @@ call SelectHeroSkill(Ef,$41303130)
 call SelectHeroSkill(Ef,$41303130)
 call SelectHeroSkill(Ef,$41303130)
 call IssueImmediateOrder(Ef,"")
+// 蚩尤魔刀
 call UnitAddItemToSlotById(Ef,$49303233,0)
+// 魔魂盔
 call UnitAddItemToSlotById(Ef,$49303145,1)
+// 蚩尤甲
 call UnitAddItemToSlotById(Ef,$49303235,2)
+// 幽冥赤兔
 call UnitAddItemToSlotById(Ef,$49303146,3)
+// 九天算尺
 call UnitAddItemToSlotById(Ef,$49303043,4)
+// 蚩尤护手
 call UnitAddItemToSlotById(Ef,$49303245,5)
 set Eg=CreateUnit(CC,$4E303031,12424.2,-9657.2,261.51)
 call SetHeroLevel(Eg,145,false)
@@ -19384,7 +19609,7 @@ set I3[4]=ATTACK_TYPE_MELEE
 set I3[5]=ATTACK_TYPE_CHAOS
 set I3[6]=ATTACK_TYPE_MAGIC
 // 神圣伤害，无视护甲和魔抗
-set I4[0]=DAMAGE_TYPE_UNIVERSAL
+set I4[0]=DAMAGE_TYPE_ENHANCED
 set I4[1]=DAMAGE_TYPE_NORMAL
 set I4[2]=DAMAGE_TYPE_ENHANCED
 set I4[3]=DAMAGE_TYPE_MAGIC
@@ -19420,9 +19645,9 @@ return IsUnitAlly(GetSpellTargetUnit(),Player(8))==true
 endfunction
 function gq takes nothing returns nothing
 if Gq==7 then
-call UnitDamageTarget(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroInt(GetTriggerUnit(),true))*3.,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroInt(GetTriggerUnit(),true))*3.,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroInt(GetTriggerUnit(),true))*3.,true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_MAGIC,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroInt(GetTriggerUnit(),true))*3.,true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_MAGIC,WEAPON_TYPE_WHOKNOWS)
 endif
 endfunction
 function gr takes nothing returns nothing
@@ -19582,10 +19807,23 @@ call TriggerRegisterPlayerChatEvent(Jm,Player(7),"-cd",true)
 call TriggerAddAction(Jm,function gw)
 endfunction
 function gy takes nothing returns nothing
+local real defend_percent = 1
+local integer magic_defend_amout = magicDefendLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())])
+local integer magic_strike_percent = (100 - magicPercentStrikeLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())],100))
+local integer magic_strike_amout = (1000 - magicStrikeLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())],1000))
+
+set defend_percent = (I2R(magic_defend_amout) / I2R(magic_defend_amout + 100))
+
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前攻击速度  |cff00ff00"+R2S(GetUnitState(Ib[GetConvertedPlayerId(GetTriggerPlayer())],ConvertUnitState(81))))
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前攻击间隔  |cff00ff00"+R2S(GetUnitState(Ib[GetConvertedPlayerId(GetTriggerPlayer())],ConvertUnitState(37))))
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前移动速度  |cff00ff00"+R2S(GetUnitMoveSpeed(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
-call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前英雄ID:  |cff00ff00" + I2S(GetUnitTypeId(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
+call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前魔法抗性  |cff00ff00"+I2S(magic_defend_amout))
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前魔抗减伤  |cff00ff00" + R2S(defend_percent *100) + "%")
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前百分比法术穿透  |cff00ff00" + R2S(magic_strike_percent) + "%")
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前固定法术穿透  |cff00ff00" + R2S(magic_strike_amout) )
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前法术强度  |cff00ff00" + R2S(magicLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
+
+// call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前英雄ID:  |cff00ff00" + I2S(GetUnitTypeId(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
 
 endfunction
 function gz takes nothing returns nothing
@@ -19638,7 +19876,7 @@ endif
 // 张角被动
 if Ih == zhangjiao and GetUnitAbilityLevel(Ih, 'Ab3y') > 0 and IsUnitType(Ih, UNIT_TYPE_HERO) then
     if YDWEIsEventAttackDamage() then
-    call UnitDamageTarget(Ih, Ig, I2R(GetHeroInt(Ih,true) * GetUnitAbilityLevel(Ih, 'Ab3s')), false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Ih, Ig, I2R(GetHeroInt(Ih,true) * GetUnitAbilityLevel(Ih, 'Ab3s')), false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
     call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852096)
     call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",GetUnitX(Ig),GetUnitY(Ig)))
 
@@ -19654,7 +19892,7 @@ endif
 // 残影攻击
 if GetUnitTypeId(Ih) == 'ua01' or Ih == zhangjiao  then
     if YDWEIsEventAttackDamage() then
-    call UnitDamageTarget(Ih, Ig, I2R(100 * (GetUnitAbilityLevel(Ih, 'Ab3t') + 1)), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Ih, Ig, I2R(100 * (GetUnitAbilityLevel(Ih, 'Ab3t') + 1)), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
     call SaveInteger(Ia, GetHandleId(Ih), 102, LoadInteger(Ia, GetHandleId(Ih), 102) +1)
     // 如果目标
     if LoadInteger(Ia, GetHandleId(Ih), 102) >6 then
@@ -19682,19 +19920,19 @@ call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\MarkOfChaos\\Mark
     if GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab41') >0 then
     // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cffff0000有爆伤效果:")
 
-    call UnitDamageTarget(Ih, Ig, 1.2 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Ih, Ig, 1.2 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
     else
-        call UnitDamageTarget(Ih, Ig, 0.8 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+        call take_magic_damage(Ih, Ig, 0.8 * bk(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 3, GetUnitAbilityLevel(LoadUnitHandle(Ia, GetHandleId(Ih), 101), 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
     endif
   elseif Ih == zhangjiao then
      if GetUnitAbilityLevel(Ih,'Ab41') > 0 then
             // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cffff0000有爆伤效果:")
 
-    call UnitDamageTarget(Ih, Ig, 1.2 * bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Ih, Ig, 1.2 * bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
      else
-         call UnitDamageTarget(Ih, Ig, 0.8 *bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+         call take_magic_damage(Ih, Ig, 0.8 *bk(Ih, 3, GetUnitAbilityLevel(Ih, 'Ab3t')), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
    
      endif
   endif
@@ -19706,12 +19944,12 @@ if Ig ==maliang and  GetUnitAbilityLevel(Ig, 'A0BX') >0 then
 
 if GetUnitAbilityLevel(Ig, $41304844) >0 then
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ig)), $65303939, $4162326A, 1, GetUnitX(Ig), GetUnitY(Ig), bj_UNIT_FACING, 0.5), 852125, Ih)
-call UnitDamageTarget(Ig,Ih,bk(Ig, 3, GetUnitAbilityLevel(Ig, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig,Ih,bk(Ig, 3, GetUnitAbilityLevel(Ig, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 
 else
 if GetRandomInt(1, 100) < 3 * GetUnitAbilityLevel(Ig, 'A0BX') then 
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ig)), $65303939, $4162326A, 1, GetUnitX(Ig), GetUnitY(Ig), bj_UNIT_FACING, 0.5), 852125, Ih)
-call UnitDamageTarget(Ig,Ih,bk(Ig, 3, GetUnitAbilityLevel(Ig, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig,Ih,bk(Ig, 3, GetUnitAbilityLevel(Ig, 'Ab2j')) *0.5,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 
 endif
 endif
@@ -19723,7 +19961,7 @@ if Ig == yanyu and GetUnitAbilityLevel(Ig, 'Ab2g') >0 then
   if Ii ==0. then
     // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00收到伤害为：" + R2S(Ii))
     // call EXSetEventDamage( GetUnitState(Ig, ConvertUnitState(18)) * GetUnitAbilityLevel(Ig, 'Ab2g') *3)
-    call UnitDamageTarget(Ig, Ih, GetUnitState(Ig, ConvertUnitState(18)) * GetUnitAbilityLevel(Ig, 'Ab2g') *3, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Ig, Ih, GetUnitState(Ig, ConvertUnitState(18)) * GetUnitAbilityLevel(Ig, 'Ab2g') *3, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
   endif
 endif
 
@@ -19751,7 +19989,7 @@ call UnitRemoveBuffsEx(Ig,false,true,false,false,true,true,false)
 else
 endif
 if GetUnitTypeId(Ih)==$754A5243 then
-call UnitDamageTarget(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,GetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],ConvertUnitState(21)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,GetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],ConvertUnitState(21)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitTypeId(Ih)==$6E303052 then
@@ -19788,7 +20026,7 @@ else
 
 endif
 if GetUnitTypeId(Ih)==$68305344 then
-call UnitDamageTarget(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,I2R(GetHeroInt(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],true))*2.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,I2R(GetHeroInt(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],true))*2.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitTypeId(Ig)==$485A4630 then
@@ -19922,7 +20160,7 @@ call EXSetEventDamage((GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.1)
 
 
 else
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -19934,7 +20172,7 @@ if IsUnitAlly(Ih,Player(8))==true then
     call bs(Ih, GetUnitX(Ig), GetUnitY(Ig), 330., GetEventDamage() + bk(Ih, 2, GetItemCharges(bW(Ih, $676F626D))) *0.8 + 1200 * (1. + GetItemCharges(bW(Ih, $676F626D))), 1, 0)
 // call EXSetEventDamage(GetEventDamage()+(GetHeroAgi(Ih,true))*(6.+GetItemCharges(aj(GetTriggerUnit(),$676F626D))*.5))
 else
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -19963,9 +20201,9 @@ endif
 if GetUnitAbilityLevel(Ih,$41303755)>0 then
 if IsUnitAlly(Ih,Player(8))==true then
 if bC(Ig,$49303055)==true or bC(Ig,$6D6C7374)==true then 
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.05,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.05,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.03,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetEventDamage()+bk(Ih,1,GetUnitAbilityLevel(Ih,$41303755))*.03,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
 else
@@ -19973,7 +20211,7 @@ endif
 // 马忠淬毒箭效果
 if GetUnitAbilityLevel(Ih,$414F414F)>0 then
     // GetEventDamage()
- call UnitDamageTarget(Ih,Ig,GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.01,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+ call take_magic_damage(Ih,Ig,GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.01,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 // call EXSetEventDamage(GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.001)
 else
 endif
@@ -19981,14 +20219,14 @@ endif
 if GetUnitAbilityLevel(Ih,$42575132)>0 then
 call UnitRemoveAbility(Ih,$42575132)
 call SetUnitTimeScale(Ih,1)
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.5*I2R(GetUnitAbilityLevel(Ih,$41575132)),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WOOD_HEAVY_BASH)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.5*I2R(GetUnitAbilityLevel(Ih,$41575132)),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WOOD_HEAVY_BASH)
 else
 endif
 // 霍格碎瓜娃大招伤害效果
 if GetUnitAbilityLevel(Ih,$41575135)>0 then
 if LoadInteger(Ia,GetHandleId(Ih),$41575135)>=3 then
 call SaveInteger(Ia,GetHandleId(Ih),$41575135,0)
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.5,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WOOD_HEAVY_BASH)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.5,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WOOD_HEAVY_BASH)
 call EXSetEventDamage(GetEventDamage()+GetUnitState(Ih,ConvertUnitState(21))*2.)
 else
 call SaveInteger(Ia,GetHandleId(Ih),$41575135,LoadInteger(Ia,GetHandleId(Ih),$41575135)+1)
@@ -19998,7 +20236,7 @@ endif
 if GetUnitAbilityLevel(Ih,$41304645)>0 and GetUnitAbilityLevel(GetTriggerUnit(),$41304644)>0 then
 call SaveInteger(Ia,GetHandleId(Ih),$41564A51,LoadInteger(Ia,GetHandleId(Ih),$41564A51)+1)
 call b5(I2S(LoadInteger(Ia,GetHandleId(Ih),$41564A51))+"连击",Ig,.1,10,255,200,0,255)
-call UnitDamageTarget(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304645)*100+LoadInteger(Ia,GetHandleId(Ih),$41564A51)*(G5*10)),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304645)*100+LoadInteger(Ia,GetHandleId(Ih),$41564A51)*(G5*10)),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 // 玄武战甲回血
@@ -20055,14 +20293,14 @@ if GetUnitAbilityLevel(Ih,$415A4635)>=1 and GetRandomInt(1,5)<=2 then
 // 张飞携带盘古斧时，大招伤害提高
 if  GetUnitAbilityLevel(Ih,$41303041)>=1 then
 call b5("万军取首",Ih,.1,12,255,200,0,255)
-call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.025*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.025*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
     call b5("万夫莫敌",Ih,.1,12,255,200,0,255)
     if IsUnitAlly(Ih,Player(8))==true then 
 
-call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.01*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.01*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
     else
-call UnitDamageTarget(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(1)))*.001,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(1)))*.001,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 
     endif
 
@@ -20070,21 +20308,21 @@ endif
 else
 endif
 if GetUnitAbilityLevel(Ih,$41304736)>=1 then
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,GetUnitAbilityLevel(Ih,$41304736))*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
-// call UnitDamageTarget(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304736))*200.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bk(Ih,3,GetUnitAbilityLevel(Ih,$41304736))*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+// call take_magic_damage(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304736))*200.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call SetUnitManaBJ(Ig,GetUnitState(Ig,UNIT_STATE_MANA)-I2R(GetUnitAbilityLevel(Ih,$41304736))*200.)
 else
 endif
 if GetUnitAbilityLevel(Ih,$41304457)>=1 then
-call UnitDamageTarget(Ih,Ig,bk(Ih,0,2),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bk(Ih,0,2),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 // 伏羲琴伤害 Gq
 if GetUnitAbilityLevel(Ih,$41303552)>=1 then
 if Gq >6 then
-call UnitDamageTarget(Ih, Ig, GetHeroInt(Ih, true) *2, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih, Ig, GetHeroInt(Ih, true) *2, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,bk(Ih,3,1)*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bk(Ih,3,1)*.05,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -20095,7 +20333,7 @@ set Hv=Hv+360.
 else
 endif
 if RAbsBJ(Hv-GetUnitFacing(GetTriggerUnit()))>=310. or RAbsBJ(Hv-GetUnitFacing(GetTriggerUnit()))<=50. then
-call UnitDamageTarget(Ih,Ig,I2R(GetHeroAgi(Ih,true))*1.5,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetHeroAgi(Ih,true))*1.5,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call CreateTextTagUnitBJ("背袭攻击",GetEventDamageSource(),1.,10,60.,0.,100,0)
 call SetTextTagVelocity(bj_lastCreatedTextTag,0.,.15)
 call SetTextTagPermanent(bj_lastCreatedTextTag,false)
@@ -20107,12 +20345,12 @@ if IsUnitEnemy(Ig,GetOwningPlayer(Ih))==true and GetUnitAbilityLevel(Ih,$4130344
 if RAbsBJ(GetUnitFacing(Ih)-GetUnitFacing(Ig))<=90. then
 if GetUnitAbilityLevel(GetEventDamageSource(),$41304545)>=1 then
 if GetUnitAbilityLevel(Ih,$4130344F)>=1 then
-call UnitDamageTarget(Ih,Ig,I2R(GetHeroAgi(Ih,true))*4.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetHeroAgi(Ih,true))*4.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Ih,Ig,I2R(GetHeroAgi(Ih,true))*3.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetHeroAgi(Ih,true))*3.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
-call UnitDamageTarget(Ih,Ig,I2R(GetHeroAgi(Ih,true))*2.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetHeroAgi(Ih,true))*2.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 call CreateTextTagUnitBJ("背袭攻击",Ih,1.,10,60.,0.,100,0)
 call SetTextTagVelocity(bj_lastCreatedTextTag,0.,.15)
@@ -20132,7 +20370,7 @@ call SetUnitAnimation(Ih,"spin")
 else
 endif
 if UnitHasBuffBJ(Ih,$42575935)==true then
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ig,UNIT_STATE_LIFE)*.03+GetUnitState(Ih,ConvertUnitState(21)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ig,UNIT_STATE_LIFE)*.03+GetUnitState(Ih,ConvertUnitState(21)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 else
@@ -20159,14 +20397,14 @@ if GetUnitAbilityLevel(Ih,$41623076)>0 then
 if LoadInteger(Ia,GetHandleId(Ih),$41623076)>=3 then
 call SaveInteger(Ia,GetHandleId(Ih),$41623076,0)
 // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00卡牌骗术！" + R2S(I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076)))
-call UnitDamageTarget(Ih,Ig,I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if GetRandomInt(1, 6) ==6 and bC(Ih, $69743065) == false then
 
     // 黄牌眩晕
 if GetRandomInt(1, 6) < 3 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00黄牌大师！"  )
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,1),852095,Ig)
-call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.1,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.1,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
         // 红牌减速
 elseif GetRandomInt(1, 6) < 3 then 
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00红牌大师！"  )
@@ -20176,7 +20414,7 @@ call bs(Ih,GetUnitX(Ig),GetUnitY(Ig),330,bk(Ih, 3, GetUnitAbilityLevel(Ih, $4162
 elseif GetRandomInt(1, 6) < 3 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00蓝牌大师！"  )
 call SetUnitManaBJ(Ig,GetUnitState(Ig,UNIT_STATE_MANA)-1000.)
-call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 // 如果有专属
@@ -20185,7 +20423,7 @@ if bC(Ih,$69743065)== true then
     if GetRandomInt(1, 8) < 3 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真黄牌大师！"  )
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41623071,1,GetUnitX(Ih),GetUnitY(Ih),bj_UNIT_FACING,1),852095,Ig)
-call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.6,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.6,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
     elseif  GetRandomInt(1, 9) < 3 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真红牌大师！"  )
 call IssueImmediateOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$41314C54,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852096)
@@ -20193,7 +20431,7 @@ call bs(Ih,GetUnitX(Ig),GetUnitY(Ig),330,bk(Ih, 3, GetUnitAbilityLevel(Ih, $4162
     else
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真蓝牌大师！"  )
 call SetUnitManaBJ(Ig,GetUnitState(Ig,UNIT_STATE_MANA)-1000.)
-call UnitDamageTarget(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
     endif
 endif
 endif
@@ -20208,7 +20446,7 @@ call d4(GetEventDamageSource(),GetTriggerUnit())
 else
     // 马忠大招狂暴伤害
 if UnitHasBuffBJ(GetEventDamageSource(),$42303234)==true then
-call UnitDamageTarget(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304151)*1000)+bk(Ih,2,GetUnitAbilityLevel(Ih,$41304151)+2),false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304151)*1000)+bk(Ih,2,GetUnitAbilityLevel(Ih,$41304151)+2),false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 if GetRandomReal(0,100.)<=20. and GetUnitAbilityLevel(Ih,$41303645)>0 then
 call bv(Ih,bk(Ih,1,GetUnitAbilityLevel(Ih,$41303645)),bN(Ih,Ig),1000,220)
@@ -20216,7 +20454,7 @@ call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(Ih)),$65303939,$4130364B
 else
 endif
 if UnitHasBuffBJ(Ih,$42303236)==true and GetRandomReal(0,100.)<=15. then
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ig,UNIT_STATE_LIFE)*.05,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ig,UNIT_STATE_LIFE)*.05,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call CreateTextTagUnitBJ("元灵之怒",Ig,0,15.,100,100,40.,20.)
 call SetTextTagLifespan(bj_lastCreatedTextTag,1.)
 call SetTextTagPermanent(bj_lastCreatedTextTag,false)
@@ -20226,7 +20464,7 @@ else
 if GetUnitAbilityLevel(Ih,$41594C35)>0 then
 if LoadInteger(Ia,GetHandleId(Ih),$41594C35)>=2 then
 call SaveInteger(Ia,GetHandleId(Ih),$41594C35,0)
-call UnitDamageTarget(Ih,Ig,I2R(GetHeroAgi(Ih,true))*5.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetHeroAgi(Ih,true))*5.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 call SaveInteger(Ia,GetHandleId(Ih),$41594C35,LoadInteger(Ia,GetHandleId(Ih),$41594C35)+1)
 endif
@@ -20242,7 +20480,7 @@ if LoadInteger(Ia,GetHandleId(Ih),$41595030)>=$41595030+1 then
 call SaveInteger(Ia,GetHandleId(Ih),$41595030,LoadInteger(Ia,GetHandleId(Ih),$41595030)-1)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Ih),LoadInteger(Ia,GetHandleId(Ih),$41595030)+1,false)
 call SetPlayerAbilityAvailable(GetOwningPlayer(Ih),LoadInteger(Ia,GetHandleId(Ih),$41595030),true)
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*I2R(GetHeroStr(Ih,true))*.005,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*I2R(GetHeroStr(Ih,true))*.005,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
 else
 endif
 else
@@ -20254,7 +20492,7 @@ call SetUnitState(Ih,UNIT_STATE_LIFE,(GetUnitState(Ih,UNIT_STATE_MAX_LIFE)-GetUn
 call fU(Ih,Ig,Ii)
 else
 if GetUnitAbilityLevel(Ih,$42475957)>0 then
-call UnitDamageTarget(Ih,Ig,bk(Ih,0,GetUnitAbilityLevel(Ih,$41475957))*.3+GetUnitState(Ih,ConvertUnitState(21)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
+call take_magic_damage(Ih,Ig,bk(Ih,0,GetUnitAbilityLevel(Ih,$41475957))*.3+GetUnitState(Ih,ConvertUnitState(21)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
 else
 endif
 if GetUnitAbilityLevel(Ih,$41475957)>0 then
@@ -20274,10 +20512,10 @@ endif
 if GetUnitAbilityLevel(Ih,$41304C4F)>0 and GetRandomReal(0,100.)<=I2R(HK[GetConvertedPlayerId(GetOwningPlayer(Ih))])*.5 then
 call SetUnitAnimation(Ih,"Slam")
 if GetUnitAbilityLevel(Ih,$4230334C)>0 then
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call CreateTextTagUnitBJ(I2S(R2I(GetUnitState(Ih,ConvertUnitState(21))*5.)),Ig,1.,18.,100,0.,0.,20.)
 else
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*3,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call CreateTextTagUnitBJ(I2S(R2I(GetUnitState(Ih,ConvertUnitState(21))*3.)),Ig,1.,18.,100,0.,0.,20.)
 endif
 set Jc[5]=GetLastCreatedTextTag()
@@ -20317,7 +20555,7 @@ else
 call SaveInteger(Ia,GetHandleId(Ih),$47535A4C,LoadInteger(Ia,GetHandleId(Ih),$47535A4C)+1)
 endif
 if GetUnitAbilityLevel(Ih,$41304451)>0 and GetRandomInt(1,20)<=GetUnitAbilityLevel(Ih,$41304451) then
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 else
@@ -20327,23 +20565,23 @@ call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDa
 else
 endif
 if GetUnitAbilityLevel(GetEventDamageSource(),$416C6974)>0 then
-call UnitDamageTarget(GetEventDamageSource(),GetTriggerUnit(),I2R(GetHeroInt(GetEventDamageSource(),true))*2.,false,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetEventDamageSource(),GetTriggerUnit(),I2R(GetHeroInt(GetEventDamageSource(),true))*2.,false,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitAbilityLevel(GetEventDamageSource(),$41534A38)>0 and 0!=EXGetEventDamageData(JI)==true then
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitAbilityLevel(GetEventDamageSource(),$41304558)>0 and 0!=EXGetEventDamageData(JI)==true then
-call UnitDamageTarget(Ih,Ig,4500.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,4500.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitAbilityLevel(Ih,$41304245)>0 or GetUnitAbilityLevel(Ih,$41534A34)>0 or GetUnitAbilityLevel(Ih,$41303748)>=1 and 0!=EXGetEventDamageData(JI)==true and IsUnitType(Ih,UNIT_TYPE_HERO)==true then
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 if GetUnitAbilityLevel(Ih,$41594D30)>0 then
 call SetUnitState(Ih,UNIT_STATE_LIFE,GetUnitState(Ih,UNIT_STATE_LIFE)+Ii)
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
     //附带技能这个的造成1.5倍真伤效果
 if GetUnitAbilityLevel(Ih,$41303646)>0 then
@@ -20353,19 +20591,19 @@ endif
 endif
 endif
 if GetUnitTypeId(GetEventDamageSource())==$485A4731 or GetUnitTypeId(GetEventDamageSource())==$48767764 and GetUnitAbilityLevel(Ig,$42486361)>=1 or GetUnitAbilityLevel(Ig,$42637364)>=1 then
-call UnitDamageTarget(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetRandomReal(0,100.)<=10 and GetUnitAbilityLevelSwapped($4130354E,GetEventDamageSource())>=1 then
-call UnitDamageTarget(GetEventDamageSource(),GetTriggerUnit(),I2R(GetUnitLevel(GetEventDamageSource()))*10.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetEventDamageSource(),GetTriggerUnit(),I2R(GetUnitLevel(GetEventDamageSource()))*10.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitAbilityLevelSwapped($41304341,GetEventDamageSource())>=1 then
-call UnitDamageTarget(Ih,Ig,bO(Ih,Ig)*2+I2R(GetHeroLevel(Ih))*15,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,bO(Ih,Ig)*2+I2R(GetHeroLevel(Ih))*15,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if bC(Ih,$666C6167)==true and IsPlayerAlly(GetOwningPlayer(Ih),GetOwningPlayer(Ig))==false then
-call UnitDamageTarget(Ih,Ig,I2R(GetHeroAgi(Ih,true)),false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetHeroAgi(Ih,true)),false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if GetUnitAbilityLevelSwapped($4130354A,Ig)<1 and GetRandomInt(1,10)==8 then
 set Jd[5]=GetUnitLoc(Ig)
 call CreateTextTagLocBJ("破防箭技",Jd[5],1.,15.,100.,100,100.,20.)
@@ -20384,16 +20622,16 @@ endif
 if GetUnitTypeId(Ih)==$6E30304C then
 set HP=0.+I2R(GetHeroAgi(Ib[GetConvertedPlayerId(GetOwningPlayer(GetEventDamageSource()))],true)+50)*I2R(GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetEventDamageSource()))],$4130414E))
 call IssueImmediateOrderById(CreateUnit(GetOwningPlayer(Ih),$65303130,GetUnitX(Ig),GetUnitY(Ig),0),852127)
-call UnitDamageTarget(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,HP,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,HP,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitTypeId(Ih)==$65303144 then
 set HP=.25*bk(Ib[GetConvertedPlayerId(GetOwningPlayer(GetEventDamageSource()))],2,GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetEventDamageSource()))],$41574432))
-call UnitDamageTarget(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,HP,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,HP,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if UnitHasBuffBJ(Ig,$42304747)==true or UnitHasBuffBJ(Ig,$42314747)==true or UnitHasBuffBJ(Ig,$42303135)==true then
-call UnitDamageTarget(Ih,Ig,GetEventDamage(),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetEventDamage(),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call CreateTextTagUnitBJ("伤害加深",GetTriggerUnit(),0,10,100,100,20.,0)
 call SetTextTagPermanent(GetLastCreatedTextTag(),false)
 call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
@@ -20406,13 +20644,13 @@ if UnitHasBuffBJ(Ig,$42304659)==true and UnitHasBuffBJ(Ih,$42486473)==false and 
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",Ih,"chest"))
   //轩辕剑 盘古斧伤害计算
 if bC(Ig,$6D6C7374)==true or bC(Ig,$6F636F72)==true then
-call UnitDamageTarget(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.1,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.1,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 if GetRandomInt(1,10)==5 then
 call IssueTargetOrder(CreateUnit(GetOwningPlayer(Ig),$65303052,GetUnitX(Ih),GetUnitY(Ih),0),"thunderbolt",Ih)
 else
 endif
 else
-call UnitDamageTarget(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.03,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.03,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 endif
 
 else
@@ -20420,13 +20658,13 @@ if UnitHasBuffBJ(Ig,$426C7361)==true or UnitHasBuffBJ(Ig,$426C7368)==true and Un
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",Ih,"chest"))
 // 轩辕剑、雷神管
 if bC(Ig,$6D6C7374)==true or bC(Ig,$49303142)==true then
-call UnitDamageTarget(Ig,Ih,I2R(GetHeroInt(Ig,true))*5.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig,Ih,I2R(GetHeroInt(Ig,true))*5.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if GetRandomInt(1,10)==5 then
 call IssueTargetOrder(CreateUnit(GetOwningPlayer(Ig),$65303052,GetUnitX(Ih),GetUnitY(Ih),0),"thunderbolt",Ih)
 else
 endif
 else
-call UnitDamageTarget(Ig,Ih,I2R(GetHeroInt(Ig,true))*3.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig,Ih,I2R(GetHeroInt(Ig,true))*3.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -22734,14 +22972,14 @@ call RemoveItem(aj(GetTriggerUnit(),'srtl'))
 call UnitAddItem(GetTriggerUnit(),CreateItem('it0r',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了羽渡尘")
 // 打造自然魂珠
-elseif bC(GetTriggerUnit(),$49303142)==true and bC(GetTriggerUnit(),$62747374)==true and bC(GetTriggerUnit(),$73747067)==true and bC(GetTriggerUnit(),$726F7473)==true and bC(GetTriggerUnit(),$7372746C)==true and bC(GetTriggerUnit(),'ledg')==true then
+elseif bC(GetTriggerUnit(),$49303142)==true and bC(GetTriggerUnit(),$62747374)==true and bC(GetTriggerUnit(),$73747067)==true and bC(GetTriggerUnit(),$726F7473)==true and bC(GetTriggerUnit(),$7372746C)==true and bC(GetTriggerUnit(),'I00B')==true then
  
   call RemoveItem(aj(GetTriggerUnit(),$62747374))
    call RemoveItem(aj(GetTriggerUnit(),$49303142))
    call RemoveItem(aj(GetTriggerUnit(),$73747067))
    call RemoveItem(aj(GetTriggerUnit(),$726F7473))
     call RemoveItem(aj(GetTriggerUnit(),$7372746C))
-    call RemoveItem(aj(GetTriggerUnit(),'ledg'))
+    call RemoveItem(aj(GetTriggerUnit(),'I00B'))
     call UnitAddItem(GetTriggerUnit(),CreateItem($6974306B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
     call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了自然魂珠")
 // 真武战甲
@@ -23304,7 +23542,7 @@ endfunction
 function jG takes nothing returns nothing
 local integer Ix=xuan_yuan
 set xuan_yuan = xuan_yuan +1
-if xuan_yuan > 107 then
+if xuan_yuan > 109 then
 set xuan_yuan = 101
 endif
 call SetItemUserData(aj(GetTriggerUnit(),$6D6C7374),Ix)
@@ -24017,6 +24255,17 @@ call TimerStart(MG,60.,false,function ja)
 else
     // 蛇
 if GetTriggerUnit()==Cl then
+    // 金箍棒掉落
+if GetUnitTypeId(GetKillingUnitBJ())=='H00Q' or GetUnitTypeId(GetKillingUnitBJ())=='QTDS' then
+call CreateItem($6D67746B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+if lei_ting > 5 then
+    set lei_ting = 0
+call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+set lei_ting = lei_ting+1
+endif
 if GetRandomInt(1,10)==2 then
 else
 call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
@@ -24046,20 +24295,12 @@ if GetRandomInt(0,3)==3 then
 call CreateItem($49303057,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
-if lei_ting > 5 then
-    set lei_ting = 0
-call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
-else
-set lei_ting = lei_ting+1
-endif
+
 if GetRandomInt(0,5)==0 then
 call CreateItem('it12',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
-if GetUnitTypeId(GetKillingUnitBJ())==$51544453 or GetUnitTypeId(GetKillingUnitBJ())==$48303051 then
-call CreateItem($6D67746B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
-else
-endif
+
 endif
 if GetRandomInt(0,4)==2 then
 call CreateItem($49303250,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
@@ -25979,7 +26220,7 @@ function mK takes nothing returns boolean
 return GetSpellAbilityId()==$41746175 and DistanceBetweenPoints(GetUnitLoc(GetTriggerUnit()),GetUnitLoc(Ct))<=300.
 endfunction
 function mL takes nothing returns nothing
-call UnitDamageTarget(Ct,GetTriggerUnit(),1000000000.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ct,GetTriggerUnit(),1000000000.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endfunction
 function mM takes nothing returns nothing
 set OT=CreateTrigger()
@@ -26306,6 +26547,8 @@ set M9[104]=$41303945
 set M9[105]=$4130394A
 set M9[106]='Ab3o'
 set M9[107]='Ab3n'
+set M9[108]='Ab51'
+set M9[109]='Ab52'
 set M9[200]=$414F636C
 set M9[201]=$414E7367
 set M9[202]=$4155736C
@@ -27899,6 +28142,12 @@ call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffFF0000无法携带多个心之钢！|r")
 else
 endif
+// 其他人捡起苍玄之书
+if GetItemTypeId(GetManipulatedItem()) == 'it0s' and GetUnitPointValue(GetTriggerUnit()) !=5 then
+call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffFF0000你智商不够（非智力英雄）！|r")
+else
+endif
 // 其他人捡起落宝铜钱
 if GetItemTypeId(GetManipulatedItem())==$69743065 and GetTriggerUnit()!=sunQian  then
 call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
@@ -28299,10 +28548,10 @@ function ou takes nothing returns boolean
 return GetSpellAbilityId()==$414E6874 or GetSpellAbilityId()==$415A4657
 endfunction
 function ov takes nothing returns nothing
-call UnitDamageTarget(MX[8000],GetEnumUnit(),I2R(R2I(GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE))*2),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(MX[8000],GetEnumUnit(),I2R(R2I(GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE))*2),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endfunction
 function ow takes nothing returns nothing
-call UnitDamageTarget(MX[8000],GetEnumUnit(),I2R(R2I(GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE))*2),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(MX[8000],GetEnumUnit(),I2R(R2I(GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE))*2),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endfunction
 function ox takes nothing returns nothing
 local group KB
@@ -28320,7 +28569,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,GetOwningPlayer(Iv))==true and KC!=Iv and IsUnitType(KC,UNIT_TYPE_STRUCTURE)==false then
-call UnitDamageTarget(Iv,KC,JT*2,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,KC,JT*2,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if IsUnitType(KC,UNIT_TYPE_HERO)==false and GetUnitPointValue(KC)!=55 and GetUnitPointValue(KC)!=50 and GetUnitState(KC,UNIT_STATE_LIFE)>.405 then
 call GroupAddUnit(Hx[0],KC)
 else
@@ -28342,7 +28591,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,GetOwningPlayer(Iv))==true and IsUnitType(KC,UNIT_TYPE_STRUCTURE)==false and KC!=Iv then
-call UnitDamageTarget(Iv,KC,JT*2,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,KC,JT*2,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if IsUnitType(KC,UNIT_TYPE_HERO)==false and GetUnitPointValue(KC)!=55 and GetUnitPointValue(KC)!=50 and GetUnitState(KC,UNIT_STATE_LIFE)>.405 then
 call GroupAddUnit(Hx[0],KC)
 else
@@ -28398,9 +28647,9 @@ return GetSpellAbilityId()==$414E6662
 endfunction
 function o0 takes nothing returns nothing
 if bC(GetTriggerUnit(),$72616D33)==true or huntingFinish==true then
-call UnitDamageTarget(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroAgi(GetTriggerUnit(),true)*(GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())+3)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroAgi(GetTriggerUnit(),true)*(GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())+3)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroAgi(GetTriggerUnit(),true)*GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())),false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroAgi(GetTriggerUnit(),true)*GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())),false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endfunction
 function o1 takes nothing returns nothing
@@ -28481,13 +28730,13 @@ function o8 takes nothing returns boolean
 return IsUnitEnemy(GetFilterUnit(),GetOwningPlayer(PU[2]))==true
 endfunction
 function o9 takes nothing returns nothing
-call UnitDamageTarget(PU[2],GetEnumUnit(),I2R(GetHeroStr(PU[2],true))*15.,true,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_MAGIC,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(PU[2],GetEnumUnit(),I2R(GetHeroStr(PU[2],true))*15.,true,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_MAGIC,WEAPON_TYPE_WHOKNOWS)
 endfunction
 function pB takes nothing returns boolean
 return IsUnitEnemy(GetFilterUnit(),GetOwningPlayer(PU[2]))==true
 endfunction
 function pC takes nothing returns nothing
-call UnitDamageTarget(PU[2],GetEnumUnit(),I2R(GetHeroStr(PU[2],true))*10.,true,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_MAGIC,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(PU[2],GetEnumUnit(),I2R(GetHeroStr(PU[2],true))*10.,true,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_MAGIC,WEAPON_TYPE_WHOKNOWS)
 endfunction
 function pD takes nothing returns nothing
 local group KB
@@ -28561,7 +28810,7 @@ else
 endif
 endloop
 call DestroyGroup(KB)
-call UnitDamageTarget(Ig,Pa,I2R(GetHeroStr(Ig,true))*(1.*JV),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig,Pa,I2R(GetHeroStr(Ig,true))*(1.*JV),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 set Ig=null
 set Pa=null
 set KB=null
@@ -28617,7 +28866,7 @@ call SetTextTagVelocity(bj_lastCreatedTextTag,0.,.15)
 call SetTextTagPermanent(GetLastCreatedTextTag(),false)
 call SetTextTagLifespan(GetLastCreatedTextTag(),1.)
 else
-call UnitDamageTarget(DI,GetAttackedUnitBJ(),I2R(GetHeroAgi(DI,true))*5.,true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(DI,GetAttackedUnitBJ(),I2R(GetHeroAgi(DI,true))*5.,true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 if UnitHasBuffBJ(DI,$424F776B)==true then
@@ -28627,7 +28876,7 @@ call SetTextTagVelocity(bj_lastCreatedTextTag,0.,.15)
 call SetTextTagPermanent(GetLastCreatedTextTag(),false)
 call SetTextTagLifespan(GetLastCreatedTextTag(),1.)
 else
-call UnitDamageTarget(DI,GetAttackedUnitBJ(),I2R(GetHeroAgi(DI,true))*3.,true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(DI,GetAttackedUnitBJ(),I2R(GetHeroAgi(DI,true))*3.,true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endif
 else
@@ -28667,7 +28916,7 @@ function pU takes nothing returns nothing
 call GroupRemoveUnit(Fq,GetEnumUnit())
 call SetUnitLifePercentBJ(GetEnumUnit(),GetUnitLifePercent(GetEnumUnit())-.3)
 if GetUnitLifePercent(GetEnumUnit())<=.5 then
-call UnitDamageTarget(Pd,GetEnumUnit(),GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Pd,GetEnumUnit(),GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 call SetUnitLifePercentBJ(GetEnumUnit(),GetUnitLifePercent(GetEnumUnit())-.3)
 endif
@@ -28721,7 +28970,7 @@ call SetUnitLifePercentBJ(GetEnumUnit(), GetUnitLifePercent(GetEnumUnit()) -(.01
 endif
 
 if GetUnitLifePercent(GetEnumUnit())<=1 then
-call UnitDamageTarget(maliang,GetEnumUnit(),GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(maliang,GetEnumUnit(),GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 else
 call SetUnitLifePercentBJ(GetEnumUnit(),GetUnitLifePercent(GetEnumUnit())-(.01 *GetUnitAbilityLevel(maliang, 'Ab2m')))
 endif
@@ -28864,7 +29113,7 @@ return IsUnitAlly(GetFilterUnit(),GetOwningPlayer(Pl))==false
 endfunction
 function pm takes nothing returns nothing
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Undead\\FreezingBreath\\FreezingBreathTargetArt.mdl",GetEnumUnit(),"origin"))
-call UnitDamageTarget(Pl,GetEnumUnit(),I2R(GetHeroStr(Pl,true)*GetRandomInt(15,30)),false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Pl,GetEnumUnit(),I2R(GetHeroStr(Pl,true)*GetRandomInt(15,30)),false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endfunction
 function pn takes nothing returns nothing
 local group KB
@@ -28931,7 +29180,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Pw[FN] and IsUnitEnemy(CE,GetOwningPlayer(Pv[FN]))==true then
-call UnitDamageTarget(Pv[FN],CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Pv[FN],CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Pv[FN])),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,3),852095,CE)
 
 endif
@@ -28946,7 +29195,7 @@ call UnitRemoveType(Pw[FN],UNIT_TYPE_GIANT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_ANCIENT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_FLYING)
 if IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==true then
-call UnitDamageTarget(Pv[FN],Pw[FN],P0*1.5,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Pv[FN],Pw[FN],P0*1.5,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Pv[FN])),$65303939,$41623071,1,GetUnitX(Pw[FN]),GetUnitY(Pw[FN]),bj_UNIT_FACING,3),852095,Pw[FN])
 endif
 call bh(FN)
@@ -28989,7 +29238,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if CE!=Pw[FN] and IsUnitEnemy(CE,GetOwningPlayer(Pv[FN]))==true then
-call UnitDamageTarget(Pv[FN],CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Pv[FN],CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Pv[FN])),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,3),852095,CE)
 
 endif
@@ -29005,7 +29254,7 @@ call UnitRemoveType(Pw[FN],UNIT_TYPE_GIANT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_ANCIENT)
 call UnitRemoveType(Pw[FN],UNIT_TYPE_FLYING)
 if IsUnitEnemy(Pw[FN],GetOwningPlayer(Pv[FN]))==true then
-call UnitDamageTarget(Pv[FN],Pw[FN],P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Pv[FN],Pw[FN],P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 call Trig_StunEffect_Actions(Pw[FN])
 call IssueTargetOrderById(XB(0,$65303939,$41623071,1,GetUnitX(Pw[FN]),GetUnitY(Pw[FN]),bj_UNIT_FACING,3),852095,Pw[FN])
 
@@ -29116,9 +29365,9 @@ return IsUnitAliveBJ(GetFilterUnit())==true and UnitHasBuffBJ(GetFilterUnit(),$4
 endfunction
 function p3 takes nothing returns nothing
 if bC(Cv,$6D6C7374)==true or GetUnitAbilityLevel(P5,$41303347)==1 then
-call UnitDamageTarget(P5,GetEnumUnit(),I2R(GetHeroAgi(P5,true))*(I2R(GetUnitAbilityLevel(P5,$41303743))+5.),true,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(P5,GetEnumUnit(),I2R(GetHeroAgi(P5,true))*(I2R(GetUnitAbilityLevel(P5,$41303743))+5.),true,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(P5,GetEnumUnit(),I2R(GetHeroAgi(P5,true))*I2R(GetUnitAbilityLevel(P5,$41303743)),true,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(P5,GetEnumUnit(),I2R(GetHeroAgi(P5,true))*I2R(GetUnitAbilityLevel(P5,$41303743)),true,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 set Fx=Fx+1
 set P6[Fx]=GetEnumUnit()
@@ -29272,7 +29521,7 @@ endif
 
     // 如果学习的是孤军奋战
 if GetLearnedSkillBJ()==$41623062 then
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"|Cff00ff00孤军奋战！")
+// call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"|Cff00ff00孤军奋战！")
 call SetUnitAbilityLevel(GetTriggerUnit(),$41623061,GetUnitAbilityLevel(GetTriggerUnit(),$41623062))
 call SetUnitAbilityLevel(GetTriggerUnit(),$41623063,GetUnitAbilityLevel(GetTriggerUnit(),$41623062))
 // call IncUnitAbilityLevelSwapped($41623061,GetTriggerUnit())
@@ -29372,9 +29621,9 @@ return GetSpellAbilityId()==$41457368
 endfunction
 function qF takes nothing returns nothing
 if bC(GetTriggerUnit(),$6D6C7374)==true or bC(GetTriggerUnit(),$7664646C)==true then
-call UnitDamageTarget(GetTriggerUnit(),GetSpellTargetUnit(),bk(GetTriggerUnit(),2,GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())+3),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetTriggerUnit(),GetSpellTargetUnit(),bk(GetTriggerUnit(),2,GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())+3),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(GetTriggerUnit(),GetSpellTargetUnit(),bk(GetTriggerUnit(),2,GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetTriggerUnit(),GetSpellTargetUnit(),bk(GetTriggerUnit(),2,GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId())),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 endif
 set QF[0]=GetSpellTargetUnit()
 call CreateTextTagUnitBJ(I2S(GetHeroAgi(Co,true)*GetUnitAbilityLevel(Co,$41457368)),QF[0],0,10,25.,100,75.,15.)
@@ -29421,9 +29670,9 @@ return IsUnitAlly(GetFilterUnit(),GetOwningPlayer(Cu))==false
 endfunction
 function qM takes nothing returns nothing
 if bC(QQ,$6D6C7374)==true or bC(QQ,$726E7370)==true then
-call UnitDamageTarget(QQ,GetEnumUnit(),(I2R(GetHeroStr(QQ,true))+500.)*I2R(GetUnitAbilityLevelSwapped($41656E73,QQ)),true,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(QQ,GetEnumUnit(),(I2R(GetHeroStr(QQ,true))+500.)*I2R(GetUnitAbilityLevelSwapped($41656E73,QQ)),true,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(QQ,GetEnumUnit(),(I2R(GetHeroStr(QQ,true))+400.)*I2R(GetUnitAbilityLevelSwapped($41656E73,QQ)),true,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(QQ,GetEnumUnit(),(I2R(GetHeroStr(QQ,true))+400.)*I2R(GetUnitAbilityLevelSwapped($41656E73,QQ)),true,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endfunction
 // 野蛮撞击触发函数
@@ -29517,7 +29766,7 @@ function qW takes nothing returns boolean
 return IsUnitAlly(GetFilterUnit(),GetOwningPlayer(Pl))==false
 endfunction
 function qX takes nothing returns nothing
-call UnitDamageTarget(C0,GetEnumUnit(),I2R(GetHeroStr(C0,true)*1),true,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(C0,GetEnumUnit(),I2R(GetHeroStr(C0,true)*1),true,false,ATTACK_TYPE_MAGIC,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endfunction
 function qY takes nothing returns nothing
 local group KB
@@ -29677,7 +29926,7 @@ if GS>=10 then
 set GS=0
 call DisableTrigger(GetTriggeringTrigger())
 call IssuePointOrder(CreateUnit(GetOwningPlayer(J8),$6530304D,GetUnitX(J8),GetUnitY(J8),0),"shockwave",GetUnitX(Qg),GetUnitY(Qg))
-call UnitDamageTarget(C4,Qg,I2R((GetHeroStr(C4,true)+GetHeroAgi(C4,true))*10),true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(C4,Qg,I2R((GetHeroStr(C4,true)+GetHeroAgi(C4,true))*10),true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call bv(C4,bk(C4,0,3),bN(C4,Qg),800,220)
 call SetUnitAnimation(Qg,"death")
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Other\\Stampede\\StampedeMissileDeath.mdl",Qg,"chest"))
@@ -29753,9 +30002,9 @@ if F8>=180. then
 call PauseTimer(GU)
 call IssueTargetOrder(Qo,"attack",Qp)
 if bC(DI,$6D6C7374)==true or bC(DI,$49303057)==true then
-call UnitDamageTarget(DI,Qp,I2R(GetHeroAgi(DI,true))*(I2R(GetUnitAbilityLevel(DI,$41303744))+3.),true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(DI,Qp,I2R(GetHeroAgi(DI,true))*(I2R(GetUnitAbilityLevel(DI,$41303744))+3.),true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(DI,Qp,I2R(GetHeroAgi(DI,true))*I2R(GetUnitAbilityLevel(DI,$41303744)),true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(DI,Qp,I2R(GetHeroAgi(DI,true))*I2R(GetUnitAbilityLevel(DI,$41303744)),true,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 call RemoveLocation(Qq[1])
 call RemoveLocation(Qq[2])
@@ -30924,7 +31173,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,GetOwningPlayer(Q3))==true then
-call UnitDamageTargetBJ(Q3,KC,I2R(GetHeroInt(Cp,true)*(GetUnitAbilityLevel(Cp,$41303759)+3)),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(Q3,KC,I2R(GetHeroInt(Cp,true)*(GetUnitAbilityLevel(Cp,$41303759)+3)),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 else
 endif
 endloop
@@ -30976,7 +31225,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,GetOwningPlayer(Q8))==true then
-call UnitDamageTargetBJ(Q8,KC,I2R(GetHeroInt(Cw,true)*((GetUnitAbilityLevel(Cw,$4130314B)+2)*2)),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(Q8,KC,I2R(GetHeroInt(Cw,true)*((GetUnitAbilityLevel(Cw,$4130314B)+2)*2)),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 else
 endif
 endloop
@@ -31273,7 +31522,7 @@ local integer FN
 local real P0=0.
 if bj(GetSpellTargetUnit()) then
 set P0=bk(Ij,1,Pt)
-call UnitDamageTarget(Ij,CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,P0,false,false,I3[5],I4[2],WEAPON_TYPE_WHOKNOWS)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 then
 set FN=bf()
 set Hi[FN]=0
@@ -31581,7 +31830,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>0 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true then
-call UnitDamageTarget(Ij,CE,HO[FN],true,false,I,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,HO[FN],true,false,I,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 set CE=null
 endloop
@@ -31631,7 +31880,7 @@ exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>0 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true then
 set Im=bL(GetUnitX(UV),GetUnitY(UV),GetUnitX(CE),GetUnitY(CE))
-call UnitDamageTarget(Ij,CE,HO[FN],false,false,I,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,HO[FN],false,false,I,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 set CE=null
 endloop
@@ -31726,7 +31975,7 @@ if bC(GetTriggerUnit(),$72616D33)==true or GetUnitAbilityLevel(GetTriggerUnit(),
 set JT=JT*1.5
 else
 endif
-call UnitDamageTarget(GetTriggerUnit(),GetSpellTargetUnit(),JT,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(GetTriggerUnit(),GetSpellTargetUnit(),JT,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if GetUnitState(SE[1],UNIT_STATE_LIFE)<=.2 then
 set MG=null
 return
@@ -31939,14 +32188,14 @@ if LoadInteger(FT,GetHandleId(GetExpiredTimer()),$9A2F6BAB)<=0 or GetUnitState(L
 call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 if GetUnitState(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D),UNIT_STATE_LIFE)>.405 and Z9(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D))<=200. then
-call UnitDamageTarget(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D),GetUnitState(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),UNIT_STATE_MAX_LIFE)*.3,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D),GetUnitState(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),UNIT_STATE_MAX_LIFE)*.3,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl",GetUnitX(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D)),GetUnitY(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D))))
 call bs(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),GetUnitX(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D)),GetUnitY(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D)),330,LoadReal(FT,GetHandleId(GetExpiredTimer()),$7B0498D8),5,0)
 else
 endif
 call IssueTargetOrderById(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),851983,LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D))
 else
-call UnitDamageTarget(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D),I2R(GetUnitAbilityLevel(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),$41304437)*GetHeroAgi(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),true))*1.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$C303079D),I2R(GetUnitAbilityLevel(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),$41304437)*GetHeroAgi(LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),true))*1.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call DestroyEffect(AddSpecialEffectTarget("war3mapImported\\0347.mdx",LoadUnitHandle(FT,GetHandleId(GetExpiredTimer()),$9F0C6E00),"chest"))
 endif
 endfunction
@@ -31972,9 +32221,9 @@ call GroupRemoveUnit(KB,KC)
 if IsUnitAliveBJ(KC)==true and IsUnitEnemy(KC,GetOwningPlayer(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010)))==true and IsUnitType(KC,UNIT_TYPE_STRUCTURE)==false then
 call SetUnitPosition(KC,LoadReal(FT,GetHandleId(GetTriggeringTrigger())*QY,$A26FA440),LoadReal(FT,GetHandleId(GetTriggeringTrigger())*QY,$EE6E0494))
 if GetUnitAbilityLevel(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),$4130424F)>0 then
-call UnitDamageTarget(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),KC,I2R(GetUnitAbilityLevel(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),$4130464A)*GetHeroAgi(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),true))*3.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),KC,I2R(GetUnitAbilityLevel(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),$4130464A)*GetHeroAgi(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),true))*3.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),KC,I2R(GetUnitAbilityLevel(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),$4130464A)*GetHeroAgi(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),true))*2.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),KC,I2R(GetUnitAbilityLevel(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),$4130464A)*GetHeroAgi(LoadUnitHandle(FT,GetHandleId(GetTriggeringTrigger())*QY,$72741010),true))*2.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 else
 endif
@@ -32024,7 +32273,7 @@ exitwhen CE==null
 call GroupRemoveUnit(HN[Ix],CE)
 if IsUnitEnemy(CE,GetOwningPlayer(MX[Ix]))==true and GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",CE,"chest"))
-call UnitDamageTarget(MX[Ix],CE,HO[Ix],true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(MX[Ix],CE,HO[Ix],true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 endloop
 call GroupEnumUnitsInRange(I2,GetUnitX(MX[Ix]),GetUnitY(MX[Ix]),220.,null)
@@ -32090,7 +32339,7 @@ function tI takes nothing returns boolean
 return IsUnitIllusionBJ(GetFilterUnit())==true and IsUnitAlly(GetFilterUnit(),GetOwningPlayer(GetTriggerUnit()))==false
 endfunction
 function tJ takes nothing returns nothing
-call UnitDamageTargetBJ(GetTriggerUnit(),GetEnumUnit(),100000000.,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(GetTriggerUnit(),GetEnumUnit(),100000000.,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 endfunction
 
 function tK takes nothing returns nothing
@@ -32322,13 +32571,13 @@ call RemoveLocation(Jd[29])
 else
 if GetSpellAbilityId()==$41303842 then
 if bC(GetTriggerUnit(),$6D6C7374)==true or bC(GetTriggerUnit(),$6E737069)==true then
-call UnitDamageTargetBJ(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroStatBJ(bj_HEROSTAT_STR,GetTriggerUnit(),true))*2.*I2R(GetUnitAbilityLevelSwapped($41303842,GetTriggerUnit())),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroStatBJ(bj_HEROSTAT_STR,GetTriggerUnit(),true))*2.*I2R(GetUnitAbilityLevelSwapped($41303842,GetTriggerUnit())),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 else
-call UnitDamageTargetBJ(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroStatBJ(bj_HEROSTAT_STR,GetTriggerUnit(),true))*1.5*I2R(GetUnitAbilityLevelSwapped($41303842,GetTriggerUnit())),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroStatBJ(bj_HEROSTAT_STR,GetTriggerUnit(),true))*1.5*I2R(GetUnitAbilityLevelSwapped($41303842,GetTriggerUnit())),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 endif
 else
 if GetSpellAbilityId()==$41303841 then
-call UnitDamageTargetBJ(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroStatBJ(bj_HEROSTAT_STR,GetTriggerUnit(),true))*1.2*I2R(GetUnitAbilityLevelSwapped($41303841,GetTriggerUnit())),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNIVERSAL)
+call UnitDamageTargetBJ(GetTriggerUnit(),GetSpellTargetUnit(),I2R(GetHeroStatBJ(bj_HEROSTAT_STR,GetTriggerUnit(),true))*1.2*I2R(GetUnitAbilityLevelSwapped($41303841,GetTriggerUnit())),ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED)
 else
 if GetSpellAbilityId()==$4130374A and GetOwningPlayer(GetSpellTargetUnit())==Player(PLAYER_NEUTRAL_AGGRESSIVE) and GetUnitTypeId(GetSpellTargetUnit())==$6E777766 then
 call SetUnitOwner(GetSpellTargetUnit(),GetOwningPlayer(GetTriggerUnit()),true)
@@ -32359,7 +32608,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call UnitDamageTarget(Ij,CE,Ii,false,false,I,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Ii,false,false,I,N,WEAPON_TYPE_WHOKNOWS)
 if GetUnitState(CE,UNIT_STATE_LIFE)>0 then
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Undead\\AnimateDead\\AnimateDeadTarget.mdl",CE,"overhead"))
 endif
@@ -32396,7 +32645,7 @@ endif
 call SetUnitY(Iv,LoadReal(FS,GetHandleId(Iv),$140B6202) )
 set Ii=bk(Iv,2,GetUnitAbilityLevel(Iv,GetSpellAbilityId()))
 if IsUnitAlly(Iv,Player(8))==true then
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
 endif
 endif
@@ -32484,7 +32733,7 @@ if LoadInteger(FS, GetConvertedPlayerId(GetOwningPlayer(Iv)), $7368686F) == 4 an
 set Ii = Ii *1.5
 endif
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "神灭斩当前面板伤害：" + R2S(Ii))
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 
 if GetSpellAbilityId() == 'Ab3i' then
@@ -32492,7 +32741,7 @@ set Ii = bk(Iv, 3, GetUnitAbilityLevel(Iv, GetSpellAbilityId()) +2) * 3 + LoadRe
 if LoadInteger(FS, GetConvertedPlayerId(GetOwningPlayer(Iv)), $7368686F) == 4 and bC(Iv, 'it0r') == true then
 set Ii = Ii *1.5
 endif
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "强化神灭斩当前面板伤害：" + R2S(Ii))
 call TriggerSleepAction(0.2)
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, GetUnitName(CE) + ":" + R2S(GetUnitState(CE, ConvertUnitState(1))))
@@ -32606,7 +32855,7 @@ endif
 if GetSpellAbilityId()=='Ab2j' then
 set Ii = bk(Iv, 3, GetUnitAbilityLevel(Iv, GetSpellAbilityId())) *0.5
 call TriggerSleepAction(1)
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 // 马良W
 if GetSpellAbilityId()=='Ab2k' then
@@ -32673,7 +32922,7 @@ endif
 call SetUnitY(Iv,GetUnitY(CE))
 set Ii=bk(Iv,2,GetUnitAbilityLevel(Iv,GetSpellAbilityId()))
 if IsUnitAlly(Iv,Player(8))==true then
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),Ii,false,false,ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
 endif
 endif
@@ -32776,7 +33025,7 @@ endif
 endif
 // 天使Q
  if GetSpellAbilityId() == $41623130 and Iv == juFu and CE != Dz then
-call UnitDamageTarget(Iv, CE, bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623130)) *0.5, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv, CE, bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623130)) *0.5, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
  endif
 //  天使W
 if GetSpellAbilityId() == $41623131 and Iv == juFu  then
@@ -32791,7 +33040,7 @@ endif
    call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00乾坤一掷！造成伤害：" + R2S((bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623077)) *0.5 + GetPlayerState(GetTriggerPlayer(), PLAYER_STATE_RESOURCE_GOLD) * .05) * touzi))
     // call (bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623077)) +GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.05) * touzi
     call bs(Iv,GetUnitX(CE),GetUnitY(CE),330,(bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623077)) *0.4 + GetPlayerState(GetTriggerPlayer(), PLAYER_STATE_RESOURCE_GOLD) * .01) * touzi,5,0)
-    // call UnitDamageTarget(Iv, CE, (bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623077)) *0.3 + GetPlayerState(GetTriggerPlayer(), PLAYER_STATE_RESOURCE_GOLD) * .03) * touzi, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    // call take_magic_damage(Iv, CE, (bk(Iv, 3, GetUnitAbilityLevel(Iv, $41623077)) *0.3 + GetPlayerState(GetTriggerPlayer(), PLAYER_STATE_RESOURCE_GOLD) * .03) * touzi, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
     if touzi == 6 then
     call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|Cff00ff00乾坤一掷，好运连连！" )
     call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41623071,1,GetUnitX(CE),GetUnitY(CE),bj_UNIT_FACING,3),852095,CE)
@@ -32931,9 +33180,9 @@ call SetUnitPosition(Iv,GetUnitX(LoadUnitHandle(Ia,GetHandleId(Iv),$41505431)),G
 endif
 elseif GetSpellAbilityId()==$41505432 then
 if IsUnitType(CE,UNIT_TYPE_ETHEREAL) then
-call UnitDamageTarget(Iv,CE,bk(Iv,3,JS),false,false,F,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,3,JS),false,false,F,N,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Iv,CE,bk(Iv,3,JS),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,3,JS),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 endif
 elseif GetSpellAbilityId()==$41505433 then
 call XX(Iv,$41505433,1,108,bk(Iv,3,GetUnitAbilityLevel(Iv,$41505436)))
@@ -32953,15 +33202,15 @@ elseif GetSpellAbilityId()==$41303651 then
 call dL(Iv,GetSpellTargetX(),GetSpellTargetY())
 elseif GetSpellAbilityId()==$41436362 then
 if bC(GetTriggerUnit(),$6D6C7374)==true or bC(GetTriggerUnit(),$666C6167)==true then
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),bk(Iv,2,JS+3),false,false,ATTACK_TYPE_CHAOS,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),bk(Iv,2,JS+3),false,false,ATTACK_TYPE_CHAOS,N,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),bk(Iv,2,JS),false,false,ATTACK_TYPE_CHAOS,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),bk(Iv,2,JS),false,false,ATTACK_TYPE_CHAOS,N,WEAPON_TYPE_WHOKNOWS)
 endif
 elseif GetSpellAbilityId()==$414E7362 then
 if bC(GetTriggerUnit(),$6D6C7374)==true or bC(GetTriggerUnit(),$6F636F72)==true then
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),bk(Iv,1,JS+3),false,false,ATTACK_TYPE_CHAOS,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),bk(Iv,1,JS+3),false,false,ATTACK_TYPE_CHAOS,N,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),bk(Iv,1,JS),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_COLD,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),bk(Iv,1,JS),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_COLD,WEAPON_TYPE_WHOKNOWS)
 endif
 // 幻影斩
 elseif GetSpellAbilityId()==$41487462 then
@@ -32973,10 +33222,10 @@ endif
 call SetUnitY(Iv,GetUnitY(CE))
 set Ii=bk(Iv,2,GetUnitAbilityLevel(Iv,GetSpellAbilityId()))
 if IsUnitAlly(Iv,Player(8))==true then
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),Ii,false,false,K,M,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),Ii,false,false,K,M,WEAPON_TYPE_WHOKNOWS)
 call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),280,Ii,5,2)
 else
-call UnitDamageTarget(Iv,GetSpellTargetUnit(),I2R(GetHeroAgi(Iv,true)*GetUnitAbilityLevel(Iv,$41487462)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_COLD,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,GetSpellTargetUnit(),I2R(GetHeroAgi(Iv,true)*GetUnitAbilityLevel(Iv,$41487462)),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_COLD,WEAPON_TYPE_WHOKNOWS)
 endif
 
 
@@ -33017,7 +33266,7 @@ elseif GetSpellAbilityId()==$414F6878 and IsUnitType(GetTriggerUnit(),UNIT_TYPE_
 call dW(Iv,CE,bk(Iv,3,GetUnitAbilityLevel(Iv,GetSpellAbilityId())+1))
 elseif GetSpellAbilityId()==$41707267 then
 set Ii=bk(Iv,3,JS)
-call UnitDamageTarget(Iv,CE,Ii,false,false,L,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,L,N,WEAPON_TYPE_WHOKNOWS)
 elseif GetSpellAbilityId()==$41425330 then
 call cU(Iv,GetUnitX(Iv),GetUnitY(Iv))
 elseif GetSpellAbilityId()==$41425331 then
@@ -33414,9 +33663,9 @@ call SaveUnitHandle(Ia,GetHandleId(Iv),$41564A55,CE)
 call SaveInteger(Ia,GetHandleId(Iv),$41564A51,0)
 endif
 if GetRandomInt(1,4)==4 then
-call UnitDamageTarget(Iv,CE,bk(Iv,2,JS)*4,true,false,I,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,2,JS)*4,true,false,I,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Iv,CE,bk(Iv,2,JS)*2,true,false,I,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,2,JS)*2,true,false,I,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Other\\Stampede\\StampedamissileDeath.mdl",CE,"origin"))
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Items\\AIil\\AIilTarget.mdl",GetUnitX(Iv),GetUnitY(Iv)))
@@ -33448,9 +33697,9 @@ call ck(Iv,CE,JS)
 
 elseif GetSpellAbilityId()==$41303455 then
 if GetUnitAbilityLevel(Iv,$41303352)>0 then
-call UnitDamageTarget(Iv,CE,bk(Iv,3,JS+3),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,3,JS+3),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Iv,CE,bk(Iv,3,JS),false,false,K,DAMAGE_TYPE_FIRE,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,3,JS),false,false,K,DAMAGE_TYPE_FIRE,WEAPON_TYPE_WHOKNOWS)
 endif
 elseif GetSpellAbilityId()==$41415345 then
 call cJ(Iv,CE,bk(Iv,0,JS))
@@ -33467,14 +33716,16 @@ call bs(Iv,GetUnitX(CE),GetUnitY(CE),380.,Ii*1.3,4,0)
 else
 call bs(Iv,GetUnitX(CE),GetUnitY(CE),300.,Ii,4,0)
 endif
+// 噬心咒伤害
 elseif GetSpellAbilityId()==$414E736F then
 if IsUnitAlly(Iv,Player(8)) then
-call UnitDamageTarget(Iv,CE,bk(Iv,3,JS),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv, CE, bk(Iv, 3, JS) *0.8, false, false, K, N, WEAPON_TYPE_WHOKNOWS)
 else
-call UnitDamageTarget(Iv,CE,I2R(GetHeroInt(Iv,true)*JS),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_FIRE,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,I2R(GetHeroInt(Iv,true)*JS),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_FIRE,WEAPON_TYPE_WHOKNOWS)
 endif
+// 发力燃烧伤害
 elseif GetSpellAbilityId()==$4130364A then
-call UnitDamageTarget(Iv,CE,bk(Iv,3,JS),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,3,JS)*0.8,false,false,K,N,WEAPON_TYPE_WHOKNOWS)
 elseif GetSpellAbilityId()==$41485A52 then
 call dT(Iv)
 elseif GetSpellAbilityId()==$41575131 then
@@ -33557,7 +33808,7 @@ if GetUnitAbilityLevel(Iv,'Ab3y') > 0 then
 call SaveInteger(Ia, GetHandleId(CE), 103, LoadInteger(Ia, GetHandleId(CE), 103) +1)
 endif
 call SaveInteger(Ia, GetHandleId(Iv), StringHash("shuangjian"),0)
-call UnitDamageTarget(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)), true, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)), true, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 else
 call SaveInteger(Ia, GetHandleId(Iv), StringHash("shuangjian"),1)
 endif
@@ -33574,12 +33825,12 @@ if GetUnitAbilityLevel(Iv, 'Ab4l') >0 then
     call SaveInteger(Ia, GetHandleId(Iv), StringHash("Ab4l"),0)
     // 如果携带双刃，会额外附带全属性两倍的伤害
     if GetUnitAbilityLevel(Iv, 'Ab4f') >0  then 
-    call UnitDamageTarget(Iv, CE, I2R((GetHeroAgi(Iv, true) + GetHeroStr(Iv, true)) * 5) + bk(Iv, 0, 6) + GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l'), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Iv, CE, I2R((GetHeroAgi(Iv, true) + GetHeroStr(Iv, true)) * 5) + bk(Iv, 0, 6) + GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l'), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
 
     call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S(I2R((GetHeroAgi(Iv, true) + GetHeroStr(Iv, true)) * 5) + bk(Iv, 0, 6) + GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l')))
     
     else
-    call UnitDamageTarget(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l') , false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
     call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S( GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab4l')))
 
     endif
@@ -35198,7 +35449,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitType(KC,UNIT_TYPE_STRUCTURE)==false and IsUnitEnemy(KC,GetOwningPlayer(Iv))==true and GetUnitState(KC,UNIT_STATE_LIFE)>.405 then
-call UnitDamageTarget(Iv,KC,I2R(GetHeroLevel(Iv))*20.,true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,KC,I2R(GetHeroLevel(Iv))*20.,true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 endloop
@@ -35235,7 +35486,7 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitType(KC,UNIT_TYPE_STRUCTURE)==false and IsUnitEnemy(KC,GetOwningPlayer(Iv))==true and GetUnitState(KC,UNIT_STATE_LIFE)>.405 then
-call UnitDamageTarget(Iv,KC,I2R(GetHeroLevel(Iv))*20.,true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,KC,I2R(GetHeroLevel(Iv))*20.,true,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 endloop
@@ -37141,9 +37392,9 @@ set KC=FirstOfGroup(KB)
 exitwhen KC==null
 call GroupRemoveUnit(KB,KC)
 if IsUnitEnemy(KC,Player(8))==true and IsUnitType(KC,UNIT_TYPE_DEAD)==false and UnitHasBuffBJ(GetTriggerUnit(),$4276756C)==false then
-call UnitDamageTarget(Tm[0],KC,I2R(GetHeroStr(Tm[0],true)),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
-call UnitDamageTarget(Tm[1],KC,I2R(GetHeroAgi(Tm[1],true)),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
-call UnitDamageTarget(Tm[2],KC,I2R(GetHeroInt(Tm[2],true)),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Tm[0],KC,I2R(GetHeroStr(Tm[0],true)),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Tm[1],KC,I2R(GetHeroAgi(Tm[1],true)),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Tm[2],KC,I2R(GetHeroInt(Tm[2],true)),false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 endloop
@@ -41267,6 +41518,7 @@ exitwhen i > 8
 set gamblePlayerGroup[i] = 0
 set huntingBoss[i]=false
 set text_show[i] = false 
+set text_damage_str[i] = "test" 
 set i = i + 1
 endloop
 endfunction
