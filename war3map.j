@@ -64,6 +64,7 @@ string array text_damage_str
 // 单位选中事件
 trigger select_listen
 unit pet_unit
+unit select_unit =null
 // 黑洞引力事件
 trigger gg_trg_S_DummyUnitDeath=null
 trigger gg_trg_AnnihilateABlackHole=null
@@ -4256,6 +4257,16 @@ function magicDefendLevel takes unit Iv returns integer
      if GetUnitAbilityLevel(Iv, 'ADS4') > 0 then 
       set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'ADS4') *10
     endif 
+    // 阎宇R魔抗
+     if GetUnitAbilityLevel(Iv, 'Ab57') > 0 then 
+      set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Ab57') * 50
+    endif 
+
+     // 剑域10+20/每级魔抗
+     if GetUnitAbilityLevel(Iv, 'B03K') > 0 then 
+      set int_MD = int_MD + 10 + GetUnitAbilityLevel(yanyu, 'Ab2d') * 20
+    endif 
+
     // 难度魔抗 41304139
   if GetUnitAbilityLevel(Iv, 'A0A9') > 0 then 
       set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'A0A9') *10
@@ -4395,31 +4406,78 @@ set JT = bk(Ij, 3, 1)
 return JT
 endfunction
 
-function To takes unit I1_1111I,unit m5 returns nothing
-local real a=GetRandomReal(0,360)
-local real x=GetUnitX(m5)+50*Cos(a*bj_DEGTORAD)
-local real y=GetUnitY(m5)+50*Sin(a*bj_DEGTORAD)
-local integer i=0
-local integer l=0
-call SetUnitPosition(I1_1111I,x,y)
-call SetUnitFacing(I1_1111I,bj_RADTODEG*Atan2(GetUnitY(m5)-GetUnitY(I1_1111I),GetUnitX(m5)-GetUnitX(I1_1111I)))
-call SetUnitAnimation(I1_1111I,"Attack")
-call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl",I1_1111I,"chest"))
-call IssueTargetOrder(I1_1111I,"attack",m5)
-call I_I1II_I(I1_1111I,1093677131,false)
-set i=I_III1_I(I1_1111I,1093677131)
-if i>0 then
-set l=2+8*i
-if i==4 then
-set l=l+2
+function Omin_slash_Move takes unit Iv,unit CE returns nothing
+local real local_real=GetRandomReal(0,360)
+local real loc_x=GetUnitX(CE)+50*Cos(local_real*bj_DEGTORAD)
+local real loc_y=GetUnitY(CE)+50*Sin(local_real*bj_DEGTORAD)
+local integer loc_i=0
+local integer loc_l=0
+call SetUnitPosition(Iv,loc_x,loc_y)
+call SetUnitFacing(Iv,bj_RADTODEG*Atan2(GetUnitY(CE)-GetUnitY(Iv),GetUnitX(CE)-GetUnitX(Iv)))
+call SetUnitAnimation(Iv,"Attack")
+call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl",Iv,"chest"))
+call IssueTargetOrder(Iv,"attack",CE)
+call SaveBoolean(hero_hash,GetHandleId(Iv),'Ab2f',false)
+// 剑舞被动
+
+set loc_i=GetUnitAbilityLevel(Iv,'Ab2f')
+if loc_i>0 then
+set loc_l=2+8*loc_i
+
+if GetRandomInt(0,99)<loc_l then
+call SaveBoolean(hero_hash,GetHandleId(Iv),'Ab2f',true)
+call SetUnitAnimation(Iv,"slam")
 endif
-if GetRandomInt(0,99)<l then
-call I_I1II_I(I1_1111I,1093677131,true)
-call I_11___I("Abilities\\Weapons\\IllidanMissile\\IllidanMissile.mdl",I1_1111I,"weapon",0.5)
-call SetUnitAnimation(I1_1111I,"slam")
 endif
+// 伤害
+call take_magic_damage(Iv, CE, GetUnitState(Iv, ConvertUnitState(18)) * GetRandomInt(3,6), false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+// call I1III__I(Iv,CE,0,GetRandomReal(150,250))
+endfunction
+
+function judgeUnitType takes unit Iv returns boolean
+local integer unit_id=GetUnitTypeId(Iv)
+
+
+
+if IsUnitOwnedByPlayer(Iv,Player(15))then
+return false
 endif
-call I1III__I(I1_1111I,m5,0,GetRandomReal(150,250))
+
+if GetUnitState(Iv,UNIT_STATE_LIFE)<0.5 or IsUnitType(Iv,UNIT_TYPE_DEAD) then
+return false
+endif
+
+if IsUnitType(Iv,UNIT_TYPE_STRUCTURE) then
+return false
+endif
+
+return true
+endfunction
+
+function Omin_slash_random takes unit Iv returns nothing
+local group loc_group=CreateGroup()
+local integer loc_range=1050
+local unit CE=null
+call GroupEnumUnitsInRange(loc_group,GetUnitX(Iv),GetUnitY(Iv),loc_range,null)
+set loc_range=0
+set select_unit=null
+loop
+set CE=FirstOfGroup(loc_group)
+exitwhen CE==null
+if judgeUnitType(CE) and IsUnitType(CE,UNIT_TYPE_ETHEREAL)==false and IsUnitVisible(CE,GetOwningPlayer(Iv)) then
+if GetRandomInt(0,loc_range)==loc_range then
+set select_unit=CE
+endif
+set loc_range=loc_range+1
+endif
+call GroupRemoveUnit(loc_group,CE)
+endloop
+if select_unit!=null then
+call Omin_slash_Move(Iv,select_unit)
+endif
+call DestroyGroup(loc_group)
+set loc_group=null
+set CE=null
 endfunction
 
 function Omin_slash_action1 takes nothing returns boolean
@@ -4428,9 +4486,11 @@ local integer Ix=GetHandleId(loc_trig)
 local unit Iv = LoadUnitHandle(hero_hash, Ix, StringHash("Hero"))
 local unit CE = LoadUnitHandle(hero_hash, Ix, StringHash("Target"))
 
-call To(Iv,CE)
-call a7(Ix)
-call I1_1I1II(loc_trig)
+call Omin_slash_Move(Iv,CE)
+call FlushChildHashtable(hero_hash, Ix)
+call DisableTrigger(loc_trig)
+call DestroyTrigger(loc_trig)
+
 set loc_trig=null
 set Iv=null
 set CE=null
@@ -4438,45 +4498,52 @@ return false
 endfunction
 
 function Omin_slash_action2 takes nothing returns boolean
-local trigger t=GetTriggeringTrigger()
-local integer I1II11_I=GetHandleId(t)
-local unit I1_1111I=Y7(I1II11_I,"Hero")
-local integer Tq=E8(I1II11_I,"Limit")
-local integer TQ=E8(I1II11_I,"BFLevel")
-local integer Rd=E8(I1II11_I,"Counter")
-local unit Tr
-if Rd>Tq or GetWidgetLife(I1_1111I)<1 then
-call DestroyEffect(r8(I1II11_I,"FX"))
-call a7(I1II11_I)
-call I1_1I1II(t)
-call SetPlayerAbilityAvailable(GetOwningPlayer(I1_1111I),1093678407,true)
-call SetUnitPathing(I1_1111I,true)
-call SetUnitInvulnerable(I1_1111I,false)
-call I1_11III(I1_1111I,"Omnislashing")
-call I_1_I_II(I1_1111I)
-if IsUnitIllusion(I1_1111I)then
-call KillUnit(I1_1111I)
+local trigger loc_trig=GetTriggeringTrigger()
+local integer Ix=GetHandleId(loc_trig)
+local unit Iv = LoadUnitHandle(hero_hash, Ix, StringHash("Hero"))
+local integer loc_max = LoadInteger(hero_hash, Ix, StringHash("Limit"))
+local integer loc_level=LoadInteger(hero_hash, Ix, StringHash("BFLevel"))
+local integer loc_count=LoadInteger(hero_hash, Ix, StringHash("Counter"))
+
+if loc_count>loc_max or GetWidgetLife(Iv)<1 then
+call DestroyEffect(LoadEffectHandle(hero_hash, Ix, StringHash("FX")))
+call FlushChildHashtable(hero_hash,Ix)
+call DisableTrigger(loc_trig)
+call DestroyTrigger(loc_trig)
+
+call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab2f',true)
+call SetUnitPathing(Iv,true)
+call SetUnitInvulnerable(Iv,false)
+call SaveInteger(hero_hash,GetHandleId(Iv),StringHash("stateOmnislashing"),2)
+
+if IsUnitIllusion(Iv) then
+call KillUnit(Iv)
 endif
+
 else
-call n7(I1II11_I,"Counter",Rd+1)
-call Tp(I1_1111I)
-if xL==null then
-call DestroyEffect(r8(I1II11_I,"FX"))
-call a7(I1II11_I)
-call I1_1I1II(t)
-call SetPlayerAbilityAvailable(GetOwningPlayer(I1_1111I),1093678407,true)
-call SetUnitPathing(I1_1111I,true)
-call SetUnitInvulnerable(I1_1111I,false)
-call I1_11III(I1_1111I,"Omnislashing")
-call I_1_I_II(I1_1111I)
-if IsUnitIllusion(I1_1111I)then
-call KillUnit(I1_1111I)
+call Omin_slash_random(Iv)
+call SaveInteger(hero_hash,Ix,StringHash("Counter"),loc_count+1)
+if select_unit == null then
+call DestroyEffect(LoadEffectHandle(hero_hash, Ix, StringHash("FX")))
+call DestroyEffect(LoadEffectHandle(hero_hash, GetHandleId(Iv), StringHash("weapon")))
+
+call FlushChildHashtable(hero_hash,Ix)
+call DisableTrigger(loc_trig)
+call DestroyTrigger(loc_trig)
+
+call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab2f',true)
+call SetUnitPathing(Iv,true)
+call SetUnitInvulnerable(Iv,false)
+call SaveInteger(hero_hash,GetHandleId(Iv),StringHash("stateOmnislashing"),2)
+
+if IsUnitIllusion(Iv) then
+call KillUnit(Iv)
 endif
 endif
 endif
-set t=null
-set I1_1111I=null
-set Tr=null
+set loc_trig=null
+set Iv=null
+
 return false
 endfunction
 function Omin_slash_start takes unit Iv,unit CE,integer loc_times returns nothing
@@ -4484,7 +4551,7 @@ local trigger CS=CreateTrigger()
 local integer Ix=GetHandleId(CS)
 local integer abililty_level=GetUnitAbilityLevel(Iv,'Ab2f')
 local player loc_player=GetOwningPlayer(Iv)
-set loc_times=loc_times*3
+set loc_times=loc_times*2
 
 call SetUnitPathing(Iv,false)
 call SetUnitInvulnerable(Iv,true)
@@ -4492,6 +4559,7 @@ call SetUnitInvulnerable(Iv,true)
 call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("stateOmnislashing") , 1)
 call SaveUnitHandle(hero_hash, Ix, StringHash("Hero"),Iv)
 call SaveUnitHandle(hero_hash, Ix, StringHash("Target"),CE)
+call SaveEffectHandle(hero_hash, GetHandleId(Iv), StringHash("weapon"), AddSpecialEffectTarget("Abilities\\Weapons\\IllidanMissile\\IllidanMissile.mdl", Iv, "weapon"))
 
 call TriggerRegisterTimerEvent(CS,0,false)
 call TriggerAddCondition(CS,Condition(function Omin_slash_action1))
@@ -4502,12 +4570,7 @@ call SaveInteger(hero_hash, Ix, StringHash("Limit"),loc_times)
 call SaveInteger(hero_hash, Ix, StringHash("BFLevel"),abililty_level)
 call SaveInteger(hero_hash, Ix, StringHash("Counter"),2)
 call SaveEffectHandle(hero_hash, Ix, StringHash("FX"),AddSpecialEffectTarget("Abilities\\Weapons\\PhoenixMissile\\Phoenix_Missile_mini.mdl",Iv,"weapon"))
-// call A7(Ix,"Hero",Iv)
-// call n7(Ix,"Limit",loc_times)
-// call n7(Ix,"BFLevel",abililty_level)
-// call n7(Ix,"Counter",2)
-// call b7(Ix,"FX",AddSpecialEffectTarget("Abilities\\Weapons\\PhoenixMissile\\Phoenix_Missile_mini.mdl",Iv,"weapon"))
-call TriggerRegisterTimerEvent(CS,0.4,true)
+call TriggerRegisterTimerEvent(CS, 0.4 - abililty_level *0.02, true)
 call TriggerAddCondition(CS,Condition(function Omin_slash_action2))
 set CS=null
 set loc_player=null
@@ -4728,7 +4791,7 @@ endfunction
 // loop
 // set loc_unit=FirstOfGroup(loc_group)
 // exitwhen loc_unit==null
-// if I1III1_I(loc_unit,0,2,0,0,null,Iv,false)then
+// if judgeUnitType(loc_unit,0,2,0,0,null,Iv,false)then
 // call SetUnitOwner(II_I1_I,Player(15),false)
 // call IssueTargetOrder(II_I1_I,"slow",loc_unit)
 // if true then
@@ -4830,7 +4893,7 @@ call GroupEnumUnitsInRange(loc_group,GetUnitX(Iv),GetUnitY(Iv),75+75*loc_i,null)
 loop
 set loc_f=FirstOfGroup(loc_group)
 exitwhen loc_f==null
-// if I1III1_I(loc_f,0,2,0,0,null,Iv,true)then
+// if judgeUnitType(loc_f,0,2,0,0,null,Iv,true)then
 // call I1III__I(Iv,loc_f,1,loc_d+I1II1_II(Iv,1)*0.6)
 // call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Human\\ManaFlare\\ManaFlareBoltImpact.mdl",loc_f,"origin"))
 // endif
@@ -5179,6 +5242,28 @@ function jingwei_E takes unit Iv returns nothing
   call ForGroupBJ( jingwei_kuilei, function jingwei_E_actions )
     call GroupClear( jingwei_kuilei )
 call DestroyGroup( jingwei_kuilei )
+endfunction
+
+function yanyu_F_actions takes nothing returns nothing
+local integer loc_i = LoadInteger(Ia, GetPlayerId(GetOwningPlayer(GetEnumUnit())), StringHash("jianyu")) 
+
+call SetUnitAbilityLevel(GetEnumUnit(), 'Ab56',loc_i)
+call SetUnitAbilityLevel(GetEnumUnit(), 'Ab55',loc_i)
+// call textToPlayer(GetOwningPlayer(GetEnumUnit()), 0, 0, "技能等级：" + I2S(loc_i))
+endfunction 
+
+function yanyu_F_conditions  takes nothing returns boolean
+return GetUnitTypeId(GetFilterUnit()) == 'u00n'
+endfunction
+
+function yanyu_F takes unit Iv returns nothing
+  local  group loc_group 
+  call TriggerSleepAction(2)
+  call SaveInteger(Ia, GetPlayerId(GetOwningPlayer(Iv)), StringHash("jianyu"), GetUnitAbilityLevel(Iv,'Ab2d'))
+  set loc_group = GetUnitsOfPlayerMatching(GetOwningPlayer(Iv), Condition(function yanyu_F_conditions))
+  call ForGroupBJ( loc_group, function yanyu_F_actions )
+    call GroupClear( loc_group )
+call DestroyGroup( loc_group )
 endfunction
 
 // 马良技能开始
@@ -8608,6 +8693,9 @@ call SaveInteger(Ia,Ix,1,LoadInteger(Ia,Ix,1)-1)
 call bs(Iv,GetUnitX(Iv),GetUnitY(Iv),550,LoadReal(Ia,Ix,$3064616D),1,0)
 call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Resurrect\\ResurrectTarget.mdl",GetUnitX(Iv)+GetRandomReal(-500.,500.),GetUnitY(Iv)+GetRandomReal(-500.,500.)))
 if LoadInteger(Ia,Ix,1)<=0 then
+if GetUnitAbilityLevel(Iv, 'Ab57') >0 then
+call UnitRemoveAbility(Iv, 'Ab57')
+endif
 call DestroyTimer(CS)
 call DestroyEffect(LoadEffectHandle(Ia, GetHandleId(Iv),$65666666))
 call FlushChildHashtable(Ia,Ix)
@@ -8621,7 +8709,9 @@ local integer Ix=GetHandleId(CS)
 call SaveUnitHandle(Ia,Ix,1,Iv)
 call SaveInteger(Ia,Ix,1,JV)
 call SaveReal(Ia,Ix,$3064616D,Ii*.1)
-call UnitAddItem(Iv,CreateItem($49303232,GetUnitX(Iv),GetUnitY(Iv)))
+call UnitAddAbility(Iv,'Ab57')
+call SetUnitAbilityLevel(Iv, 'Ab57', GetUnitAbilityLevel(Iv, 'Ab2b'))
+// call UnitAddItem(Iv,CreateItem($49303232,GetUnitX(Iv),GetUnitY(Iv)))
 call TimerStart(CS,.2,true,function ca)
 set CS=null
 endfunction
@@ -18783,6 +18873,7 @@ call UnitAddItemToSlotById(maliang,'sbch',0)
 set yanyu=CreateUnit(CC,'H009',-3763.4,-7127.6,273.26)
 call SetUnitState(yanyu,UNIT_STATE_MANA,220)
 call UnitAddItemToSlotById(yanyu,$72646531,0)
+call UnitAddItemToSlotById(yanyu,'it07',1)
 // call ShowUnitHide(yanyu)
 // 宗预
 set zongyu=CreateUnit(CC,$48303038,-3763.4,-7527.6,273.26)
@@ -31264,16 +31355,16 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff
 endif
 // 阎宇大招
 elseif Iv == yanyu then
-if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab2f',Iv)<1 then
-call UnitAddAbilityBJ('Ab2f',Iv)
-call UnitMakeAbilityPermanent(Iv,true,'Ab2f')
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00心中无剑！")
-elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab2f',Iv)==1 then
-call IncUnitAbilityLevel(Iv,'Ab2f')
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00心中无剑的等级已经提升了！")
-elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab2f',Iv)==2 then
-call IncUnitAbilityLevel(Iv,'Ab2f')
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00心中无剑的等级已经提升了！")
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab2d',Iv)<1 then
+call UnitAddAbilityBJ('Ab2d',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab2d')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00剑域！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab2d',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab2d')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00剑域的等级已经提升了！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab2d',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab2d')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00剑域的等级已经提升了！")
 endif
 // 马良大招
 elseif Iv == maliang then
@@ -33117,14 +33208,16 @@ if GetSpellAbilityId()=='Ab2b' then
 call cb(Iv, bk(Iv, 2, GetUnitAbilityLevel(Iv, $Ab2b)) *5, 30)
 call SaveEffectHandle(Ia,GetHandleId(Iv),$65666666,AddSpecialEffectTarget("war3mapImported\\jsQ.mdx",Iv,"origin"))
 endif
-
+if GetSpellAbilityId()=='Ab2d' then
+call yanyu_F(Iv)
+endif
 // 无敌斩
 if GetSpellAbilityId()=='Ab2f' then
 call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000无敌斩！")
-   call UnitAddAbilityBJ($4176756C,Iv)
+//    call UnitAddAbilityBJ($4176756C,Iv)
 // call UnitAddItem(Iv,CreateItem($49303053,GetUnitX(Iv),GetUnitY(Iv)))
-
-call huk_action(Iv, CE, JS * 4 +5)
+call Omin_slash()
+// call huk_action(Iv, CE, JS * 4 +5)
 endif
 // 阎宇Q
 if GetSpellAbilityId()=='Ab2e' then
@@ -36118,7 +36211,7 @@ call IncUnitAbilityLevelSwapped('Ab28',GetTriggerUnit())
 else
     // 
 if GetUnitTypeId(GetTriggerUnit())=='H009' then
-call IncUnitAbilityLevelSwapped('Ab2f',GetTriggerUnit())
+call IncUnitAbilityLevelSwapped('Ab2d',GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())=='H00A' then
 call IncUnitAbilityLevelSwapped('Ab2o',GetTriggerUnit())
