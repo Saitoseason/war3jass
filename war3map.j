@@ -4225,7 +4225,7 @@ function bk takes unit Ij, integer Ik, integer JS returns real
         // 力量伤害技能系数     
     elseif Ik == 1 then 
         if IsUnitEnemy(Ij, Player(8)) == false then 
-            set JT = (I2R(GetHeroStr(Ij, true) * (JS + 1)) + JT ) * (1 + GetUnitState(Ij, ConvertUnitState(1)) / 40000) 
+            set JT = (I2R(GetHeroStr(Ij, true) * (JS + 1)) + JT ) * (1 + GetUnitState(Ij, ConvertUnitState(1)) / 100000) 
         else 
             set JT = I2R(GetHeroStr(Ij, true) * (JS + 1)) 
         endif 
@@ -4494,6 +4494,10 @@ local integer magic_defend_amout = magicDefendLevel(CE)
 local integer magic_infact_amout =magicDefendLevel(CE)
 local real really_amout=amout
 local string loc_string =null
+// 虚无状态移除所有魔法抗性
+if IsUnitType(CE,UNIT_TYPE_ETHEREAL) and damage_type == DAMAGE_TYPE_ENHANCED then
+    set damage_type = DAMAGE_TYPE_UNIVERSAL
+endif
     if damage_type != DAMAGE_TYPE_UNIVERSAL then
         // 先计算百分比法穿
         set magic_infact_amout = magicPercentStrikeLevel(Iv,magic_defend_amout)
@@ -5565,7 +5569,7 @@ return((((IsUnitType(GetFilterUnit(),UNIT_TYPE_STRUCTURE)==false)and(IsUnitAlive
 endfunction
 function Trig_AnnihilateABlackHole2Func004A takes nothing returns nothing
 set udg_AnnihilateABlackHoleEUPoint=GetUnitLoc(GetEnumUnit())
-set udg_AnnihilateABlackHoleP2P = PolarProjectionBJ(udg_AnnihilateABlackHoleEUPoint, (5 + udg_AnnihilateBlackHoleSLv *5), AngleBetweenPoints(udg_AnnihilateABlackHoleEUPoint, udg_AnnihilateABlackHoleSPoint))
+set udg_AnnihilateABlackHoleP2P = PolarProjectionBJ(udg_AnnihilateABlackHoleEUPoint, (10 + udg_AnnihilateBlackHoleSLv *6), AngleBetweenPoints(udg_AnnihilateABlackHoleEUPoint, udg_AnnihilateABlackHoleSPoint))
 
 call SetUnitX(GetEnumUnit(),GetLocationX(udg_AnnihilateABlackHoleP2P))
 call SetUnitY(GetEnumUnit(),GetLocationY(udg_AnnihilateABlackHoleP2P))
@@ -5584,7 +5588,7 @@ call UnitDamageTargetBJ(udg_AnnihilateABlackHoleCasters,GetEnumUnit(),100,ATTACK
 endfunction
 // 没专属伤害
 function Trig_AnnihilateABlackHole2Func006Func003Func002A takes nothing returns nothing
-call UnitDamageTargetBJ(udg_AnnihilateABlackHoleCasters, GetEnumUnit(), 100 + getMasterServent(maliang) , ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED)
+call UnitDamageTargetBJ(udg_AnnihilateABlackHoleCasters, GetEnumUnit(), 100 + getMasterServent(maliang) *0.75, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED)
 endfunction
 // 黑洞吸人动作
 function Trig_AnnihilateABlackHole2Actions takes nothing returns nothing
@@ -10907,7 +10911,7 @@ local real Ii=LoadReal(Ia,Ix,1)
 if Ii>0 then
 if Ik>0 and GetWidgetLife(CE)>.405 and IsUnitType(CE,UNIT_TYPE_ETHEREAL) then
 call SaveInteger(Ia,Ix,1,Ik)
-call take_magic_damage(Iv,CE,Ii,false,false,F,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 call FlushChildHashtable(Ia,Ix)
 call DestroyTimer(CS)
@@ -21344,17 +21348,18 @@ else
 endif
 if UnitHasBuffBJ(Ig,$42304659)==true or UnitHasBuffBJ(Ig,$426C7361)==true or UnitHasBuffBJ(Ig,$426C7368)==true then
 call UnitRemoveBuffs(Ig,false,true)
+// 孟获W伤害
 if UnitHasBuffBJ(Ig,$42304659)==true and UnitHasBuffBJ(Ih,$42486473)==false and GetUnitAbilityLevel(Ih,$416C6F63)==0 and GetUnitAbilityLevel(Ih,$4176756C)==0 then
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",Ih,"chest"))
   //轩辕剑 盘古斧伤害计算
-if bC(Ig,$6D6C7374)==true or bC(Ig,$6F636F72)==true then
-call take_magic_damage(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.1,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+if bC(Ig, $6D6C7374) == true or bC(Ig, $6F636F72) == true or GetUnitAbilityLevel(Ih,'Ab02') > 0 or GetUnitAbilityLevel(Ih,'Ab4a') > 0 or GetUnitAbilityLevel(Ih,'Ab4a') > 0  then
+call take_magic_damage(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.1 * (1 + I2R(GetHeroStr(Ig)) /1250),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 if GetRandomInt(1,10)==5 then
 call IssueTargetOrder(CreateUnit(GetOwningPlayer(Ig),$65303052,GetUnitX(Ih),GetUnitY(Ih),0),"thunderbolt",Ih)
 else
 endif
 else
-call take_magic_damage(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.03,false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ig, Ih, GetUnitState(Ig, UNIT_STATE_MAX_LIFE) * .05 * (1 + I2R(GetHeroStr(Ig)) /1250), false, false, ATTACK_TYPE_SIEGE, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
 endif
 
 else
@@ -24845,7 +24850,7 @@ call SetUnitState(loc_unit, ConvertUnitState(32), GetUnitState(loc_unit, Convert
 endif
 if maliang_R_num > 150 then
     call textToPlayer(GetOwningPlayer(loc_unit), 0, 0, "腐蚀精华已满150层，溢出的精华将转化为最大生命上限")
-    call SetUnitState(loc_unit, ConvertUnitState(1), GetUnitState(loc_unit, ConvertUnitState(1)) + GetUnitAbilityLevel(loc_unit, 'Ab5a') *50) 
+    call SetUnitState(loc_unit, ConvertUnitState(1), GetUnitState(loc_unit, ConvertUnitState(1)) + GetUnitAbilityLevel(loc_unit, 'Ab5a') *20) 
 
 endif 
 
@@ -34247,15 +34252,17 @@ call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),$41505431,true)
 if GetTerrainType(GetUnitX(LoadUnitHandle(Ia,GetHandleId(Iv),$41505431)),GetUnitY(LoadUnitHandle(Ia,GetHandleId(Iv),$41505431)))!=$634F6331 then
 call SetUnitPosition(Iv,GetUnitX(LoadUnitHandle(Ia,GetHandleId(Iv),$41505431)),GetUnitY(LoadUnitHandle(Ia,GetHandleId(Iv),$41505431)))
 endif
+// 庞统死亡一指
 elseif GetSpellAbilityId()==$41505432 then
 if IsUnitType(CE,UNIT_TYPE_ETHEREAL) then
 call take_magic_damage(Iv,CE,bk(Iv,3,JS),false,false,F,N,WEAPON_TYPE_WHOKNOWS)
 else
-call take_magic_damage(Iv,CE,bk(Iv,3,JS),false,false,K,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Iv,CE,bk(Iv,3,JS),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endif
 elseif GetSpellAbilityId()==$41505433 then
 call XX(Iv,$41505433,1,108,bk(Iv,3,GetUnitAbilityLevel(Iv,$41505436)))
 call XY(Iv,$41505433,1,218,"向周围弹射火焰，造成（|cff22ff66"+(R2S(bk(Iv,3,GetUnitAbilityLevel(Iv,$41505436)))+"|r）伤害。"))
+// 虚空放逐
 elseif GetSpellAbilityId()==$41505434 then
 if IsUnitEnemy(Iv,GetOwningPlayer(CE))==true then
 call dt(Iv,CE,bk(Iv,3,JS))
@@ -34847,6 +34854,7 @@ call SetUnitPathing(CE,false)
 call SetUnitPosition(CE,-1174.,-5055.)
 call SetUnitPathing(CE,true)
 endif
+// 蚩尤和蛇定军伤害
 if GetUnitTypeId(Iv)==$4E423035 or GetUnitTypeId(Iv)==$4E423030 then
 call fO(Iv)
 endif
