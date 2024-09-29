@@ -166,6 +166,7 @@ trigger she_trg=null
 unit spider =null
 trigger spider_trg =null
 // 新英雄
+unit genie =null
 unit liurui=null
 unit gongshuban=null
 unit zhangjiao =null
@@ -2449,6 +2450,1171 @@ set CE=null
 call DestroyGroup(StunGroup)
 set StunGroup=null
 endfunction
+
+// PA技能开始
+
+// 专属
+// function Trig_VexHelEl_Eld_ZodEth_uConditions takes nothing returns boolean
+//     return ( ( GetItemTypeId(GetManipulatedItem()) == 'I000' ) )
+// endfunction
+// function Trig_VexHelEl_Eld_ZodEth_uActions takes nothing returns nothing
+//     if ( true ) then
+//         if ( ( ( EVENT_PLAYER_UNIT_PICKUP_ITEM == GetTriggerEventId() ) == true ) ) then
+//             if ( ( GetUnitTypeId(GetManipulatingUnit()) == 'E000' ) ) then
+//                 call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00G', true)
+//                 call IssueImmediateOrderById(GetManipulatingUnit(), 852155)
+//                 call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00G', false)
+//             else
+//                 if ( ( GetUnitTypeId(GetManipulatingUnit()) == 'E001' ) ) then
+//                     call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00F', true)
+//                     call IssueImmediateOrderById(GetManipulatingUnit(), 852155)
+//                     call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00F', false)
+//                 else
+//                 endif
+//             endif
+//         else
+//             if ( ( GetUnitTypeId(GetManipulatingUnit()) == 'E005' ) ) then
+//                 call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00G', true)
+//                 call IssueImmediateOrderById(GetManipulatingUnit(), 852156)
+//                 call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00G', false)
+//             else
+//                 if ( ( GetUnitTypeId(GetManipulatingUnit()) == 'E006' ) ) then
+//                     call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00F', true)
+//                     call IssueImmediateOrderById(GetManipulatingUnit(), 852156)
+//                     call SetPlayerAbilityAvailable(GetOwningPlayer(GetManipulatingUnit()), 'A00F', false)
+//                 else
+//                 endif
+//             endif
+//         endif
+//     else
+//     endif
+// endfunction
+
+// function InitTrig_VexHelEl_Eld_ZodEth_u takes nothing returns nothing
+//     set gg_trg_VexHelEl_Eld_ZodEth_u=CreateTrigger()
+//     call TriggerRegisterAnyUnitEventBJ(gg_trg_VexHelEl_Eld_ZodEth_u, EVENT_PLAYER_UNIT_PICKUP_ITEM)
+//     call TriggerRegisterAnyUnitEventBJ(gg_trg_VexHelEl_Eld_ZodEth_u, EVENT_PLAYER_UNIT_DROP_ITEM)
+//     call TriggerAddCondition(gg_trg_VexHelEl_Eld_ZodEth_u, Condition(function Trig_VexHelEl_Eld_ZodEth_uConditions))
+//     call TriggerAddAction(gg_trg_VexHelEl_Eld_ZodEth_u, function Trig_VexHelEl_Eld_ZodEth_uActions)
+// endfunction
+
+
+// F恩赐解脱
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func003Func003T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624, ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) - 0.01 ))
+//     if ( ( ( IsUnitDeadBJ(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)) == true ) or ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) <= 0.00 ) ) ) then
+//         if ( ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
+//             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
+//         else
+//             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
+//         endif
+//         call RemoveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9)
+//         call RemoveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624)
+//         call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//         call DestroyTimer(GetExpiredTimer())
+//     else
+//         if ( ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
+//             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
+//         else
+//             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func008T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func013T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_250", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_251", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func017T takes nothing returns nothing
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51) - 10 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func031Func009T takes nothing returns nothing
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51) - 10 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func031Func010T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_252", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_253", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func003Func003T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624, ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) - 0.01 ))
+//     if ( ( ( IsUnitDeadBJ(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)) == true ) or ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) <= 0.00 ) ) ) then
+//         if ( ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
+//             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
+//         else
+//             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
+//         endif
+//         call RemoveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9)
+//         call RemoveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624)
+//         call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//         call DestroyTimer(GetExpiredTimer())
+//     else
+//         if ( ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
+//             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
+//         else
+//             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func008T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func013T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_256", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_257", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func017T takes nothing returns nothing
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51) - 10 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func009T takes nothing returns nothing
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51) - 10 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func010T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_258", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_259", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func003Func003T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624, ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) - 0.01 ))
+//     if ( ( ( IsUnitDeadBJ(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)) == true ) or ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) <= 0.00 ) ) ) then
+//         if ( ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
+//             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
+//         else
+//             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
+//         endif
+//         call RemoveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9)
+//         call RemoveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624)
+//         call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//         call DestroyTimer(GetExpiredTimer())
+//     else
+//         if ( ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
+//             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
+//         else
+//             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func008T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func013T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_223", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_224", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func017T takes nothing returns nothing
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51) - 10 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func031Func009T takes nothing returns nothing
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x239F3A6E)), 0xB4A97C51) - 10 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func031Func010T takes nothing returns nothing
+//     call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
+//     if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
+//         call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_227", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//     else
+//         if ( ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
+//             call SaveReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
+//             call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_228", LoadReal(YDHT, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
+//         else
+//             call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//             call DestroyTimer(GetExpiredTimer())
+//         endif
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func007Conditions takes nothing returns nothing
+//     local timer ydl_timer
+//     if ( ( GetEventDamage() > 0.00 ) ) then
+//         if ( ( GetEventDamageSource() == LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) ) ) then
+//             if ( ( GetUnitAbilityLevel(GetEventDamageSource(), 'A009') != 0 ) ) then
+//                 if ( ( IsUnitType(GetTriggerUnit(), UNIT_TYPE_HERO) == true ) ) then
+//                     if ( ( GetEventDamage() != ( ( 20.00 * I2R(GetUnitAbilityLevel(GetEventDamageSource(), 'A009')) ) + 0.01 ) ) ) then
+//                         if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
+//                         else
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) ) ) ) ))
+//                         endif
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) * 0.01 ) + 1 ) ) * 100.00 ))
+//                         call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x9CD60476, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) ))
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x25DAB820, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                         call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x312C4181, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x9CD60476)))
+//                         if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x312C4181) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x25DAB820) * 1000.00 )) ) ) then
+//                             call DisableTrigger(GetTriggeringTrigger())
+//                             if ( ( YDWEUnitHasItemOfTypeBJNull(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) , 'I000') == true ) ) then
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 1.25 ))
+//                             else
+//                             endif
+//                             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE, ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE) + GetEventDamage() ))
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) ))
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
+//                             call SaveTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
+//                             call SaveTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
+//                             if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 10000.00 ))
+//                                 if ( ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) >= 100 ) ) then
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 1)
+//                                 else
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                                 endif
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, 0)
+//                                 call SetUnitAnimation(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), "Spell Slam")
+//                                 call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_255", ( 0.27 / 10.00 ))
+//                                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.26 / 10.00 ))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func013T)
+//                             else
+//                                 if ( ( GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00C') == 0 ) ) then
+//                                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00J')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
+//                                 else
+//                                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00C')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
+//                                 endif
+//                                 if ( ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) >= 100 ) ) then
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 1)
+//                                 else
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                                 endif
+//                                 if ( ( HaveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624) == true ) ) then
+//                                     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624, 5.00)
+//                                 else
+//                                     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624, 5.00)
+//                                     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE))
+//                                     set ydl_timer=CreateTimer()
+//                                     call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x22B8EBA2, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E))
+//                                     call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x0475F38E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E))
+//                                     call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func003Func003T)
+//                                 endif
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2) + 1 ))
+//                                 call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), I2S(R2I(LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))), ( 0.27 / 10.00 ))
+//                                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x1FAB6098, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x2D1E4992, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func008T)
+//                             endif
+//                             call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) + 10 ))
+//                             set ydl_timer=CreateTimer()
+//                             call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x239F3A6E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                             call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                             call TimerStart(ydl_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func017T)
+//                             call UnitDamageTarget(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+//                             call SetTextTagColor(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
+//                             call SetTextTagPos(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 20.00)
+//                             call SetTextTagVisibility(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
+//                             call SetTextTagPermanent(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
+//                             call SetTextTagVelocity(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
+//                             call SetTextTagLifespan(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
+//                             call SetTextTagFadepoint(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
+//                             call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0))
+//                             call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xFE09847D)
+//                             call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xD3ABBFEF)
+//                             call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0)
+//                             call FlushChildHashtable(YDHT, GetHandleId(GetTriggeringTrigger()))
+//                             call DestroyTrigger(GetTriggeringTrigger())
+//                         else
+//                             if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
+//                             else
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) ) ) ) ))
+//                             endif
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) ))
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
+//                             if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
+//                                 call DisableTrigger(GetTriggeringTrigger())
+//                                 call SaveTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
+//                                 if ( ( YDWEUnitHasItemOfTypeBJNull(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) , 'I000') == true ) ) then
+//                                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 1.25 ))
+//                                 else
+//                                 endif
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) + 10 ))
+//                                 set ydl_timer=CreateTimer()
+//                                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x239F3A6E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                                 call TimerStart(ydl_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func009T)
+//                                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func010T)
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 10000.00 ))
+//                                 call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE, ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE) + GetEventDamage() ))
+//                                 call UnitDamageTarget(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+//                                 call SetUnitAnimation(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), "Spell Slam")
+//                                 call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_260", ( 0.27 / 10.00 ))
+//                                 call SetTextTagColor(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
+//                                 call SetTextTagPos(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 20.00)
+//                                 call SetTextTagVisibility(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
+//                                 call SetTextTagPermanent(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
+//                                 call SetTextTagVelocity(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
+//                                 call SetTextTagLifespan(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
+//                                 call SetTextTagFadepoint(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
+//                                 call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0))
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, 0)
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                                 call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xFE09847D)
+//                                 call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xD3ABBFEF)
+//                                 call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0)
+//                                 call FlushChildHashtable(YDHT, GetHandleId(GetTriggeringTrigger()))
+//                                 call DestroyTrigger(GetTriggeringTrigger())
+//                             else
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE) + 1 ))
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2) + 1 ))
+//                             endif
+//                         endif
+//                     else
+//                     endif
+//                 else
+//                     if ( ( GetEventDamage() != ( ( 50.00 + ( 50.00 * I2R(GetUnitAbilityLevel(GetEventDamageSource(), 'A009')) ) ) + 0.01 ) ) ) then
+//                         if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
+//                         else
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) ) ) ) ))
+//                         endif
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) * 0.01 ) + 1 ) ) * 100.00 ))
+//                         call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x9CD60476, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) ))
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x25DAB820, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                         call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x312C4181, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x9CD60476)))
+//                         if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x312C4181) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x25DAB820) * 1000.00 )) ) ) then
+//                             call DisableTrigger(GetTriggeringTrigger())
+//                             if ( ( YDWEUnitHasItemOfTypeBJNull(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) , 'I000') == true ) ) then
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 1.25 ))
+//                             else
+//                             endif
+//                             call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE, ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE) + GetEventDamage() ))
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) ))
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
+//                             call SaveTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
+//                             call SaveTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
+//                             if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 10000.00 ))
+//                                 if ( ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) >= 100 ) ) then
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 1)
+//                                 else
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                                 endif
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, 0)
+//                                 call SetUnitAnimation(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), "Spell Slam")
+//                                 call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_218", ( 0.27 / 10.00 ))
+//                                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.26 / 10.00 ))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func013T)
+//                             else
+//                                 if ( ( GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00C') == 0 ) ) then
+//                                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00J')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
+//                                 else
+//                                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00C')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
+//                                 endif
+//                                 if ( ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) >= 100 ) ) then
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 1)
+//                                 else
+//                                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                                 endif
+//                                 if ( ( HaveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624) == true ) ) then
+//                                     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624, 5.00)
+//                                 else
+//                                     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624, 5.00)
+//                                     call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE))
+//                                     set ydl_timer=CreateTimer()
+//                                     call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x22B8EBA2, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E))
+//                                     call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x0475F38E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E))
+//                                     call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func003Func003T)
+//                                 endif
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2) + 1 ))
+//                                 call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), I2S(R2I(LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))), ( 0.27 / 10.00 ))
+//                                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x1FAB6098, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x2D1E4992, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func008T)
+//                             endif
+//                             call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) + 10 ))
+//                             set ydl_timer=CreateTimer()
+//                             call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x239F3A6E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                             call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                             call TimerStart(ydl_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func017T)
+//                             call UnitDamageTarget(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+//                             call SetTextTagColor(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
+//                             call SetTextTagPos(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 20.00)
+//                             call SetTextTagVisibility(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
+//                             call SetTextTagPermanent(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
+//                             call SetTextTagVelocity(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
+//                             call SetTextTagLifespan(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
+//                             call SetTextTagFadepoint(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
+//                             call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0))
+//                             call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xFE09847D)
+//                             call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xD3ABBFEF)
+//                             call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0)
+//                             call FlushChildHashtable(YDHT, GetHandleId(GetTriggeringTrigger()))
+//                             call DestroyTrigger(GetTriggeringTrigger())
+//                         else
+//                             if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
+//                             else
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) ) ) ) ))
+//                             endif
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) ))
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                             call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
+//                             if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
+//                                 call DisableTrigger(GetTriggeringTrigger())
+//                                 call SaveTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
+//                                 if ( ( YDWEUnitHasItemOfTypeBJNull(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) , 'I000') == true ) ) then
+//                                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 1.25 ))
+//                                 else
+//                                 endif
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) + 10 ))
+//                                 set ydl_timer=CreateTimer()
+//                                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x239F3A6E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                                 call TimerStart(ydl_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func031Func009T)
+//                                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
+//                                 call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                                 call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                                 call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                                 call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func031Func010T)
+//                                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 10000.00 ))
+//                                 call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE, ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE) + GetEventDamage() ))
+//                                 call UnitDamageTarget(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+//                                 call SetUnitAnimation(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), "Spell Slam")
+//                                 call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_220", ( 0.27 / 10.00 ))
+//                                 call SetTextTagColor(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
+//                                 call SetTextTagPos(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 20.00)
+//                                 call SetTextTagVisibility(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
+//                                 call SetTextTagPermanent(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
+//                                 call SetTextTagVelocity(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
+//                                 call SetTextTagLifespan(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
+//                                 call SetTextTagFadepoint(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
+//                                 call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0))
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, 0)
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                                 call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xFE09847D)
+//                                 call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xD3ABBFEF)
+//                                 call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0)
+//                                 call FlushChildHashtable(YDHT, GetHandleId(GetTriggeringTrigger()))
+//                                 call DestroyTrigger(GetTriggeringTrigger())
+//                             else
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE) + 1 ))
+//                                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2) + 1 ))
+//                             endif
+//                         endif
+//                     else
+//                     endif
+//                 endif
+//             else
+//                 if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
+//                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
+//                 else
+//                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) ) ) ) ))
+//                 endif
+//                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) * 0.01 ) + 1 ) ) * 100.00 ))
+//                 call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x9CD60476, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) ))
+//                 call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x25DAB820, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                 call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x312C4181, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x9CD60476)))
+//                 if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x312C4181) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x25DAB820) * 1000.00 )) ) ) then
+//                     call DisableTrigger(GetTriggeringTrigger())
+//                     if ( ( YDWEUnitHasItemOfTypeBJNull(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) , 'I000') == true ) ) then
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 1.25 ))
+//                     else
+//                     endif
+//                     call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE, ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE) + GetEventDamage() ))
+//                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
+//                     call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) ))
+//                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                     call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
+//                     call SaveTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
+//                     call SaveTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
+//                     if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 10000.00 ))
+//                         if ( ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) >= 100 ) ) then
+//                             call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 1)
+//                         else
+//                             call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                         endif
+//                         call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, 0)
+//                         call SetUnitAnimation(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), "Spell Slam")
+//                         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_249", ( 0.27 / 10.00 ))
+//                         set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                         call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                         call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.26 / 10.00 ))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                         call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                         call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                         call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func013T)
+//                     else
+//                         if ( ( GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00C') == 0 ) ) then
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00J')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
+//                         else
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), 'A00C')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
+//                         endif
+//                         if ( ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) >= 100 ) ) then
+//                             call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 1)
+//                         else
+//                             call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                         endif
+//                         if ( ( HaveSavedReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624) == true ) ) then
+//                             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624, 5.00)
+//                         else
+//                             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0x190E7624, 5.00)
+//                             call SaveReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E)), 0xFCD961C9, GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE))
+//                             set ydl_timer=CreateTimer()
+//                             call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x22B8EBA2, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E))
+//                             call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x0475F38E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E))
+//                             call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func003Func003T)
+//                         endif
+//                         call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2) + 1 ))
+//                         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), I2S(R2I(LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))), ( 0.27 / 10.00 ))
+//                         set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                         call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0x1FAB6098, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
+//                         call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                         call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0x2D1E4992, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
+//                         call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                         call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func008T)
+//                     endif
+//                     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) + 10 ))
+//                     set ydl_timer=CreateTimer()
+//                     call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x239F3A6E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                     call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                     call TimerStart(ydl_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func017T)
+//                     call UnitDamageTarget(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+//                     call SetTextTagColor(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
+//                     call SetTextTagPos(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 20.00)
+//                     call SetTextTagVisibility(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
+//                     call SetTextTagPermanent(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
+//                     call SetTextTagVelocity(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
+//                     call SetTextTagLifespan(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
+//                     call SetTextTagFadepoint(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
+//                     call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0))
+//                     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xFE09847D)
+//                     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xD3ABBFEF)
+//                     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0)
+//                     call FlushChildHashtable(YDHT, GetHandleId(GetTriggeringTrigger()))
+//                     call DestroyTrigger(GetTriggeringTrigger())
+//                 else
+//                     if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
+//                     else
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') * 0.06 ) ) ) ) ))
+//                     endif
+//                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
+//                     call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99) ))
+//                     call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2)) * ( ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) + ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
+//                     call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
+//                     if ( ( ( LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
+//                         call DisableTrigger(GetTriggeringTrigger())
+//                         call SaveTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
+//                         call SaveTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
+//                         if ( ( YDWEUnitHasItemOfTypeBJNull(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) , 'I000') == true ) ) then
+//                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 1.25 ))
+//                         else
+//                         endif
+//                         call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xB4A97C51) + 10 ))
+//                         set ydl_timer=CreateTimer()
+//                         call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x239F3A6E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                         call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8))
+//                         call TimerStart(ydl_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func031Func009T)
+//                         set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
+//                         call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x1E172918, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                         call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xA39D4443, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
+//                         call SaveReal(YDHT, GetHandleId(ydl_timer), 0x67E711DF, 0.00)
+//                         call SaveTextTagHandle(YDHT, GetHandleId(ydl_timer), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//                         call SaveTimerHandle(YDHT, GetHandleId(ydl_timer), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//                         call TimerStart(ydl_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func031Func010T)
+//                         call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2) * 10000.00 ))
+//                         call SetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE, ( GetUnitState(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), UNIT_STATE_LIFE) + GetEventDamage() ))
+//                         call UnitDamageTarget(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E), LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
+//                         call SetUnitAnimation(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8), "Spell Slam")
+//                         call SetTextTagText(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_254", ( 0.27 / 10.00 ))
+//                         call SetTextTagColor(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
+//                         call SetTextTagPos(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 20.00)
+//                         call SetTextTagVisibility(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
+//                         call SetTextTagPermanent(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
+//                         call SetTextTagVelocity(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
+//                         call SetTextTagLifespan(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
+//                         call SetTextTagFadepoint(LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
+//                         call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0))
+//                         call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, 0)
+//                         call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, 0)
+//                         call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xFE09847D)
+//                         call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0xD3ABBFEF)
+//                         call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x4A4DB0A0)
+//                         call FlushChildHashtable(YDHT, GetHandleId(GetTriggeringTrigger()))
+//                         call DestroyTrigger(GetTriggeringTrigger())
+//                     else
+//                         call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x439763AE) + 1 ))
+//                         call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8)), 0x06A4F9F2) + 1 ))
+//                     endif
+//                 endif
+//             endif
+//         else
+//         endif
+//     else
+//     endif
+//     set ydl_timer=null
+// endfunction
+// function Trig_Coup_de_GraceFunc001Func001Func008T takes nothing returns nothing
+//     call DestroyTrigger(LoadTriggerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0xD3ABBFEF))
+//     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0xFE09847D)
+//     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0xD3ABBFEF)
+//     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0x4A4DB0A0)
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Coup_de_GraceFunc001Conditions takes nothing returns nothing
+//     local trigger ydl_trigger
+//     local timer ydl_timer
+//     if ( ( ( IsUnitType(GetAttackedUnitBJ(), UNIT_TYPE_STRUCTURE) == false ) and ( IsUnitType(GetAttackedUnitBJ(), UNIT_TYPE_ETHEREAL) == false ) and ( ( GetUnitAbilityLevel(GetAttacker(), 'A00C') != 0 ) or ( GetUnitAbilityLevel(GetAttacker(), 'A00J') != 0 ) ) ) ) then
+//         if ( ( HaveSavedHandle(YDHT, GetHandleId(GetAttacker()), 0xFE09847D) == true ) ) then
+//             if ( ( GetAttackedUnitBJ() == LoadUnitHandle(YDHT, GetHandleId(GetAttacker()), 0xFE09847D) ) ) then
+//                 call DestroyTrigger(LoadTriggerHandle(YDHT, GetHandleId(GetAttacker()), 0xD3ABBFEF))
+//                 call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(GetAttacker()), 0x4A4DB0A0))
+//                 call RemoveSavedHandle(YDHT, GetHandleId(GetAttacker()), 0xD3ABBFEF)
+//                 call RemoveSavedHandle(YDHT, GetHandleId(GetAttacker()), 0x4A4DB0A0)
+//             else
+//                 call DestroyTrigger(LoadTriggerHandle(YDHT, GetHandleId(GetAttacker()), 0xD3ABBFEF))
+//                 call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(GetAttacker()), 0x4A4DB0A0))
+//                 call RemoveSavedHandle(YDHT, GetHandleId(GetAttacker()), 0xFE09847D)
+//                 call RemoveSavedHandle(YDHT, GetHandleId(GetAttacker()), 0xD3ABBFEF)
+//                 call RemoveSavedHandle(YDHT, GetHandleId(GetAttacker()), 0x4A4DB0A0)
+//             endif
+//         else
+//         endif
+//         call SaveUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6, GetAttacker())
+//         call SaveUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB, GetAttackedUnitBJ())
+//         call SaveUnitHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6)), 0xFE09847D, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB))
+//         call SaveTriggerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6)), 0xD3ABBFEF, CreateTrigger())
+//         call SaveTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6)), 0x4A4DB0A0, CreateTimer())
+//         set ydl_trigger=LoadTriggerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6)), 0xD3ABBFEF)
+//         call SaveUnitHandle(YDHT, GetHandleId(ydl_trigger), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6))
+//         call SaveUnitHandle(YDHT, GetHandleId(ydl_trigger), 0x0475F38E, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB))
+//         call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x2D9B99E2, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2))
+//         call SaveReal(YDHT, GetHandleId(ydl_trigger), 0xA3098AE2, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2))
+//         call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x73769032, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x73769032))
+//         call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x9CD60476, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x9CD60476))
+//         call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x72FC19A0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0))
+//         call SaveTextTagHandle(YDHT, GetHandleId(ydl_trigger), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
+//         call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x25DAB820, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x25DAB820))
+//         call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x488D5FD8, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8))
+//         call SaveUnitHandle(YDHT, GetHandleId(ydl_trigger), 0x329FF8E6, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6))
+//         call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x2D1E4992, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
+//         call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x312C4181, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x312C4181))
+//         call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x20BBFE2C, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C))
+//         call SaveTimerHandle(YDHT, GetHandleId(ydl_trigger), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
+//         call SaveUnitHandle(YDHT, GetHandleId(ydl_trigger), 0xDFB448FB, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB))
+//         call TriggerRegisterUnitEvent(ydl_trigger, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB), EVENT_UNIT_DAMAGED)
+//         call TriggerAddCondition(ydl_trigger, Condition(function Trig_Coup_de_GraceFunc001Func001Func007Conditions))
+//         set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6)), 0x4A4DB0A0)
+//         call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x2B0A6845, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6))
+//         call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x329FF8E6, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x329FF8E6))
+//         call TimerStart(ydl_timer, 0.30, false, function Trig_Coup_de_GraceFunc001Func001Func008T)
+//     else
+//     endif
+//     set ydl_trigger=null
+//     set ydl_timer=null
+// endfunction
+// function Trig_Coup_de_GraceFunc002Conditions takes nothing returns nothing
+//     if ( ( ( GetLearnedSkill() == 'A00C' ) or ( GetLearnedSkill() == 'A00J' ) ) ) then
+//         if ( ( GetLearnedSkillLevel() == 1 ) ) then
+//             call SaveInteger(YDHT, GetHandleId(GetLearningUnit()), 0x7FA0AE99, ( LoadInteger(YDHT, GetHandleId(GetLearningUnit()), 0x7FA0AE99) + 2 ))
+//             call SaveInteger(YDHT, GetHandleId(GetLearningUnit()), 0xB4A97C51, 15)
+//             call SaveInteger(YDHT, GetHandleId(GetLearningUnit()), 0x439763AE, 1)
+//             call SaveInteger(YDHT, GetHandleId(GetLearningUnit()), 0x06A4F9F2, 1)
+//         else
+//             call SaveInteger(YDHT, GetHandleId(GetLearningUnit()), 0x7FA0AE99, ( LoadInteger(YDHT, GetHandleId(GetLearningUnit()), 0x7FA0AE99) + 2 ))
+//         endif
+//     else
+//     endif
+// endfunction
+// function Trig_Coup_de_GraceActions takes nothing returns nothing
+//     local trigger ydl_trigger
+//     set ydl_trigger=CreateTrigger()
+//     call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x2D9B99E2, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x2D9B99E2))
+//     call SaveReal(YDHT, GetHandleId(ydl_trigger), 0xA3098AE2, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0xA3098AE2))
+//     call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x73769032, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x73769032))
+//     call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x9CD60476, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x9CD60476))
+//     call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x72FC19A0, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x72FC19A0))
+//     call SaveTextTagHandle(YDHT, GetHandleId(ydl_trigger), 0xF8F856EA, LoadTextTagHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0xF8F856EA))
+//     call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x25DAB820, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x25DAB820))
+//     call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x488D5FD8, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x488D5FD8))
+//     call SaveUnitHandle(YDHT, GetHandleId(ydl_trigger), 0x329FF8E6, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x329FF8E6))
+//     call SaveReal(YDHT, GetHandleId(ydl_trigger), 0x2D1E4992, LoadReal(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x2D1E4992))
+//     call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x312C4181, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x312C4181))
+//     call SaveInteger(YDHT, GetHandleId(ydl_trigger), 0x20BBFE2C, LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x20BBFE2C))
+//     call SaveTimerHandle(YDHT, GetHandleId(ydl_trigger), 0x6B54C545, LoadTimerHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0x6B54C545))
+//     call SaveUnitHandle(YDHT, GetHandleId(ydl_trigger), 0xDFB448FB, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7), 0xDFB448FB))
+//     call TriggerRegisterAnyUnitEventBJ(ydl_trigger, EVENT_PLAYER_UNIT_ATTACKED)
+//     call TriggerAddCondition(ydl_trigger, Condition(function Trig_Coup_de_GraceFunc001Conditions))
+//     set ydl_trigger=CreateTrigger()
+//     call TriggerRegisterAnyUnitEventBJ(ydl_trigger, EVENT_PLAYER_HERO_SKILL)
+//     call TriggerAddCondition(ydl_trigger, Condition(function Trig_Coup_de_GraceFunc002Conditions))
+//     call DestroyTrigger(gg_trg_Coup_de_Grace)
+//     set ydl_trigger=null
+// endfunction
+
+
+
+//===========================================================================
+
+
+
+// W幻影突袭
+
+
+// function Trig_Phantom_StrikeFunc007Func008Func003Func001T takes nothing returns nothing
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'A007')
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'B001')
+//     call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1339AD30, false)
+//     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Phantom_StrikeFunc007Func008Func003Func002T takes nothing returns nothing
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'A007')
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'B001')
+//     call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1339AD30, false)
+//     call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x23B85F87, false)
+//     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0xB4A97C51) - 5 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Phantom_StrikeFunc007Func008Func016Func003T takes nothing returns nothing
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'A007')
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'B001')
+//     call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1339AD30, false)
+//     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+// function Trig_Phantom_StrikeFunc007Func008Func016Func005T takes nothing returns nothing
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'A007')
+//     call UnitRemoveAbility(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'B001')
+//     call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1339AD30, false)
+//     call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x23B85F87, false)
+//     call RemoveSavedHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
+//     call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0xB4A97C51) - 5 ))
+//     call FlushChildHashtable(YDHT, GetHandleId(GetExpiredTimer()))
+//     call DestroyTimer(GetExpiredTimer())
+// endfunction
+
+// function Trig_Phantom_StrikeActions takes nothing returns nothing
+//     local timer ydl_timer
+//     local integer ydl_localvar_step= LoadInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+//     set ydl_localvar_step=ydl_localvar_step + 3
+//     call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, ydl_localvar_step)
+//     call SaveInteger(YDHT, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, ydl_localvar_step)
+//     call SaveUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6, GetSpellAbilityUnit())
+//     call SaveUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D, GetSpellTargetUnit())
+//     call SaveLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8, Location(GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6))))
+//     call SaveLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x041DB5E6, Location(GetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D)), GetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D))))
+//     call SaveLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016, PolarProjectionBJ(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8), ( DistanceBetweenPoints(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8), LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x041DB5E6)) - 100.00 ), YDWEAngleBetweenUnits(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6) , LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D))))
+//     call SetUnitPathing(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), false)
+//     if ( ( IsUnitAlly(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D), GetOwningPlayer(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6))) == true ) ) then
+//         call SetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), GetLocationX(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016)))
+//         call SetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), GetLocationY(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016)))
+//         call SetUnitFacing(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), YDWEAngleBetweenUnits(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6) , LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D)))
+//         call SetUnitPathing(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), true)
+//         call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8))
+//         call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x041DB5E6))
+//         call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016))
+//     else
+//         if ( ( LoadBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1339AD30) == true ) ) then
+//             call DestroyTimer(LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1C540719))
+//             call SaveTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1C540719, CreateTimer())
+//             if ( ( LoadBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x23B85F87) == true ) ) then
+//                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1C540719)
+//                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6))
+//                 call TimerStart(ydl_timer, 3.00, false, function Trig_Phantom_StrikeFunc007Func008Func003Func002T)
+//             else
+//                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1C540719)
+//                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6))
+//                 call TimerStart(ydl_timer, 3.00, false, function Trig_Phantom_StrikeFunc007Func008Func003Func001T)
+//             endif
+//             call SetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), GetLocationX(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016)))
+//             call SetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), GetLocationY(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016)))
+//             call SetUnitFacing(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), YDWEAngleBetweenUnits(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6) , LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D)))
+//             call UnitAddAbility(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), 'A007')
+//             call UnitMakeAbilityPermanent(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), true, 'A007')
+//             call IssueTargetOrder(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), "attack", LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D))
+//             call SetUnitPathing(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), true)
+//             call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8))
+//             call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x041DB5E6))
+//             call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016))
+//         else
+//             call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1339AD30, true)
+//             call SaveTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1C540719, CreateTimer())
+//             if ( ( ( GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), 'A00C') != 0 ) or ( GetUnitAbilityLevel(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), 'A00J') != 0 ) ) ) then
+//                 call SaveBoolean(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x23B85F87, true)
+//                 call SaveInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0xB4A97C51, ( LoadInteger(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0xB4A97C51) + 5 ))
+//                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1C540719)
+//                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6))
+//                 call TimerStart(ydl_timer, 3.00, false, function Trig_Phantom_StrikeFunc007Func008Func016Func005T)
+//             else
+//                 set ydl_timer=LoadTimerHandle(YDHT, GetHandleId(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6)), 0x1C540719)
+//                 call SaveUnitHandle(YDHT, GetHandleId(ydl_timer), 0x02EE20D8, LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6))
+//                 call TimerStart(ydl_timer, 3.00, false, function Trig_Phantom_StrikeFunc007Func008Func016Func003T)
+//             endif
+//             call SetUnitX(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), GetLocationX(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016)))
+//             call SetUnitY(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), GetLocationY(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016)))
+//             call SetUnitFacing(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), YDWEAngleBetweenUnits(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6) , LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D)))
+//             call UnitAddAbility(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), 'A007')
+//             call UnitMakeAbilityPermanent(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), true, 'A007')
+//             call IssueTargetOrder(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), "attack", LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0xA1614B4D))
+//             call SetUnitPathing(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x329FF8E6), true)
+//             call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x32A9E4C8))
+//             call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x041DB5E6))
+//             call RemoveLocation(LoadLocationHandle(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step, 0x64D66016))
+//         endif
+//     endif
+//     call FlushChildHashtable(YDHT, GetHandleId(GetTriggeringTrigger()) * ydl_localvar_step)
+//     set ydl_timer=null
+// endfunction
+
+//===========================================================================
+
+
+
+// Q窒息之刃
+
+
+function Trig_Stifling_DaggerFunc006Func003Func008Func002Func003Conditions takes nothing returns nothing
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+        call FlushChildHashtable(hero_hash, GetHandleId(GetTriggeringTrigger()))
+        call DestroyTrigger(GetTriggeringTrigger())
+    else
+        call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E, CreateUnit(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xE1FEEAA6)), 'e002', GetUnitX(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetUnitY(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetRandomDirectionDeg()))
+        call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), false)
+        call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'BHwe', 0.50)
+        call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'A00B')
+        call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 852095, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233))
+    endif
+endfunction
+
+function Trig_Stifling_DaggerFunc006Func003Func008Func002Func004T takes nothing returns nothing
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+        call DestroyTrigger(LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x20BBFE2C))
+        call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+        call DestroyTimer(GetExpiredTimer())
+    else
+        call DoNothing()
+    endif
+endfunction
+
+function Trig_Stifling_DaggerFunc006Func003Func008Func002Func021Conditions takes nothing returns nothing
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+        call FlushChildHashtable(hero_hash, GetHandleId(GetTriggeringTrigger()))
+        call DestroyTrigger(GetTriggeringTrigger())
+    else
+        call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E, CreateUnit(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xE1FEEAA6)), 'e002', GetUnitX(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetUnitY(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetRandomDirectionDeg()))
+        call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), false)
+        call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'BHwe', 0.50)
+        call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'A00B')
+        call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 852095, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233))
+    endif
+endfunction
+
+function Trig_Stifling_DaggerFunc006Func003Func008Func002Func022T takes nothing returns nothing
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+        call DestroyTrigger(LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x20BBFE2C))
+        call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+        call DestroyTimer(GetExpiredTimer())
+    else
+        call DoNothing()
+    endif
+endfunction
+
+function knife_fly takes nothing returns nothing
+    local trigger ydl_trigger
+    local timer loc_timer
+    local unit Iv =LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)
+    local unit CE =LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x4167CB27)
+    local unit loc_knife =LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xEFBA6636)
+    call SaveLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8, Location(GetUnitX(loc_knife), GetUnitY(loc_knife)))
+    call SaveLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6, Location(GetUnitX(CE), GetUnitY(CE)))
+    // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "飞刀在飞")
+
+    if ( ( DistanceBetweenPoints(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8), LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6)) <= 12.00 ) ) then
+        // if ( ( ( IsUnitType(CE, UNIT_TYPE_MAGIC_IMMUNE) == true ) or ( IsUnitDeadBJ(CE) == true ) or ( IsUnitHiddenBJ(CE) == true ) ) ) then
+        //     call SetUnitX(loc_knife, GetUnitX(CE))
+        //     call SetUnitY(loc_knife, GetUnitY(CE))
+        //     call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
+        //     call KillUnit(loc_knife)
+        //     call YDWETimerRemoveUnit(1.61 , loc_knife)
+        //     call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
+        //     call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
+        //     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+        //     call DestroyTimer(GetExpiredTimer())
+        // else
+        //     if ( ( IsUnitType(CE, UNIT_TYPE_HERO) == true ) ) then
+        //         call SaveTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181, CreateTrigger())
+        //         call SaveUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D, CreateUnit(GetOwningPlayer(Iv), 'e002', GetUnitX(CE), GetUnitY(CE), YDWEAngleBetweenUnits(loc_knife , CE)))
+        //         set ydl_trigger=LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0xE1FEEAA6, Iv)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x7F520233, CE)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x4167CB27, CE)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x9C0F555E, LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x9C0F555E))
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x02EE20D8, Iv)
+        //         call TriggerRegisterUnitEvent(ydl_trigger, CE, EVENT_UNIT_SPELL_CAST)
+        //         call TriggerAddCondition(ydl_trigger, Condition(function Trig_Stifling_DaggerFunc006Func003Func008Func002Func021Conditions))
+        //         set loc_timer=CreateTimer()
+        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x20BBFE2C, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0xA878230A, CE)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x4167CB27, CE)
+        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x312C4181, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+        //         call TimerStart(loc_timer, 0.01, true, function Trig_Stifling_DaggerFunc006Func003Func008Func002Func022T)
+        //         call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), false)
+        //         call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'BHwe', 0.50)
+        //         call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A')
+        //         call SetUnitAbilityLevel(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A', GetUnitAbilityLevel(Iv, 'A009'))
+        //         call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 852075, CE)
+        //         call SetUnitX(loc_knife, GetUnitX(CE))
+        //         call SetUnitY(loc_knife, GetUnitY(CE))
+        //         call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
+        //         call KillUnit(loc_knife)
+        //         call YDWETimerRemoveUnit(1.61 , loc_knife)
+        //         call UnitDamageTarget(Iv, CE, ( ( 20.00 * I2R(GetUnitAbilityLevel(Iv, 'A009')) ) + 0.01 ), false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
+        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
+        //         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+        //         call DestroyTimer(GetExpiredTimer())
+        //     else
+        //         call SaveTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181, CreateTrigger())
+        //         call SaveUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D, CreateUnit(GetOwningPlayer(Iv), 'e002', GetUnitX(CE), GetUnitY(CE), YDWEAngleBetweenUnits(loc_knife , CE)))
+        //         set ydl_trigger=LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0xE1FEEAA6, Iv)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x7F520233, CE)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x4167CB27, CE)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x9C0F555E, LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x9C0F555E))
+        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x02EE20D8, Iv)
+        //         call TriggerRegisterUnitEvent(ydl_trigger, CE, EVENT_UNIT_SPELL_CAST)
+        //         call TriggerAddCondition(ydl_trigger, Condition(function Trig_Stifling_DaggerFunc006Func003Func008Func002Func003Conditions))
+        //         set loc_timer=CreateTimer()
+        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x20BBFE2C, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0xA878230A, CE)
+        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x4167CB27, CE)
+        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x312C4181, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+        //         call TimerStart(loc_timer, 0.01, true, function Trig_Stifling_DaggerFunc006Func003Func008Func002Func004T)
+        //         call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), false)
+        //         call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'BHwe', 0.50)
+        //         call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A')
+        //         call SetUnitAbilityLevel(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A', GetUnitAbilityLevel(Iv, 'A009'))
+        //         call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 852075, CE)
+        //         call SetUnitX(loc_knife, GetUnitX(CE))
+        //         call SetUnitY(loc_knife, GetUnitY(CE))
+        //         call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
+        //         call KillUnit(loc_knife)
+        //         call YDWETimerRemoveUnit(1.61 , loc_knife)
+        //         call UnitDamageTarget(Iv, CE, ( ( 50.00 + ( 50.00 * I2R(GetUnitAbilityLevel(Iv, 'A009')) ) ) + 0.01 ), false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
+        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
+        //         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+        //         call DestroyTimer(GetExpiredTimer())
+        //     endif
+        // endif
+    else
+        call SaveLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x64D66016, PolarProjectionBJ(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8), 12.00, YDWEAngleBetweenUnits(loc_knife , CE)))
+        call SetUnitX(loc_knife, GetLocationX(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x64D66016)))
+        call SetUnitY(loc_knife, GetLocationY(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x64D66016)))
+        call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "飞刀X:" + R2S(GetUnitX(loc_knife)) + ",飞刀Y" + R2S(GetUnitY(loc_knife)))
+        
+        call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
+        call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
+        call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
+        call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x64D66016))
+    endif
+    set ydl_trigger=null
+    set loc_timer=null
+endfunction
+
+function genieQ_Action takes nothing returns nothing
+    local timer loc_timer
+    local integer loc_step= LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76)
+    set loc_step=loc_step + 3
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0,"开始飞刀")
+    call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, loc_step)
+    call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, loc_step)
+    // 施法者
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "施法者" + GetUnitName(GetSpellAbilityUnit()))
+
+    call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6, GetSpellAbilityUnit())
+    // 目标
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "目标" + GetUnitName(GetSpellTargetUnit()))
+
+    call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0xA1614B4D, GetSpellTargetUnit())
+    call SaveLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x60F50C9B, Location(GetUnitX(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6)), GetUnitY(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6))))
+    call SaveLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x9B1A6867, PolarProjectionBJ(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x60F50C9B), 75.00, YDWEAngleBetweenUnits(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6) , LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0xA1614B4D))))
+    // 匕首
+    call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x2B0A6845, CreateUnit(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6)), 'u00o', GetLocationX(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x9B1A6867)), GetLocationY(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x9B1A6867)), YDWEAngleBetweenUnits(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6) , LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0xA1614B4D))))
+    set loc_timer=CreateTimer()
+    // 施法者
+    call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x02EE20D8, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6))
+    // 目标
+    call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x4167CB27, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0xA1614B4D))
+    
+    call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0xEFBA6636, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x2B0A6845))
+    call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x9C0F555E, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x9C0F555E))
+    call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x2970F80D, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x2970F80D))
+    call SaveLocationHandle(hero_hash, GetHandleId(loc_timer), 0x32A9E4C8, LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x32A9E4C8))
+    call SaveLocationHandle(hero_hash, GetHandleId(loc_timer), 0x041DB5E6, LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x041DB5E6))
+    call SaveLocationHandle(hero_hash, GetHandleId(loc_timer), 0x64D66016, LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x64D66016))
+    call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x312C4181, LoadTriggerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x312C4181))
+    call TimerStart(loc_timer, 0.01, true, function knife_fly)
+    // call YDWEFlyEnable(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x2B0A6845))
+    // call SetUnitFlyHeight(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x2B0A6845), ( GetUnitFlyHeight(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x329FF8E6)) + 60.00 ), 1000000000.00)
+    // call SetUnitPathing(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x2B0A6845), false)
+    call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x9B1A6867))
+    call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x60F50C9B))
+    // call FlushChildHashtable(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step)
+    set loc_timer=null
+endfunction
+
+
+
+// 被动
+
+// PA技能结束
 
 
 // 无敌斩函数
@@ -19240,11 +20406,16 @@ call SetUnitState(Cv,UNIT_STATE_MANA,160)
 call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
+// PA
+set genie=CreateUnit(CC,'HA0I',-3422.2,-7867.1,277.77)
+// set genie=CreateUnit(CC,'u00o',-3522.2,-7867.1,277.77)
+call UnitAddItemToSlotById(liurui,'frgd',0)
+call UnitAddItemToSlotById(liurui,$70656E72,2)
 // 刘璿
 set liurui=CreateUnit(CC,'HA07',-3422.2,-7867.1,277.77)
 call UnitMakeAbilityPermanent(liurui, true,'S005')
 call UnitAddItemToSlotById(liurui,'frgd',0)
-// call UnitAddItemToSlotById(liurui,$736F7231,1)
+
 call UnitAddItemToSlotById(liurui,$70656E72,2)
 // call UnitAddItemToSlotById(liurui,'fgun',0)
 // call UnitAddItemToSlotById(liurui,'oflg',1)
@@ -21633,6 +22804,10 @@ elseif GetUnitTypeId(GetTriggerUnit())==$485A4747 then
 call registerZhuisuiBorn(Iv,$48303031)
 elseif GetTriggerUnit() == liurui then
 set gongshuban = CreateUnit(GetOwningPlayer(Iv), 'u00l', GetUnitX(Iv), GetUnitY(Iv), 0.)
+// PA技能
+elseif GetUnitTypeId(GetTriggerUnit())=='HA0I' then
+ call SetPlayerAbilityAvailable(GetOwningPlayer(GetTriggerUnit()),'Ab5t',false)
+
 else
 
 
@@ -33839,6 +35014,11 @@ local group I2=CreateGroup()
 // 死亡判决
 if GetSpellAbilityId()=='Ab5g' then
 call maliang_zhansha(Iv,CE)
+return
+endif
+
+if GetSpellAbilityId()=='Ab5q' then
+call genieQ_Action()
 return
 endif
 
