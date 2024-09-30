@@ -2729,9 +2729,9 @@ endfunction
 //     local timer ydl_timer
 //     if ( ( GetEventDamage() > 0.00 ) ) then
 //         if ( ( GetEventDamageSource() == LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x02EE20D8) ) ) then
-//             if ( ( GetUnitAbilityLevel(GetEventDamageSource(), 'A009') != 0 ) ) then
+//             if ( ( GetUnitAbilityLevel(GetEventDamageSource(), 'Ab5q') != 0 ) ) then
 //                 if ( ( IsUnitType(GetTriggerUnit(), UNIT_TYPE_HERO) == true ) ) then
-//                     if ( ( GetEventDamage() != ( ( 20.00 * I2R(GetUnitAbilityLevel(GetEventDamageSource(), 'A009')) ) + 0.01 ) ) ) then
+//                     if ( ( GetEventDamage() != ( ( 20.00 * I2R(GetUnitAbilityLevel(GetEventDamageSource(), 'Ab5q')) ) + 0.01 ) ) ) then
 //                         if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
 //                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
 //                         else
@@ -2884,7 +2884,7 @@ endfunction
 //                     else
 //                     endif
 //                 else
-//                     if ( ( GetEventDamage() != ( ( 50.00 + ( 50.00 * I2R(GetUnitAbilityLevel(GetEventDamageSource(), 'A009')) ) ) + 0.01 ) ) ) then
+//                     if ( ( GetEventDamage() != ( ( 50.00 + ( 50.00 * I2R(GetUnitAbilityLevel(GetEventDamageSource(), 'Ab5q')) ) ) + 0.01 ) ) ) then
 //                         if ( ( YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000') < 0.00 ) ) then
 //                             call SaveReal(YDHT, GetHandleId(GetTriggeringTrigger()), 0x2D9B99E2, ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(LoadUnitHandle(YDHT, GetHandleId(GetTriggeringTrigger()), 0x0475F38E) , 'A000'))) ) ))
 //                         else
@@ -3420,20 +3420,20 @@ endfunction
 
 
 function Trig_Stifling_DaggerFunc006Func003Func008Func002Func003Conditions takes nothing returns nothing
-    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), 'B03R') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
         call FlushChildHashtable(hero_hash, GetHandleId(GetTriggeringTrigger()))
         call DestroyTrigger(GetTriggeringTrigger())
     else
-        call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E, CreateUnit(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xE1FEEAA6)), 'e002', GetUnitX(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetUnitY(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetRandomDirectionDeg()))
+        call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E, CreateUnit(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xE1FEEAA6)), $65303939, GetUnitX(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetUnitY(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetRandomDirectionDeg()))
         call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), false)
         call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'BHwe', 0.50)
         call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'A00B')
         call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 852095, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233))
     endif
 endfunction
-
+// 判定
 function Trig_Stifling_DaggerFunc006Func003Func008Func002Func004T takes nothing returns nothing
-    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), 'B03R') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
         call DestroyTrigger(LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x20BBFE2C))
         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
         call DestroyTimer(GetExpiredTimer())
@@ -3441,22 +3441,23 @@ function Trig_Stifling_DaggerFunc006Func003Func008Func002Func004T takes nothing 
         call DoNothing()
     endif
 endfunction
-
-function Trig_Stifling_DaggerFunc006Func003Func008Func002Func021Conditions takes nothing returns nothing
-    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+// 如果有单位在施法
+function knife_unit_spell_punish takes nothing returns nothing
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), 'B03R') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
         call FlushChildHashtable(hero_hash, GetHandleId(GetTriggeringTrigger()))
         call DestroyTrigger(GetTriggeringTrigger())
     else
-        call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E, CreateUnit(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xE1FEEAA6)), 'e002', GetUnitX(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetUnitY(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetRandomDirectionDeg()))
+        call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E, CreateUnit(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xE1FEEAA6)), $65303939, GetUnitX(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetUnitY(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233)), GetRandomDirectionDeg()))
         call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), false)
+        // 对目标释放雷神之锤
         call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'BHwe', 0.50)
-        call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 'A00B')
+        call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), $41623071)
         call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9C0F555E), 852095, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x7F520233))
     endif
 endfunction
-
+// 小兵触发
 function Trig_Stifling_DaggerFunc006Func003Func008Func002Func022T takes nothing returns nothing
-    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), 'B002') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
+    if ( ( ( UnitHasBuffBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), 'B03R') == false ) or ( IsUnitType(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA878230A), UNIT_TYPE_MAGIC_IMMUNE) == true ) ) ) then
         call DestroyTrigger(LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x20BBFE2C))
         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
         call DestroyTimer(GetExpiredTimer())
@@ -3471,93 +3472,101 @@ function knife_fly takes nothing returns nothing
     local unit Iv =LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)
     local unit CE =LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x4167CB27)
     local unit loc_knife =LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xEFBA6636)
+    local real loc_damage=0
     call SaveLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8, Location(GetUnitX(loc_knife), GetUnitY(loc_knife)))
     call SaveLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6, Location(GetUnitX(CE), GetUnitY(CE)))
     // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "飞刀在飞")
-
+    // 如果目标不合法则
     if ( ( DistanceBetweenPoints(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8), LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6)) <= 12.00 ) ) then
-        // if ( ( ( IsUnitType(CE, UNIT_TYPE_MAGIC_IMMUNE) == true ) or ( IsUnitDeadBJ(CE) == true ) or ( IsUnitHiddenBJ(CE) == true ) ) ) then
-        //     call SetUnitX(loc_knife, GetUnitX(CE))
-        //     call SetUnitY(loc_knife, GetUnitY(CE))
-        //     call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
-        //     call KillUnit(loc_knife)
-        //     call YDWETimerRemoveUnit(1.61 , loc_knife)
-        //     call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
-        //     call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
-        //     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-        //     call DestroyTimer(GetExpiredTimer())
-        // else
-        //     if ( ( IsUnitType(CE, UNIT_TYPE_HERO) == true ) ) then
-        //         call SaveTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181, CreateTrigger())
-        //         call SaveUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D, CreateUnit(GetOwningPlayer(Iv), 'e002', GetUnitX(CE), GetUnitY(CE), YDWEAngleBetweenUnits(loc_knife , CE)))
-        //         set ydl_trigger=LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0xE1FEEAA6, Iv)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x7F520233, CE)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x4167CB27, CE)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x9C0F555E, LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x9C0F555E))
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x02EE20D8, Iv)
-        //         call TriggerRegisterUnitEvent(ydl_trigger, CE, EVENT_UNIT_SPELL_CAST)
-        //         call TriggerAddCondition(ydl_trigger, Condition(function Trig_Stifling_DaggerFunc006Func003Func008Func002Func021Conditions))
-        //         set loc_timer=CreateTimer()
-        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x20BBFE2C, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
-        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0xA878230A, CE)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x4167CB27, CE)
-        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x312C4181, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
-        //         call TimerStart(loc_timer, 0.01, true, function Trig_Stifling_DaggerFunc006Func003Func008Func002Func022T)
-        //         call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), false)
-        //         call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'BHwe', 0.50)
-        //         call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A')
-        //         call SetUnitAbilityLevel(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A', GetUnitAbilityLevel(Iv, 'A009'))
-        //         call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 852075, CE)
-        //         call SetUnitX(loc_knife, GetUnitX(CE))
-        //         call SetUnitY(loc_knife, GetUnitY(CE))
-        //         call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
-        //         call KillUnit(loc_knife)
-        //         call YDWETimerRemoveUnit(1.61 , loc_knife)
-        //         call UnitDamageTarget(Iv, CE, ( ( 20.00 * I2R(GetUnitAbilityLevel(Iv, 'A009')) ) + 0.01 ), false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
-        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
-        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
-        //         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-        //         call DestroyTimer(GetExpiredTimer())
-        //     else
-        //         call SaveTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181, CreateTrigger())
-        //         call SaveUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D, CreateUnit(GetOwningPlayer(Iv), 'e002', GetUnitX(CE), GetUnitY(CE), YDWEAngleBetweenUnits(loc_knife , CE)))
-        //         set ydl_trigger=LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0xE1FEEAA6, Iv)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x7F520233, CE)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x4167CB27, CE)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x9C0F555E, LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x9C0F555E))
-        //         call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x02EE20D8, Iv)
-        //         call TriggerRegisterUnitEvent(ydl_trigger, CE, EVENT_UNIT_SPELL_CAST)
-        //         call TriggerAddCondition(ydl_trigger, Condition(function Trig_Stifling_DaggerFunc006Func003Func008Func002Func003Conditions))
-        //         set loc_timer=CreateTimer()
-        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x20BBFE2C, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
-        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0xA878230A, CE)
-        //         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x4167CB27, CE)
-        //         call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x312C4181, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
-        //         call TimerStart(loc_timer, 0.01, true, function Trig_Stifling_DaggerFunc006Func003Func008Func002Func004T)
-        //         call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), false)
-        //         call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'BHwe', 0.50)
-        //         call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A')
-        //         call SetUnitAbilityLevel(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'A00A', GetUnitAbilityLevel(Iv, 'A009'))
-        //         call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 852075, CE)
-        //         call SetUnitX(loc_knife, GetUnitX(CE))
-        //         call SetUnitY(loc_knife, GetUnitY(CE))
-        //         call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
-        //         call KillUnit(loc_knife)
-        //         call YDWETimerRemoveUnit(1.61 , loc_knife)
-        //         call UnitDamageTarget(Iv, CE, ( ( 50.00 + ( 50.00 * I2R(GetUnitAbilityLevel(Iv, 'A009')) ) ) + 0.01 ), false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
-        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
-        //         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
-        //         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-        //         call DestroyTimer(GetExpiredTimer())
-        //     endif
-        // endif
+        if ( ( ( IsUnitType(CE, UNIT_TYPE_MAGIC_IMMUNE) == true ) or ( IsUnitDeadBJ(CE) == true ) or ( IsUnitHiddenBJ(CE) == true ) ) ) then
+            call SetUnitX(loc_knife, GetUnitX(CE))
+            call SetUnitY(loc_knife, GetUnitY(CE))
+            call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
+            call KillUnit(loc_knife)
+            // call YDWETimerRemoveUnit(1.61 , loc_knife)
+            call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
+            call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
+            call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+            call DestroyTimer(GetExpiredTimer())
+        else
+            if ( ( IsUnitType(CE, UNIT_TYPE_HERO) == true ) ) then
+                call SaveTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181, CreateTrigger())
+                call SaveUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D, CreateUnit(GetOwningPlayer(Iv), $65303939, GetUnitX(CE), GetUnitY(CE), YDWEAngleBetweenUnits(loc_knife , CE)))
+                set ydl_trigger=LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0xE1FEEAA6, Iv)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x7F520233, CE)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x4167CB27, CE)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x9C0F555E, LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x9C0F555E))
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x02EE20D8, Iv)
+                call TriggerRegisterUnitEvent(ydl_trigger, CE, EVENT_UNIT_SPELL_CAST)
+                call TriggerAddCondition(ydl_trigger, Condition(function knife_unit_spell_punish))
+                set loc_timer=CreateTimer()
+                call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x20BBFE2C, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+                call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0xA878230A, CE)
+                call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x4167CB27, CE)
+                call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x312C4181, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+                call TimerStart(loc_timer, 0.01, true, function Trig_Stifling_DaggerFunc006Func003Func008Func002Func022T)
+                call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), false)
+                call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'BHwe', 0.50)
+                // 减速
+                call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'Ab5y')
+                call SetUnitAbilityLevel(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'Ab5y', GetUnitAbilityLevel(Iv, 'Ab5q'))
+                call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 852075, CE)
+                call SetUnitX(loc_knife, GetUnitX(CE))
+                call SetUnitY(loc_knife, GetUnitY(CE))
+                call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
+                call KillUnit(loc_knife)
+                call YDWETimerRemoveUnit(1.61 , loc_knife)
+                // 造成伤害
+                call DisplayTextToPlayer(GetLocalPlayer(), 0, 0,"造成伤害！")
+                set loc_damage = 200 *GetUnitAbilityLevel(Iv, 'Ab5q')
+                call take_magic_damage(Iv, CE,)
+                call UnitDamageTarget(Iv, CE, loc_damage, false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+                call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
+                call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
+                call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+                call DestroyTimer(GetExpiredTimer())
+            else
+                call SaveTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181, CreateTrigger())
+                call SaveUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D, CreateUnit(GetOwningPlayer(Iv), $65303939, GetUnitX(CE), GetUnitY(CE), YDWEAngleBetweenUnits(loc_knife , CE)))
+                set ydl_trigger=LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0xE1FEEAA6, Iv)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x7F520233, CE)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x4167CB27, CE)
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x9C0F555E, LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x9C0F555E))
+                call SaveUnitHandle(hero_hash, GetHandleId(ydl_trigger), 0x02EE20D8, Iv)
+                call TriggerRegisterUnitEvent(ydl_trigger, CE, EVENT_UNIT_SPELL_CAST)
+                call TriggerAddCondition(ydl_trigger, Condition(function Trig_Stifling_DaggerFunc006Func003Func008Func002Func003Conditions))
+                set loc_timer=CreateTimer()
+                call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x20BBFE2C, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+                call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0xA878230A, CE)
+                call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x4167CB27, CE)
+                call SaveTriggerHandle(hero_hash, GetHandleId(loc_timer), 0x312C4181, LoadTriggerHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x312C4181))
+                call TimerStart(loc_timer, 0.01, true, function Trig_Stifling_DaggerFunc006Func003Func008Func002Func004T)
+                call ShowUnit(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), false)
+                call UnitApplyTimedLife(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'BHwe', 0.50)
+                call UnitAddAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'Ab5y')
+                call SetUnitAbilityLevel(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 'Ab5y', GetUnitAbilityLevel(Iv, 'Ab5q'))
+                call IssueTargetOrderById(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2970F80D), 852075, CE)
+                call SetUnitX(loc_knife, GetUnitX(CE))
+                call SetUnitY(loc_knife, GetUnitY(CE))
+                call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
+                call KillUnit(loc_knife)
+                call YDWETimerRemoveUnit(1.61 , loc_knife)
+                 call DisplayTextToPlayer(GetLocalPlayer(), 0, 0,"造成伤害！")
+                set loc_damage = 200 * GetUnitAbilityLevel(Iv, 'Ab5q') +GetUnitState(Iv,ConvertUnitState(21))
+                call UnitDamageTarget(Iv, CE, loc_damage, false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+                call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
+                call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
+                call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+                call DestroyTimer(GetExpiredTimer())
+            endif
+        endif
     else
         call SaveLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x64D66016, PolarProjectionBJ(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8), 12.00, YDWEAngleBetweenUnits(loc_knife , CE)))
         call SetUnitX(loc_knife, GetLocationX(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x64D66016)))
         call SetUnitY(loc_knife, GetLocationY(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x64D66016)))
-        call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "飞刀X:" + R2S(GetUnitX(loc_knife)) + ",飞刀Y" + R2S(GetUnitY(loc_knife)))
+        // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "飞刀X:" + R2S(GetUnitX(loc_knife)) + ",飞刀Y" + R2S(GetUnitY(loc_knife)))
         
         call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
@@ -20349,7 +20358,7 @@ set CE=CreateUnit(CC,$6E666E70,-704.,-7616.,270.)
 set CJ=CreateUnit(CC,$6861726D,-6848.,13248.,270.)
 set CK=CreateUnit(CC,$68303031,-1856.,-6592.,270.)
 set CE=CreateUnit(CC,$68303052,-1894.,-7293.7,357.27)
-set rongzhu_factory=CreateUnit(CC,'b002',-6848.,12848.,270.)
+set rongzhu_factory=CreateUnit(CC,'B03R',-6848.,12848.,270.)
 
 endfunction
 function f6 takes nothing returns nothing
