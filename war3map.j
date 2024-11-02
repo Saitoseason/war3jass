@@ -7,7 +7,7 @@ constant real YDWEAdvancedUnitDataSystem__DAMAGE_TEST= 160.
 constant real YDWEAdvancedUnitDataSystem__DAMAGE_LIFE= 300.
 constant real YDWEAdvancedUnitDataSystem__NATLOG_094= - 0.061875
 constant real YDWEAdvancedUnitDataSystem__ARMOR_INVULNERABLE= 917451.519
-constant real YDWEAdvancedUnitDataSystem__ARMOR_REDUCTION_MULTIPLIER1= 0.06
+constant real YDWEAdvancedUnitDataSystem__ARMOR_REDUCTION_MULTIPLIER1= 0.04
 
 integer YDWETimerSystem__CurrentTime
 integer YDWETimerSystem__CurrentIndex
@@ -53,7 +53,7 @@ real yd_MapMinY= 0
 
 hashtable YDHT
 hashtable YDLOC
-hashtable hero_hash
+hashtable hero_hash =InitHashtable()
 real Lx=1000
 real Ly=1
 boolean L1=false
@@ -92,8 +92,11 @@ group udg_GetUnitsInRectAllGroup=null
 // 野怪重置事件
 trigger map_boss_reset_trig
 boolean boss_rest =true
+unit tiger=null
 // 全局定时器
 timer all_timer = null
+// 拆分事件
+trigger chaifen_trig =null
 // 熔铸事件
 trigger rongzhu_trig=null
 button array rongzhu_btn
@@ -161,6 +164,8 @@ integer found_percent = 0
 timer found_timer =null
 integer array hight_level_item_pool
 boolean daomu_find =false
+// 点金术效果
+integer gold_time = 0
 // 心之钢
 trigger XinZhiGangTrigger=null
 // boolean xinZhiGangReady =false
@@ -173,6 +178,10 @@ unit she =null
 trigger she_trg=null
 unit spider =null
 trigger spider_trg =null
+trigger door_boss1_trig =null
+trigger door_boss2_trig =null
+trigger door_boss3_trig =null
+trigger door_boss4_trig =null
 // 新英雄
 unit genie =null
 unit liurui=null
@@ -1193,10 +1202,10 @@ unit De=null
 unit Df=null
 unit Dg=null
 unit C9=null
-unit Cj=null
-unit Ci=null
-unit Ch=null
-unit Cg=null
+unit door_boss4=null
+unit door_boss3=null
+unit door_boss2=null
+unit door_boss1=null
 unit Dx=null
 unit DV=null
 unit Dv=null
@@ -1788,6 +1797,7 @@ function YDWEGetUnitArmor takes unit loc_u,integer loc_aid returns real
         call UnitDamageTarget(loc_u, loc_u, YDWEAdvancedUnitDataSystem__DAMAGE_TEST, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null)
 		call EnableTrigger(yd_DamageEventTrigger)
         set redc=( YDWEAdvancedUnitDataSystem__DAMAGE_TEST - test + GetWidgetLife(loc_u) ) / YDWEAdvancedUnitDataSystem__DAMAGE_TEST
+        call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "减伤值:" + R2S(redc))
         if enab then
             call EnableTrigger(trig)
         endif
@@ -2241,7 +2251,7 @@ set hight_level_item_pool[65]='it11'
 // 强化石
 set hight_level_item_pool[66]='dkfw'
 // 优质兽皮
-set hight_level_item_pool[67]='srrc'
+set hight_level_item_pool[67]='it1c'
 // 藏宝图
 set hight_level_item_pool[68]='tlum'
 // 仙魔书
@@ -2346,6 +2356,24 @@ set hight_level_item_pool[132]='it0y'
 set hight_level_item_pool[133]='it12'
 // 远古残骸
 set hight_level_item_pool[134]='it14'
+// 勾魂镰刀
+set hight_level_item_pool[135]='it17'
+// 承影
+set hight_level_item_pool[136]='it18'
+// 含光
+set hight_level_item_pool[137]='it19'
+// 玄天战甲
+set hight_level_item_pool[138]='it1d'
+// 玄天战盔
+set hight_level_item_pool[139]='it13'
+// 九幽冰甲
+set hight_level_item_pool[140]='it1g'
+// 聚灵杖
+set hight_level_item_pool[141]='it1e'
+// 罔象毒牙
+set hight_level_item_pool[142]='it1f'
+// 玄天盾
+set hight_level_item_pool[143]='it09'
 // 刚弓
 set hight_level_item_pool[170]=$6B70696E
 // 钢剑
@@ -4031,6 +4059,7 @@ endif
 endif
 set CS=null
 endfunction
+// 击飞函数
 function bd takes unit Ij,unit CE,integer Ik,real Il,real Im,real In,real Io,real Ip returns nothing
 local timer CS
 local integer Is=0
@@ -4090,6 +4119,35 @@ endfunction
 function bj takes unit CE returns boolean
 return GetWidgetLife(CE)>.405 and (IsUnitType(CE,UNIT_TYPE_ANCIENT)==false and IsUnitType(CE,UNIT_TYPE_GIANT)==false and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false) and GetUnitDefaultMoveSpeed(CE)>1.
 endfunction
+
+
+function mazhong_w_number  takes nothing returns boolean
+
+return GetUnitTypeId(GetFilterUnit()) == 'n00L'
+endfunction
+
+// 获取马忠陷阱数量
+function get_mazhong_w_number takes unit Iv returns integer
+local  group mazhong_w_unit 
+local integer loc_num = 0
+local unit CE
+
+set mazhong_w_unit = GetUnitsOfPlayerMatching(GetOwningPlayer(Iv), Condition(function mazhong_w_number))
+//   call ForGroupBJ( mazhong_w_unit, function jingwei_E_actions )
+
+loop
+set CE=FirstOfGroup(mazhong_w_unit)
+exitwhen CE == null or loc_num >99
+call GroupRemoveUnit(mazhong_w_unit,CE)
+set loc_num = loc_num+1
+endloop
+call GroupClear( mazhong_w_unit )
+call DestroyGroup( mazhong_w_unit )
+
+return loc_num
+endfunction
+
+
 function magicLevel takes unit Iv returns real 
     local real extra = 1 
     local integer Ix =0
@@ -4097,7 +4155,11 @@ function magicLevel takes unit Iv returns real
     // set JT=JT*(I2R(GetPlayerTechCount(GetOwningPlayer(Iv),$52686D65,true))*.05)+JT     
     set extra = extra + I2R(GetPlayerTechCount(GetOwningPlayer(Iv), $52686D65, true)) * .05 
     // 伏羲琴伤害系数1.1，即10点法强(修改为1.25)     
-
+// 马忠被动
+    if GetUnitTypeId(Iv) == 'H00Y' or GetUnitTypeId(Iv) == 'E00Z' then
+         set extra = extra + get_mazhong_w_number(Iv) * 0.01
+    endif
+    
     if GetUnitAbilityLevel(Iv, $41303552) > 0 then 
         // set JT=JT*1.15     
         set extra = extra + 0.25 
@@ -4233,6 +4295,17 @@ function magicLevel takes unit Iv returns real
         // set JT=JT*1.2     
         set extra = extra + 0.4 
     endif 
+    
+     // 罔象毒牙     
+    if GetUnitAbilityLevel(Iv, 'Ab6l') > 0 then 
+        set extra = extra + 0.4 
+    endif 
+
+      // 九幽冰甲     
+    if GetUnitAbilityLevel(Iv, 'Ab6p') > 0 then 
+        set extra = extra + 0.5 
+    endif 
+    
     // 太平令法强     
     if GetUnitAbilityLevel(Iv, 'Ab40') > 0 then 
         set extra = extra + 0.3 
@@ -4241,7 +4314,7 @@ function magicLevel takes unit Iv returns real
     if GetUnitAbilityLevel(Iv, 'Ab42') > 0 then 
         set extra = extra + 0.8 
     endif 
-     // 自修系数1.3    
+     // 自修系数1.2    
     if GetUnitAbilityLevel(Iv, $41304238) > 0 then 
         // set JT=JT*1.15     
         set extra = extra *1.2
@@ -4251,6 +4324,11 @@ function magicLevel takes unit Iv returns real
       set extra = extra *1.25
     endif
 
+          // 聚灵杖
+    if bC(Iv, 'it1e') == true then 
+         set extra = extra * 1.4 
+    endif
+    
         // 落宝铜钱
     if bC(Iv, 'it0e') == true then 
          set extra = extra * 1.3 
@@ -4309,6 +4387,9 @@ function bk takes unit Ij, integer Ik, integer JS returns real
         set JT = I2R(GetHeroInt(Ij, true) * (JS + 1)) * .9 + I2R(JS + 1) * .03 * GetUnitState(Ij, ConvertUnitState(3)) + JT 
     elseif Ik == 4 then 
         set JT = I2R(GetHeroStr(Ij, true)) + I2R(GetHeroAgi(Ij, true)) + I2R(GetHeroInt(Ij, true) * (JS + 1)) * .5 + I2R(JS) * .02 * GetUnitState(Ij, ConvertUnitState(3)) + JT 
+   elseif Ik == 5 then 
+    // 智力+敏捷伤害
+    set JT = I2R(GetHeroInt(Ij, true)) + I2R(GetHeroAgi(Ij, true)) *JS
     endif 
     // call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00基础技能伤害：" + R2S(JT))     
     // 五虎每级+5%的技能伤害     
@@ -4317,7 +4398,7 @@ function bk takes unit Ij, integer Ik, integer JS returns real
     set JT = JT * (1 + extra) 
         // 如果是玩家8，系数0.2     
     if IsUnitEnemy(Ij, Player(8)) then 
-        set JT = JT * .4 
+        set JT = JT * .6 
     endif 
     return JT 
 endfunction 
@@ -4350,6 +4431,21 @@ function magicDefendLevel takes unit Iv returns integer
       set int_MD = int_MD +50
     endif 
    
+       // 玄天战盔魔抗+100
+    if GetUnitAbilityLevel(Iv, 'Ab6n') > 0 then 
+      set int_MD = int_MD +100
+    endif 
+    
+         // 冰甲魔抗+75
+    if GetUnitAbilityLevel(Iv, 'Ab6p') > 0 then 
+      set int_MD = int_MD +75
+    endif 
+    
+       // 玄天战盔光环魔抗+50
+    if GetUnitAbilityLevel(Iv, 'B03V') > 0 then 
+      set int_MD = int_MD +50
+    endif 
+    
     // 神农鼎魔抗+50
     if GetUnitAbilityLevel(Iv, 'A02I') > 0 then 
       set int_MD = int_MD +50
@@ -4416,6 +4512,11 @@ function magicDefendLevel takes unit Iv returns integer
      if GetUnitAbilityLevel(Iv, 'AT0R') > 0 then 
       set int_MD = int_MD +150
     endif 
+     // 独自一人+10魔抗
+     if GetUnitAbilityLevel(Iv, 'Ab5x') > 0 then 
+      set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Ab5x') *10
+    endif 
+
      // 铜墙铁壁+10魔抗
      if GetUnitAbilityLevel(Iv, 'Assk') > 0 then 
       set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Assk') *10
@@ -4449,7 +4550,11 @@ function magicDefendLevel takes unit Iv returns integer
    if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("magic_defend")) >0 then
     set int_MD = int_MD +LoadInteger(hero_hash, GetHandleId(Iv), StringHash("magic_defend"))
    endif
-
+    //   马忠追踪术减少魔法抗性
+    if LoadReal(hero_hash, GetHandleId(Iv), StringHash("tracing_time")) >0 then
+    set int_MD = int_MD - GetUnitAbilityLevel(DJ, 'Ab6h') *8
+   endif
+   
     // 难度魔抗 41304139
   if GetUnitAbilityLevel(Iv, 'A0A9') > 0 then 
       set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'A0A9') *10
@@ -4499,6 +4604,11 @@ function magicPercentStrikeLevel takes unit Iv,integer loc_num returns integer
      if GetUnitAbilityLevel(Iv, 'AIse') > 0 then 
       set int_MD = int_MD - int_MD *0.2
     endif  
+      //  聚灵杖+40%法穿
+     if GetUnitAbilityLevel(Iv, 'Ab6j') > 0 then 
+      set int_MD = int_MD - int_MD *0.4
+    endif  
+    
     //  伏羲琴+25%法穿
      if GetUnitAbilityLevel(Iv, 'A05E') > 0 then 
       set int_MD = int_MD - int_MD *0.25
@@ -4564,6 +4674,39 @@ function magicStrikeLevel takes unit Iv,integer loc_num returns integer
     endif
     return int_MD
 endfunction
+// 物理穿透
+function physicalStrike takes unit Iv, unit CE, real amor_amout returns real 
+    local real loc_r =0
+    // 当前护甲
+    local real unit_armor = GetUnitState(CE, ConvertUnitState(32))
+    // 当前减伤幅度
+    local real armor_percent = 1 - ((unit_armor * 4) / (100 + 4 * unit_armor))
+    local real after_armor = unit_armor *amor_amout
+    local real after_percent = 1 - ((after_armor * 4) / (100 + 4 * after_armor))
+    local real fix_amout = amor_amout *200
+    if after_armor < 0 then
+    
+        return 1
+    endif
+    if after_armor <fix_amout then
+        set after_armor = RMaxBJ(-24, unit_armor - fix_amout)
+
+        set after_percent = 1 - RMaxBJ(-0.88, ((after_armor ) / (25 +   after_armor)))
+        set after_percent = RMinBJ(1.88,after_percent)
+        // set after_percent = RminBJ(1.88,after_percent)
+    endif
+
+
+
+
+    set loc_r = after_percent / armor_percent
+    // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "目标护甲" + R2S(unit_armor))
+    // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "目标减伤" + R2S(armor_percent))
+    call textToPlayer(GetOwningPlayer(Iv), 0, 0, "计算后护甲" + R2S(after_armor))
+    call textToPlayer(GetOwningPlayer(Iv), 0, 0, "计算后伤害减免减伤" + R2S(after_percent))
+    call textToPlayer(GetOwningPlayer(Iv), 0, 0, "增幅比例" + R2S(loc_r))
+    return loc_r
+endfunction
 
 // 通用伤害可以伤害虚无，强化伤害无视护甲魔抗，不能伤害虚无
 function take_magic_damage takes unit Iv, unit CE, real amout, boolean loc_attack, boolean loc_ranged, attacktype attack_type, damagetype damage_type,weapontype weapon_type returns nothing 
@@ -4579,6 +4722,13 @@ if IsUnitType(CE,UNIT_TYPE_ETHEREAL) and damage_type == DAMAGE_TYPE_ENHANCED the
 endif
 
     if damage_type != DAMAGE_TYPE_UNIVERSAL then
+            // 盖聂被动闪避
+    if GetUnitAbilityLevel(CE, 'Ab5v') > 0 then
+        if GetRandomInt(1, 100) < (5 + GetUnitAbilityLevel(CE, 'Ab5v') * 5) then
+        set really_amout = 0
+        return
+        endif
+    endif 
         // 先计算百分比法穿
         set magic_infact_amout = magicPercentStrikeLevel(Iv,magic_defend_amout)
         // 再计算固定法穿
@@ -4591,6 +4741,7 @@ endif
     if GetUnitAbilityLevel(CE, 'Ab5k') > 0 then 
          set magic_infact_amout = magic_infact_amout -45
     endif
+
         // 防止伤害溢出太厉害
         if magic_infact_amout < -50 then
             set magic_infact_amout = -50
@@ -4624,21 +4775,81 @@ set JT = bk(Ij, 3, 1)
 return JT
 endfunction
 
+// 重伤action
+function Serious_injury_action takes nothing returns nothing
+    local timer CS=GetExpiredTimer()
+    local unit CE = LoadUnitHandle(hero_hash, GetHandleId(CS), StringHash("serious_injuery_target"))
+    local real loc_time = LoadReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_time"))
+    local real loc_health = LoadReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_target_health"))
+    if loc_time >0 then
+    call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_time") , loc_time-0.1)
+        if GetUnitState(CE,UNIT_STATE_LIFE) > loc_health then
+            call SetUnitState(CE, UNIT_STATE_LIFE,loc_health)
+        else
+            call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_target_health"), GetUnitState(CE,UNIT_STATE_LIFE))
+
+        endif
+        
+
+    //  call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "重伤效果生效中：" + R2S(loc_health))      
+   
+    endif
+
+    if loc_time <= 0 or GetUnitState(CE, UNIT_STATE_LIFE) < .405 then
+        call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_time"), 0)
+        call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_target_health"), 0)
+
+         call DestroyTimer(CS)
+    endif
+endfunction
+// 重伤触发
+function Serious_injury takes unit Iv, unit CE returns nothing
+
+local timer CS=CreateTimer()
+// 重复触发刷新冷却时间
+if LoadReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_time")) > 0 then
+call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_time") , 5)
+call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_target_health"), GetUnitState(CE,UNIT_STATE_LIFE))
+
+else
+    
+call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_time") , 5)
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("serious_injuery_target"),CE)
+call SaveReal(hero_hash, GetHandleId(CE), StringHash("serious_injuery_target_health"), GetUnitState(CE,UNIT_STATE_LIFE))
+call TimerStart(CS,.1,true,function Serious_injury_action)
+
+endif
+
+
+set CS=null
+set CE=null
+endfunction
+
+
 function chixu_injury_damage takes nothing returns nothing
 local timer CS=GetExpiredTimer()
 
-local unit Iv=LoadUnitHandle(hero_hash,StringHash("chixu_damage"),1)
-local unit CE=LoadUnitHandle(hero_hash,StringHash("chixu_damage"),2)
-local integer Ik=LoadInteger(hero_hash,StringHash("chixu_damage"),1)-1
-local real Ii=LoadReal(hero_hash,StringHash("chixu_damage"),1)
+local unit Iv = LoadUnitHandle(hero_hash, GetHandleId(CS), StringHash("chixu_damage_unit"))
+local unit CE=LoadUnitHandle(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_target"))
+local integer Ik=LoadInteger(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_time"))-1
+local real Ii=LoadReal(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_real"))
 if Ik > 0 and GetWidgetLife(CE) >.405 then
 
-call SaveInteger(hero_hash,StringHash("chixu_damage"),1,Ik)
+    // 如果有含光剑且有大招
+if bC(Iv, 'it19') and GetUnitAbilityLevel(Iv, 'Ab5s') >0 then
+call Serious_injury(Iv,CE)
+endif
+
+call SaveInteger(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_time"),Ik)
 call take_magic_damage(Iv,CE,Ii,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_DIVINE,WEAPON_TYPE_WHOKNOWS)
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Human\\HumanBlood\\BloodElfSpellThiefBlood.mdl",CE,"chest"))
 
 else
-call FlushChildHashtable(hero_hash,StringHash("chixu_damage"))
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("chixu_damage_unit"), null)
+call SaveUnitHandle(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_target"),null)
+call SaveInteger(hero_hash, GetHandleId(Iv),StringHash("chixu_damage_time"), 0)
+call SaveReal(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_real"),0)
+
 call DestroyTimer(CS)
 endif
 set CS=null
@@ -4646,523 +4857,310 @@ set Iv=null
 set CE=null
 endfunction
 
+
+
 function chixu_injury takes unit Iv, unit CE, real Ii,integer loc_time returns nothing
 local timer CS=CreateTimer()
-if LoadInteger(hero_hash, StringHash("chixu_damage"), 1) >0 then 
-call SaveUnitHandle(hero_hash, StringHash("chixu_damage"), 1, Iv)
-call SaveUnitHandle(hero_hash,StringHash("chixu_damage"),2,CE)
-call SaveInteger(hero_hash, StringHash("chixu_damage"), 1, loc_time *2)
-call SaveReal(hero_hash,StringHash("chixu_damage"),1,Ii*.2)
+
+if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("chixu_damage_time")) > 0 then 
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("chixu_damage_unit"), Iv)
+call SaveUnitHandle(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_target"),CE)
+call SaveInteger(hero_hash, GetHandleId(Iv),StringHash("chixu_damage_time"), loc_time *2)
+call SaveReal(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_real"),Ii*.2)
 else
-call SaveUnitHandle(hero_hash, StringHash("chixu_damage"), 1, Iv)
-call SaveUnitHandle(hero_hash,StringHash("chixu_damage"),2,CE)
-call SaveInteger(hero_hash, StringHash("chixu_damage"), 1, loc_time *2)
-call SaveReal(hero_hash,StringHash("chixu_damage"),1,Ii*.2)
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("chixu_damage_unit"), Iv)
+call SaveUnitHandle(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_target"),CE)
+call SaveInteger(hero_hash, GetHandleId(Iv),StringHash("chixu_damage_time"), loc_time *2)
+call SaveReal(hero_hash,GetHandleId(Iv),StringHash("chixu_damage_real"),Ii*.2)
 call TimerStart(CS,.5,true,function chixu_injury_damage)
 endif
 
 set CS=null
 set CE=null
 endfunction
+// 
 
+// 马忠追踪术标记
+function mazhong_tracing_action takes nothing returns nothing
+  local timer CS = GetExpiredTimer()  
+  local unit CE = LoadUnitHandle(hero_hash, GetHandleId(CS), StringHash("tracing_target"))
+  local unit Iv = LoadUnitHandle(hero_hash, GetHandleId(CS), StringHash("tracing_hero"))
+  local real loc_time = LoadReal(hero_hash, GetHandleId(CE), StringHash("tracing_time"))
+set loc_time = loc_time -1
+if loc_time < 0  then
+    call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("tracing_target"),null)
+    call SaveReal(hero_hash, GetHandleId(CE), StringHash("tracing_time"), 0)
+    call DestroyTimer(CS)
+else
+    call SaveReal(hero_hash, GetHandleId(CE), StringHash("tracing_time"), loc_time)
+    // call DisplayTextToPlayer()
+endif
 
+if GetUnitState(CE, UNIT_STATE_LIFE) < .405 then
+    call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("tracing_target"),null)
+    call SaveReal(hero_hash, GetHandleId(CE), StringHash("tracing_time"), 0)
+    if GetUnitLevel(CE) > 49 then
+        if bC(GetTriggerUnit(),'it0e') then
+set gold_time = gold_time+GetUnitAbilityLevel(Iv,'Ab6h')
+endif
+        set gold_time = gold_time + GetUnitAbilityLevel(Iv,'Ab6h')
+        call AdjustPlayerStateBJ(gold_time * 50, Player(0), PLAYER_STATE_RESOURCE_GOLD)
+        call AdjustPlayerStateBJ(gold_time * 50, Player(1), PLAYER_STATE_RESOURCE_GOLD)
+        call AdjustPlayerStateBJ(gold_time * 50, Player(2), PLAYER_STATE_RESOURCE_GOLD)
+        call AdjustPlayerStateBJ(gold_time * 50, Player(3), PLAYER_STATE_RESOURCE_GOLD)
+        call AdjustPlayerStateBJ(gold_time * 50, Player(4), PLAYER_STATE_RESOURCE_GOLD)
+        call AdjustPlayerStateBJ(gold_time * 50, Player(5), PLAYER_STATE_RESOURCE_GOLD)
+        call AdjustPlayerStateBJ(gold_time * 50, Player(6), PLAYER_STATE_RESOURCE_GOLD)
+        call AdjustPlayerStateBJ(gold_time * 50, Player(7), PLAYER_STATE_RESOURCE_GOLD)
 
+        call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "成功通缉目标，所有玩家获得" + I2S(gold_time *50) + "个金币")
+    endif
+    call FlushChildHashtable(hero_hash,GetHandleId(CS))
+    call DestroyTimer(CS)
+endif
+endfunction
+// 马忠追踪
+function mazhong_tracing_technique takes unit Iv, unit CE returns nothing
+local timer CS=CreateTimer()
+// 注册单位
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("tracing_target"),CE)
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("tracing_hero"),Iv)
+// 倒计时
+if LoadReal(hero_hash, GetHandleId(CE), StringHash("tracing_time")) >0 then
+call SaveReal(hero_hash,GetHandleId(CE),StringHash("tracing_time"),60)
+else
+call SaveReal(hero_hash,GetHandleId(CE),StringHash("tracing_time"),60)
+call TimerStart(CS,1,true,function  mazhong_tracing_action)
+endif
+set CS=null
 
+endfunction
+
+    
 
 // PA技能开始
 
-// 专属
 
 
-// F恩赐解脱
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func003Func003T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624, ( LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) - 0.01 ))
-//     if ( ( ( IsUnitDeadBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)) == true ) or ( LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) <= 0.00 ) ) ) then
-//         if ( ( GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
-//             call SetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
-//         else
-//             call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
-//         endif
-//         call RemoveSavedReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9)
-//         call RemoveSavedReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624)
-//         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//         call DestroyTimer(GetExpiredTimer())
-//     else
-//         if ( ( GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
-//             call SetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
-//         else
-//             call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func008T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func015Func013T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_250", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_251", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func017T takes nothing returns nothing
-//     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent")) - 10 ))
-//     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//     call DestroyTimer(GetExpiredTimer())
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func031Func009T takes nothing returns nothing
-//     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent")) - 10 ))
-//     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//     call DestroyTimer(GetExpiredTimer())
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func006Func031Func010T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_252", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_253", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func003Func003T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624, ( LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) - 0.01 ))
-//     if ( ( ( IsUnitDeadBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)) == true ) or ( LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) <= 0.00 ) ) ) then
-//         if ( ( GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
-//             call SetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
-//         else
-//             call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
-//         endif
-//         call RemoveSavedReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9)
-//         call RemoveSavedReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624)
-//         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//         call DestroyTimer(GetExpiredTimer())
-//     else
-//         if ( ( GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
-//             call SetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
-//         else
-//             call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func008T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func013T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_256", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_257", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func017T takes nothing returns nothing
-//     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent")) - 10 ))
-//     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//     call DestroyTimer(GetExpiredTimer())
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func009T takes nothing returns nothing
-//     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent")) - 10 ))
-//     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//     call DestroyTimer(GetExpiredTimer())
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func010T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_258", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_259", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func003Func003T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624, ( LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) - 0.01 ))
-//     if ( ( ( IsUnitDeadBJ(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)) == true ) or ( LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624) <= 0.00 ) ) ) then
-//         if ( ( GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
-//             call SetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
-//         else
-//             call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
-//         endif
-//         call RemoveSavedReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9)
-//         call RemoveSavedReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0x190E7624)
-//         call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//         call DestroyTimer(GetExpiredTimer())
-//     else
-//         if ( ( GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE) > LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9) ) ) then
-//             call SetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE, LoadReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9))
-//         else
-//             call SaveReal(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2)), 0xFCD961C9, GetUnitState(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x22B8EBA2), UNIT_STATE_LIFE))
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func008T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), I2S(R2I(LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x1FAB6098))), LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func015Func013T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_223", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_224", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func017T takes nothing returns nothing
-//     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent")) - 10 ))
-//     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//     call DestroyTimer(GetExpiredTimer())
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func031Func009T takes nothing returns nothing
-//     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), StringHash("Coup_de_Grace_damage_real"))), StringHash("Coup_de_Grace_percent")) - 10 ))
-//     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//     call DestroyTimer(GetExpiredTimer())
-// endfunction
-// function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func002Func007Func031Func010T takes nothing returns nothing
-//     call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) + 0.01 ))
-//     if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= ( 0.25 / 2.00 ) ) ) then
-//         call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) + ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//         call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_227", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//     else
-//         if ( ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0x67E711DF) <= 0.25 ) ) then
-//             call SaveReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B, ( LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B) - ( ( 0.03 / ( 0.25 / 2.00 ) ) * 0.01 ) ))
-//             call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0xA39D4443), "TRIGSTR_228", LoadReal(hero_hash, GetHandleId(GetExpiredTimer()), 0xAC17EA0B))
-//         else
-//             call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//             call DestroyTimer(GetExpiredTimer())
-//         endif
-//     endif
-// endfunction
-// function Trig_Coup_de_get_damaged_condition takes nothing returns nothing
-//     local timer loc_timer
-//     local unit Iv =LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_killer"))
-//     local unit CE =LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_bekiller"))
-//     if GetEventDamage() > 0.00 and GetEventDamageSource() == Iv and YDWEIsEventAttackDamage() then
-
-
-//               // 如果目标护甲小于0
-//                         if ( ( YDWEGetUnitArmor(CE , 'Ab61') < 0.00 ) ) then
-//                             call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int"), ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(CE , 'Ab61'))) ) ))
-//                         else
-//                             call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int"), ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(CE , 'Ab61') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(CE , 'Ab61') * 0.06 ) ) ) ) ))
-//                         endif
-//                         //概率*100
-//                         call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2, ( ( ( LoadReal(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) * 0.01 ) / ( ( LoadReal(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) * 0.01 ) + 1 ) ) * 100.00 ))
-//                         // 10000除以概率
-//                         call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9CD60476, ( 10000 / LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) ))
-//                         call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x25DAB820, ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x439763AE)) * ( ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"))) + ( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"))) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"))) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
-//                         call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x312C4181, GetRandomInt(0, LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9CD60476)))
-//                         if ( ( ( LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x312C4181) * 1000 ) <= R2I(( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x25DAB820) * 1000.00 )) ) ) then
-//                             call DisableTrigger(GetTriggeringTrigger())
-//                             // 专属增伤25%
-//                             if ( ( bC(Iv , 'it19') == true ) ) then
-//                                 call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int"), ( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int")) * 1.25 ))
-//                             else
-//                             endif
-//                             call SetUnitState(CE, UNIT_STATE_LIFE, ( GetUnitState(CE, UNIT_STATE_LIFE) + GetEventDamage() ))
-//                             call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(hero_hash, GetHandleId(Iv), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(hero_hash, GetHandleId(Iv), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
-//                             call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99) ))
-//                             call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2)) * ( ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99)) + ( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
-//                             call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
-//                             call SaveTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
-//                             call SaveTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
-//                             if ( ( ( LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
-//                                 call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int")) * 10000.00 ))
-//                                 if ( ( LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) >= 100 ) ) then
-//                                     call SaveInteger(hero_hash, GetHandleId(Iv), 0x439763AE, 1)
-//                                 else
-//                                     call SaveInteger(hero_hash, GetHandleId(Iv), 0x439763AE, 0)
-//                                 endif
-//                                 call SaveInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2, 0)
-//                                 call SetUnitAnimation(Iv, "Spell Slam")
-//                                 call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_255", ( 0.27 / 10.00 ))
-//                                 set loc_timer=LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
-//                                 call SaveTimerHandle(hero_hash, GetHandleId(loc_timer), 0x1E172918, LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
-//                                 call SaveTextTagHandle(hero_hash, GetHandleId(loc_timer), 0xA39D4443, LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0xAC17EA0B, ( 0.26 / 10.00 ))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0x67E711DF, 0.00)
-//                                 call SaveTextTagHandle(hero_hash, GetHandleId(loc_timer), 0xF8F856EA, LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
-//                                 call SaveTimerHandle(hero_hash, GetHandleId(loc_timer), 0x6B54C545, LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
-//                                 call TimerStart(loc_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func013T)
-//                             else
-//                                 if ( ( GetUnitAbilityLevel(Iv, 'Ab5s') == 0 ) ) then
-//                                     call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int")) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(Iv, 'A00J')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
-//                                 else
-//                                     call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, I2R(R2I(( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int")) * ( ( 1.50 + ( 1.50 * I2R(GetUnitAbilityLevel(Iv, 'Ab5s')) ) ) + GetRandomReal(- 0.25, 0.25) ) ))))
-//                                 endif
-//                                 if ( ( LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) >= 100 ) ) then
-//                                     call SaveInteger(hero_hash, GetHandleId(Iv), 0x439763AE, 1)
-//                                 else
-//                                     call SaveInteger(hero_hash, GetHandleId(Iv), 0x439763AE, 0)
-//                                 endif
-//                                 if ( ( HaveSavedReal(hero_hash, GetHandleId(CE), 0x190E7624) == true ) ) then
-//                                     call SaveReal(hero_hash, GetHandleId(CE), 0x190E7624, 5.00)
-//                                 else
-//                                     call SaveReal(hero_hash, GetHandleId(CE), 0x190E7624, 5.00)
-//                                     call SaveReal(hero_hash, GetHandleId(CE), 0xFCD961C9, GetUnitState(CE, UNIT_STATE_LIFE))
-//                                     set loc_timer=CreateTimer()
-//                                     call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x22B8EBA2, CE)
-//                                     call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), StringHash("Coup_de_Grace_bekiller"), CE)
-//                                     call TimerStart(loc_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func003Func003T)
-//                                 endif
-//                                 call SaveInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2, ( LoadInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2) + 1 ))
-//                                 call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), I2S(R2I(LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))), ( 0.27 / 10.00 ))
-//                                 set loc_timer=LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
-//                                 call SaveTimerHandle(hero_hash, GetHandleId(loc_timer), 0x1E172918, LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0x1FAB6098, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
-//                                 call SaveTextTagHandle(hero_hash, GetHandleId(loc_timer), 0xA39D4443, LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0x67E711DF, 0.00)
-//                                 call SaveTextTagHandle(hero_hash, GetHandleId(loc_timer), 0xF8F856EA, LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0x2D1E4992, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
-//                                 call SaveTimerHandle(hero_hash, GetHandleId(loc_timer), 0x6B54C545, LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
-//                                 call TimerStart(loc_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func015Func008T)
-//                             endif
-//                             call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) + 10 ))
-//                             set loc_timer=CreateTimer()
-//                             call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), StringHash("Coup_de_Grace_damage_real"), Iv)
-//                             call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), StringHash("Coup_de_Grace_killer"), Iv)
-//                             call TimerStart(loc_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func017T)
-//                             call UnitDamageTarget(Iv, CE, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
-//                             call SetTextTagColor(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
-//                             call SetTextTagPos(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(Iv), GetUnitY(Iv), 20.00)
-//                             call SetTextTagVisibility(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
-//                             call SetTextTagPermanent(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
-//                             call SetTextTagVelocity(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
-//                             call SetTextTagLifespan(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
-//                             call SetTextTagFadepoint(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
-//                             call DestroyTimer(LoadTimerHandle(hero_hash, GetHandleId(Iv), 0x4A4DB0A0))
-//                             call RemoveSavedHandle(hero_hash, GetHandleId(Iv), 0xFE09847D)
-//                             call RemoveSavedHandle(hero_hash, GetHandleId(Iv), 0xD3ABBFEF)
-//                             call RemoveSavedHandle(hero_hash, GetHandleId(Iv), 0x4A4DB0A0)
-//                             call FlushChildHashtable(hero_hash, GetHandleId(GetTriggeringTrigger()))
-//                             call DestroyTrigger(GetTriggeringTrigger())
-//                         else
-//                             if ( ( YDWEGetUnitArmor(CE , 'Ab61') < 0.00 ) ) then
-//                                 call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int"), ( GetEventDamage() / ( 2.00 - Pow(0.94, RAbsBJ(YDWEGetUnitArmor(CE , 'Ab61'))) ) ))
-//                             else
-//                                 call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int"), ( GetEventDamage() / ( 1.00 - ( ( YDWEGetUnitArmor(CE , 'Ab61') * 0.06 ) / ( 1 + ( YDWEGetUnitArmor(CE , 'Ab61') * 0.06 ) ) ) ) ))
-//                             endif
-//                             call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x73769032, ( ( ( LoadReal(hero_hash, GetHandleId(Iv), 0x7FA0AE99) * 0.01 ) / ( ( LoadReal(hero_hash, GetHandleId(Iv), 0x7FA0AE99) * 0.01 ) + 1 ) ) * 100.00 ))
-//                             call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0, ( 10000 / LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99) ))
-//                             call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8, ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2)) * ( ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99)) + ( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x73769032) * ( 0.58 * ( ( 1 - ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99)) * 0.01 ) ) * ( 1 + ( I2R(LoadInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99)) * ( 0.01 * ( 10.05 / 10.00 ) ) ) ) ) ) ) ) * 0.97 ) ))
-//                             call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C, GetRandomInt(0, LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0)))
-//                             if ( ( ( LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C) * 1000 ) <= R2I(( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8) * 1000.00 )) ) ) then
-//                                 call DisableTrigger(GetTriggeringTrigger())
-//                                 call SaveTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545, CreateTimer())
-//                                 call SaveTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA, CreateTextTag())
-//                                 if ( ( bC(Iv , 'it19') == true ) ) then
-//                                     call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int"), ( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int")) * 1.25 ))
-//                                 else
-//                                 endif
-//                                 call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) + 10 ))
-//                                 set loc_timer=CreateTimer()
-//                                 call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), StringHash("Coup_de_Grace_damage_real"), Iv)
-//                                 call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), StringHash("Coup_de_Grace_killer"), Iv)
-//                                 call TimerStart(loc_timer, 1.00, false, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func009T)
-//                                 set loc_timer=LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545)
-//                                 call SaveTimerHandle(hero_hash, GetHandleId(loc_timer), 0x1E172918, LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
-//                                 call SaveTextTagHandle(hero_hash, GetHandleId(loc_timer), 0xA39D4443, LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0xAC17EA0B, ( 0.27 / 10.00 ))
-//                                 call SaveReal(hero_hash, GetHandleId(loc_timer), 0x67E711DF, 0.00)
-//                                 call SaveTextTagHandle(hero_hash, GetHandleId(loc_timer), 0xF8F856EA, LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
-//                                 call SaveTimerHandle(hero_hash, GetHandleId(loc_timer), 0x6B54C545, LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
-//                                 call TimerStart(loc_timer, 0.01, true, function Trig_Coup_de_GraceFunc001Func001Func007Func001Func001Func001Func007Func001Func007Func031Func010T)
-//                                 call SaveReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992, ( LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int")) * 10000.00 ))
-//                                 call SetUnitState(CE, UNIT_STATE_LIFE, ( GetUnitState(CE, UNIT_STATE_LIFE) + GetEventDamage() ))
-//                                 call UnitDamageTarget(Iv, CE, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
-//                                 call SetUnitAnimation(Iv, "Spell Slam")
-//                                 call SetTextTagText(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), "TRIGSTR_260", ( 0.27 / 10.00 ))
-//                                 call SetTextTagColor(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 255, 50, 50, 255)
-//                                 call SetTextTagPos(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), GetUnitX(Iv), GetUnitY(Iv), 20.00)
-//                                 call SetTextTagVisibility(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), true)
-//                                 call SetTextTagPermanent(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), false)
-//                                 call SetTextTagVelocity(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 0.00, 0.04)
-//                                 call SetTextTagLifespan(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 5)
-//                                 call SetTextTagFadepoint(LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA), 2.00)
-//                                 call DestroyTimer(LoadTimerHandle(hero_hash, GetHandleId(Iv), 0x4A4DB0A0))
-//                                 call SaveInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2, 0)
-//                                 call SaveInteger(hero_hash, GetHandleId(Iv), 0x439763AE, 0)
-//                                 call RemoveSavedHandle(hero_hash, GetHandleId(Iv), 0xFE09847D)
-//                                 call RemoveSavedHandle(hero_hash, GetHandleId(Iv), 0xD3ABBFEF)
-//                                 call RemoveSavedHandle(hero_hash, GetHandleId(Iv), 0x4A4DB0A0)
-//                                 call FlushChildHashtable(hero_hash, GetHandleId(GetTriggeringTrigger()))
-//                                 call DestroyTrigger(GetTriggeringTrigger())
-//                             else
-//                                 call SaveInteger(hero_hash, GetHandleId(Iv), 0x439763AE, ( LoadInteger(hero_hash, GetHandleId(Iv), 0x439763AE) + 1 ))
-//                                 call SaveInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2, ( LoadInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2) + 1 ))
-//                             endif
-//                         endif
-                    
-//     else
-//     endif
-//     set loc_timer=null
-// endfunction
-// function Trig_Coup_de_get_damaged_action takes nothing returns nothing
-//     call DestroyTrigger(LoadTriggerHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0xD3ABBFEF))
-//     call RemoveSavedHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0xFE09847D)
-//     call RemoveSavedHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0xD3ABBFEF)
-//     call RemoveSavedHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x2B0A6845)), 0x4A4DB0A0)
-//     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
-//     call DestroyTimer(GetExpiredTimer())
-// endfunction
-// function Trig_Coup_de_Grace_attacked takes nothing returns nothing
-//     local trigger loc_trigger
-//     local timer loc_timer
-//     if ( ( ( IsUnitType(GetAttackedUnitBJ(), UNIT_TYPE_STRUCTURE) == false ) and ( IsUnitType(GetAttackedUnitBJ(), UNIT_TYPE_ETHEREAL) == false ) and  GetUnitAbilityLevel(GetAttacker(), 'Ab5s') != 0  ) ) then
-//         if ( ( HaveSavedHandle(hero_hash, GetHandleId(GetAttacker()), 0xFE09847D) == true ) ) then
-//             if ( ( GetAttackedUnitBJ() == LoadUnitHandle(hero_hash, GetHandleId(GetAttacker()), 0xFE09847D) ) ) then
-//                 call DestroyTrigger(LoadTriggerHandle(hero_hash, GetHandleId(GetAttacker()), 0xD3ABBFEF))
-//                 call DestroyTimer(LoadTimerHandle(hero_hash, GetHandleId(GetAttacker()), 0x4A4DB0A0))
-//                 call RemoveSavedHandle(hero_hash, GetHandleId(GetAttacker()), 0xD3ABBFEF)
-//                 call RemoveSavedHandle(hero_hash, GetHandleId(GetAttacker()), 0x4A4DB0A0)
-//             else
-//                 call DestroyTrigger(LoadTriggerHandle(hero_hash, GetHandleId(GetAttacker()), 0xD3ABBFEF))
-//                 call DestroyTimer(LoadTimerHandle(hero_hash, GetHandleId(GetAttacker()), 0x4A4DB0A0))
-//                 call RemoveSavedHandle(hero_hash, GetHandleId(GetAttacker()), 0xFE09847D)
-//                 call RemoveSavedHandle(hero_hash, GetHandleId(GetAttacker()), 0xD3ABBFEF)
-//                 call RemoveSavedHandle(hero_hash, GetHandleId(GetAttacker()), 0x4A4DB0A0)
-//             endif
-//         else
-//         endif
-//         call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker"), GetAttacker())
-//         call SaveUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB, GetAttackedUnitBJ())
-//         call SaveUnitHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker"))), 0xFE09847D, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB))
-//         call SaveTriggerHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker"))), 0xD3ABBFEF, CreateTrigger())
-//         call SaveTimerHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker"))), 0x4A4DB0A0, CreateTimer())
-//         set loc_trigger=LoadTriggerHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker"))), 0xD3ABBFEF)
-//         call SaveUnitHandle(hero_hash, GetHandleId(loc_trigger), StringHash("Coup_de_Grace_killer"), LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker")))
-//         call SaveUnitHandle(hero_hash, GetHandleId(loc_trigger), StringHash("Coup_de_Grace_bekiller"), LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB))
-//         call SaveReal(hero_hash, GetHandleId(loc_trigger), StringHash("Coup_de_Grace_damage_int"), LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_damage_int")))
-//         call SaveReal(hero_hash, GetHandleId(loc_trigger), 0xA3098AE2, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xA3098AE2))
-//         call SaveReal(hero_hash, GetHandleId(loc_trigger), 0x73769032, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x73769032))
-//         call SaveInteger(hero_hash, GetHandleId(loc_trigger), 0x9CD60476, LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x9CD60476))
-//         call SaveInteger(hero_hash, GetHandleId(loc_trigger), 0x72FC19A0, LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x72FC19A0))
-//         call SaveTextTagHandle(hero_hash, GetHandleId(loc_trigger), 0xF8F856EA, LoadTextTagHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xF8F856EA))
-//         call SaveReal(hero_hash, GetHandleId(loc_trigger), 0x25DAB820, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x25DAB820))
-//         call SaveReal(hero_hash, GetHandleId(loc_trigger), 0x488D5FD8, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x488D5FD8))
-//         call SaveUnitHandle(hero_hash, GetHandleId(loc_trigger), StringHash("Coup_de_Grace_Attacker"), LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker")))
-//         call SaveReal(hero_hash, GetHandleId(loc_trigger), 0x2D1E4992, LoadReal(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x2D1E4992))
-//         call SaveInteger(hero_hash, GetHandleId(loc_trigger), 0x312C4181, LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x312C4181))
-//         call SaveInteger(hero_hash, GetHandleId(loc_trigger), 0x20BBFE2C, LoadInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x20BBFE2C))
-//         call SaveTimerHandle(hero_hash, GetHandleId(loc_trigger), 0x6B54C545, LoadTimerHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0x6B54C545))
-//         call SaveUnitHandle(hero_hash, GetHandleId(loc_trigger), 0xDFB448FB, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB))
-//         call TriggerRegisterUnitEvent(loc_trigger, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xDFB448FB), EVENT_UNIT_DAMAGED)
-//         // 触发事件
-//         call TriggerAddCondition(loc_trigger, Condition(function Trig_Coup_de_get_damaged_condition))
-//         set loc_timer=LoadTimerHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker"))), 0x4A4DB0A0)
-//         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 0x2B0A6845, LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker")))
-//         call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), StringHash("Coup_de_Grace_Attacker"), LoadUnitHandle(hero_hash, GetHandleId(GetTriggeringTrigger()), StringHash("Coup_de_Grace_Attacker")))
-//         call TimerStart(loc_timer, 0.30, false, function Trig_Coup_de_get_damaged_action)
-//     else
-//     endif
-//     set loc_trigger=null
-//     set loc_timer=null
-// endfunction
 // // 学习恩赐解脱技能
-// function Trig_Coup_de_Grace_study takes unit Iv returns nothing
-// if(GetUnitAbilityLevel(Iv, 'Ab5s') == 1) then
-// call SaveInteger(hero_hash, GetHandleId(GetLearningUnit()), 0x7FA0AE99, 2)
-// call SaveInteger(hero_hash, GetHandleId(GetLearningUnit()), StringHash("Coup_de_Grace_percent"), 15)
-// call SaveInteger(hero_hash, GetHandleId(GetLearningUnit()), 0x439763AE, 1)
-// call SaveInteger(hero_hash, GetHandleId(GetLearningUnit()), 0x06A4F9F2, 1)
-// elseif 
-// call SaveInteger(hero_hash, GetHandleId(GetLearningUnit()), 0x7FA0AE99, ( LoadInteger(hero_hash, GetHandleId(GetLearningUnit()), 0x7FA0AE99) + 2 ))
+function Trig_Coup_de_Grace_study takes unit Iv returns nothing
+    call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "学习恩赐解脱" )
+
+if(GetUnitAbilityLevel(Iv, 'Ab5s') == 1) then
+    // 爆伤倍数
+call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_multiple"), 2)
+// 暴击几率
+call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), 15)
+// 高级爆率
+call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent"), 1)
+
+call SaveInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2, 1)
+else
+call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_multiple"), ( LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_multiple")) + 2 ))
+
+
+endif
+
+//   if (GetUnitAbilityLevel(Iv, 'Ab5s') == 1) then
+//             call SaveInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99, ( LoadInteger(hero_hash, GetHandleId(GetLearningUnit()), 0x7FA0AE99) + 2 ))
+//             call SaveInteger(hero_hash, GetHandleId(Iv), 0xB4A97C51, 15)
+//             call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), 15)
+//             call SaveInteger(hero_hash, GetHandleId(Iv), 0x439763AE, 1)
+//             call SaveInteger(hero_hash, GetHandleId(Iv), 0x06A4F9F2, 1)
+//         else
+//             call SaveInteger(hero_hash, GetHandleId(Iv), 0x7FA0AE99, ( LoadInteger(hero_hash, GetHandleId(GetLearningUnit()), 0x7FA0AE99) + 2 ))
+//         endif
+        
+endfunction
+
+function Trig_Coup_de_Grace_attacked takes nothing returns nothing
+local unit CE=GetAttackedUnitBJ()
+local unit Iv = GetAttacker()
+local real loc_damage =0
+// call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "正在攻击1" +GetUnitName(CE))
+// if IsUnitType(GetAttackedUnitBJ(), UNIT_TYPE_STRUCTURE) == false and ( IsUnitType(GetAttackedUnitBJ(), UNIT_TYPE_ETHEREAL) == false ) and  GetUnitAbilityLevel(GetAttacker(), 'Ab5s') != 0   then
+
+
 // endif
 
-// endfunction
-// function Trig_Coup_de_Grace_attacked takes nothing returns nothing
-//     local unit CE=GetTriggerUnit()
-// local unit Iv = GetAttacker()
-//         call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0,"正在攻击")
-// endfunction
+        
+// call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "具体数值:" + R2S(loc_damage))
+// call TriggerSleepAction(0.3)
+// call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "清除暴击攻击力" )
+// call XX(Iv, $41304C50, 1, 108, 0)
+// call IncUnitAbilityLevel(Iv,$41304C50)
+// call DecUnitAbilityLevel(Iv,$41304C50)
+endfunction
+// 移除额外暴击概率
+function reduce_Coup_de_Grace_percent takes nothing returns nothing
+local timer CS=GetExpiredTimer()
+local integer Ix=GetHandleId(CS)
+local unit Iv = LoadUnitHandle(hero_hash, Ix,1)
+// call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "清除暴击概率" )
 
-// function Trig_Coup_de_Grace_condition takes nothing returns boolean
+if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) > 15 then
+call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) -10)
+endif
+
+if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent")) > 1 then
+call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent"), LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent")) -1)
+endif
+endfunction
+// 
+function Trig_Coup_de_Grace_condition takes nothing returns boolean
+    local unit Iv = null
+    local unit CE = null
+    local integer loc_percent = 0
+    local integer loc_big_percent = 0
+    local integer loc_multiple = 0
+    local texttag loc_tag =null
+    local timer loc_timer =null
+    local real loc_attack = 0
+    if GetUnitAbilityLevel(GetAttacker(), 'Ab5s') > 0 and IsUnitEnemy(GetAttacker(), GetOwningPlayer(GetAttackedUnitBJ())) then
+       
+       set Iv = GetAttacker()
+       set CE = GetAttackedUnitBJ()
+       set loc_attack  =GetUnitState(Iv, ConvertUnitState(21))
+       set loc_percent = LoadInteger(hero_hash, GetHandleId(GetAttacker()), StringHash("Coup_de_Grace_percent"))
+       set loc_multiple = LoadInteger(hero_hash, GetHandleId(GetAttacker()), StringHash("Coup_de_Grace_multiple"))
+       set loc_big_percent = LoadInteger(hero_hash, GetHandleId(GetAttacker()), StringHash("Coup_de_Grace_big_percent"))
+       if GetUnitAbilityLevel(Iv, $41304C50) == 0 then
+        call UnitAddAbility(Iv, $41304C50)
+        call UnitMakeAbilityPermanent(Iv, true, $41304C50)
+       endif
+       // 移除恩赐解脱暴击加成
+        call XX(Iv, $41304C50, 1, 108, 0)
+        call IncUnitAbilityLevel(Iv,$41304C50)
+        call DecUnitAbilityLevel(Iv,$41304C50)
+       if bC(Iv,'it19') then
+        set loc_attack = loc_attack *1.35
+       endif
+
+       if GetRandomInt(1, 100) <= loc_percent then
+
+        // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "触发了恩赐解脱")
+        // 暴击
+        call XX(Iv,$41304C50,1,108,loc_attack*loc_multiple )
+        call IncUnitAbilityLevel(Iv,$41304C50)
+        call DecUnitAbilityLevel(Iv,$41304C50)  
+       call take_magic_damage(Iv, CE, loc_attack * loc_multiple *0.5, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+        call CreateTextTagUnitBJ(R2S(loc_attack*loc_multiple), Iv, 0, 12, 100, 0, 0., 0)
+        call SetTextTagPermanent(GetLastCreatedTextTag(),false)
+        call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
+        call SetTextTagLifespan(GetLastCreatedTextTag(),1.)
+        // 在1秒内提高暴击概率
+        call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) +10)
+        set loc_timer = CreateTimer()
+        call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 1,Iv)
+        call TimerStart(loc_timer,3,true,function reduce_Coup_de_Grace_percent)
+
+       endif
+       
+        if GetRandomInt(1, 100) <= loc_big_percent then
+        
+        // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "触发了暴击恩赐解脱")
+        // 暴击
+        call XX(Iv, $41304C50, 1, 108, loc_attack * loc_multiple *10)
+        call IncUnitAbilityLevel(Iv,$41304C50)
+        call DecUnitAbilityLevel(Iv,$41304C50)
+       call take_magic_damage(Iv,CE,loc_attack*loc_multiple*5,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+        
+        call CreateTextTagUnitBJ(R2S(loc_attack*loc_multiple*10), Iv, 0, 12, 100, 0, 0., 0)
+        call SetTextTagPermanent(GetLastCreatedTextTag(),false)
+        call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
+        call SetTextTagLifespan(GetLastCreatedTextTag(),1.)
+        // 在1秒内提高暴击概率
+        call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent"), LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) +1)
+        set loc_timer = CreateTimer()
+        call SaveUnitHandle(hero_hash, GetHandleId(loc_timer), 1,Iv)
+        call TimerStart(loc_timer,3,true,function reduce_Coup_de_Grace_percent)
+
+       endif
+       
+        return true
+    else
+        return false
+    endif
+endfunction
+
+
+// // //  初始化恩赐解脱事件
+function InitTrig_Coup_de_Grace takes nothing returns nothing
+    set gg_trg_Coup_de_Grace=CreateTrigger()
+    call TriggerRegisterAnyUnitEventBJ(gg_trg_Coup_de_Grace,EVENT_PLAYER_UNIT_ATTACKED)
     
-//     return false
-// endfunction
+    call TriggerAddCondition(gg_trg_Coup_de_Grace,Condition(function Trig_Coup_de_Grace_condition))
+    call TriggerAddAction(gg_trg_Coup_de_Grace,function Trig_Coup_de_Grace_attacked)
 
-// function Trig_Coup_de_GraceActions takes nothing returns nothing
-//     local trigger ydl_trigger
-//     set ydl_trigger=CreateTrigger()
+endfunction
 
-//     set ydl_trigger=null
-// endfunction
-// //  初始化恩赐解脱事件
-// function InitTrig_Coup_de_Grace takes nothing returns nothing
-//     set gg_trg_Coup_de_Grace=CreateTrigger()
-//     call TriggerRegisterAnyUnitEventBJ(gg_trg_Coup_de_Grace,EVENT_PLAYER_UNIT_ATTACKED)
-//     call TriggerAddCondition(gg_trg_Coup_de_Grace,Condition(function Trig_Coup_de_Grace_condition))
 
-// endfunction
+// R独自一人
+function genie_r_action takes nothing returns nothing
+    local timer CS =GetExpiredTimer()
+    local unit Iv = LoadUnitHandle(hero_hash, GetHandleId(CS),StringHash("single_hero"))
+    local group loc_group = CreateGroup()
+    local integer loc_range = 750 - GetUnitAbilityLevel(Iv,'Ab5w')
+    local unit CE = null
+    local integer loc_i = 0
+    call GroupEnumUnitsInRange(loc_group,GetUnitX(Iv),GetUnitY(Iv),loc_range,null)
+    loop
+set CE=FirstOfGroup(loc_group)
+exitwhen CE==null
+if IsUnitType(CE, UNIT_TYPE_STRUCTURE) or CE == Iv or GetUnitState(CE, UNIT_STATE_LIFE) < .405 or IsUnitVisible(CE, GetOwningPlayer(Iv)) == false or IsUnitIllusion(CE) then
 
+else
+    set loc_i = loc_i+1
+endif
+call GroupRemoveUnit(loc_group,CE)
+endloop
+// call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "当前范围内有" + I2S(loc_i) + "个单位")
+
+if loc_i <2 then
+    // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "独自一人")
+    if GetUnitAbilityLevel(Iv,'Ab5x')==0 then
+        call UnitAddAbility(Iv,'Ab5x')
+        call UnitMakeAbilityPermanent(Iv, true, 'Ab5x')
+        call SetUnitAbilityLevel(Iv, 'Ab5x', GetUnitAbilityLevel(Iv,'Ab5w'))
+ 
+    endif
+    // 恩赐解脱概率翻倍
+    if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) == 15 then
+    call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), 30)
+    endif
+   
+    if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent")) == 1 then
+    call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent"), 2)
+    endif
+    
+else
+     call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), 15)
+     call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent"), 1)
+
+    call UnitRemoveAbility(Iv,'Ab5x')
+endif
+    // 防止数据出错
+   if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) < 15 then
+    call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent"), 15)
+    endif
+
+    if LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent")) < 1 then
+    call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_big_percent"), 1)
+    endif
+    
+call DestroyGroup(loc_group)
+
+endfunction
+
+function genie_study_r takes unit loc_u,integer loc_i returns nothing
+local timer CS = CreateTimer()
+if loc_i=='Ab5w' and IsUnitIllusion(loc_u)==false and GetUnitAbilityLevel(loc_u,'Ab5w')==1 then
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("single_hero"), loc_u)
+
+call TimerStart(CS, 0.2, true,function genie_r_action)
+endif
+endfunction
 
 //===========================================================================
 
@@ -5176,7 +5174,9 @@ function Trig_Phantom_StrikeFunc007Func008Func003Func001T takes nothing returns 
     call UnitRemoveAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'B03S')
     call SaveBoolean(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1339AD30, false)
     call RemoveSavedHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
-    call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5t',false)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5r',true)
+    call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer())) 
     call DestroyTimer(GetExpiredTimer())
 endfunction
 function Trig_Phantom_StrikeFunc007Func008Func003Func002T takes nothing returns nothing
@@ -5186,6 +5186,8 @@ function Trig_Phantom_StrikeFunc007Func008Func003Func002T takes nothing returns 
     call SaveBoolean(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x23B85F87, false)
     call RemoveSavedHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), StringHash("Coup_de_Grace_percent")) - 5 ))
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5t',false)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5r',true)
     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
     call DestroyTimer(GetExpiredTimer())
 endfunction
@@ -5194,7 +5196,10 @@ function Phantom_Strike_not_have_final takes nothing returns nothing
     call UnitRemoveAbility(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8), 'B03S')
     call SaveBoolean(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1339AD30, false)
     call RemoveSavedHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5t',false)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5r',true)
     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+
     call DestroyTimer(GetExpiredTimer())
 endfunction
 function Phantom_Strike_have_final takes nothing returns nothing
@@ -5204,7 +5209,10 @@ function Phantom_Strike_have_final takes nothing returns nothing
     call SaveBoolean(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x23B85F87, false)
     call RemoveSavedHandle(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), 0x1C540719)
     call SaveInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), StringHash("Coup_de_Grace_percent"), ( LoadInteger(hero_hash, GetHandleId(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)), StringHash("Coup_de_Grace_percent")) - 5 ))
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5t',false)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(LoadUnitHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x02EE20D8)),'Ab5r',true)
     call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
+
     call DestroyTimer(GetExpiredTimer())
 endfunction
 
@@ -5215,6 +5223,8 @@ function genieW_action takes nothing returns nothing
     local unit CE = GetSpellTargetUnit()
     local location loc_a = Location(GetUnitX(Iv), GetUnitY(Iv))
     local location loc_b = Location(GetUnitX(CE), GetUnitY(CE))
+    call SaveReal(hero_hash, GetHandleId(Iv), StringHash("phantom_x"),GetUnitX(Iv))
+    call SaveReal(hero_hash, GetHandleId(Iv), StringHash("phantom_y"),GetUnitY(Iv))
     set loc_step=loc_step + 3
     call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xCFDE6C76, loc_step)
     call SaveInteger(hero_hash, GetHandleId(GetTriggeringTrigger()), 0xECE825E7, loc_step)
@@ -5225,6 +5235,8 @@ function genieW_action takes nothing returns nothing
     call SaveLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x041DB5E6, loc_b)
     call SaveLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x64D66016, PolarProjectionBJ(loc_a, ( DistanceBetweenPoints(loc_a, loc_b) - 100.00 ), YDWEAngleBetweenUnits(Iv , CE)))
     call SetUnitPathing(Iv, false)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab5r',false)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab5t',true)
     if ( ( IsUnitAlly(CE, GetOwningPlayer(Iv)) == true ) ) then
         call SetUnitX(Iv, GetLocationX(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x64D66016)))
         call SetUnitY(Iv, GetLocationY(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x64D66016)))
@@ -5233,6 +5245,8 @@ function genieW_action takes nothing returns nothing
         call RemoveLocation(loc_a)
         call RemoveLocation(loc_b)
         call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetTriggeringTrigger()) * loc_step, 0x64D66016))
+        call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab5r',true)
+        call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab5t',false)
     else
         if ( ( LoadBoolean(hero_hash, GetHandleId(Iv), 0x1339AD30) == true ) ) then
             call DestroyTimer(LoadTimerHandle(hero_hash, GetHandleId(Iv), 0x1C540719))
@@ -5393,12 +5407,24 @@ function knife_fly takes nothing returns nothing
                 call KillUnit(loc_knife)
                 call YDWETimerRemoveUnit(1.61 , loc_knife)
                 // 造成伤害
-                // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0,"造成伤害！")
-                set loc_damage = 200 * GetUnitAbilityLevel(Iv, 'Ab5q') +GetUnitState(Iv, ConvertUnitState(21))
-                // call take_magic_damage(Iv, CE,)
+                if GetUnitAbilityLevel(Iv, 'Ab5s') > 0 and GetRandomInt(1, 100) <= LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) then
+                set loc_damage = (200 * GetUnitAbilityLevel(Iv, 'Ab5q') +GetUnitState(Iv, ConvertUnitState(21))) *  LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_multiple"))
+                call UnitDamageTarget(Iv, CE, loc_damage, false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+                call CreateTextTagUnitBJ(R2S(loc_damage), CE, 0, 15, 100, 0, 0., 0)
+                call SetTextTagPermanent(GetLastCreatedTextTag(),false)
+                call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
+                call SetTextTagLifespan(GetLastCreatedTextTag(),1.)
+                set loc_damage = GetUnitAbilityLevel(Iv, 'Ab5q') * GetUnitState(Iv, ConvertUnitState(21))*  LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_multiple"))
+                call chixu_injury(Iv, CE,loc_damage,3)
+                
+                else
+                 set loc_damage = 200 * GetUnitAbilityLevel(Iv, 'Ab5q') +GetUnitState(Iv, ConvertUnitState(21))
                 call UnitDamageTarget(Iv, CE, loc_damage, false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
                 set loc_damage = GetUnitAbilityLevel(Iv, 'Ab5q') * GetUnitState(Iv, ConvertUnitState(21))
                 call chixu_injury(Iv, CE,loc_damage,3)
+                endif
+          
+                
                 call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
                 call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
                 call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
@@ -5430,12 +5456,23 @@ function knife_fly takes nothing returns nothing
                 call SetUnitFacing(loc_knife, YDWEAngleBetweenUnits(loc_knife , CE))
                 call KillUnit(loc_knife)
                 call YDWETimerRemoveUnit(1.61 , loc_knife)
-                // call DisplayTextToPlayer(GetLocalPlayer(), 0, 0,"造成伤害！")
-                set loc_damage = 200 * GetUnitAbilityLevel(Iv, 'Ab5q') +GetUnitState(Iv,ConvertUnitState(21))
-              
+                 // 造成伤害
+                if GetUnitAbilityLevel(Iv, 'Ab5s') > 0 and  GetRandomInt(1, 100) <= LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_percent")) then
+                set loc_damage = (200 * GetUnitAbilityLevel(Iv, 'Ab5q') +GetUnitState(Iv, ConvertUnitState(21))) *  LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_multiple"))
+                call UnitDamageTarget(Iv, CE, loc_damage, false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
+                call CreateTextTagUnitBJ("恩赐解脱：" + R2S(loc_damage), CE, 0, 15, 100, 0, 0., 0)
+                call SetTextTagPermanent(GetLastCreatedTextTag(),false)
+                call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
+                call SetTextTagLifespan(GetLastCreatedTextTag(),1.)
+                set loc_damage = GetUnitAbilityLevel(Iv, 'Ab5q') * GetUnitState(Iv, ConvertUnitState(21))*  LoadInteger(hero_hash, GetHandleId(Iv), StringHash("Coup_de_Grace_multiple"))
+                call chixu_injury(Iv, CE,loc_damage,3)
+                
+                else
+                 set loc_damage = 200 * GetUnitAbilityLevel(Iv, 'Ab5q') +GetUnitState(Iv, ConvertUnitState(21))
                 call UnitDamageTarget(Iv, CE, loc_damage, false, true, ATTACK_TYPE_HERO, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
                 set loc_damage = GetUnitAbilityLevel(Iv, 'Ab5q') * GetUnitState(Iv, ConvertUnitState(21))
                 call chixu_injury(Iv, CE,loc_damage,3)
+                endif
                 call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x32A9E4C8))
                 call RemoveLocation(LoadLocationHandle(hero_hash, GetHandleId(GetExpiredTimer()), 0x041DB5E6))
                 call FlushChildHashtable(hero_hash, GetHandleId(GetExpiredTimer()))
@@ -5504,7 +5541,23 @@ endfunction
 // 被动
 
 // PA技能结束
-
+function wuming_w_acion takes unit Iv, unit CE returns nothing
+local group loc_group = CreateGroup()
+local unit loc_u = null
+call GroupEnumUnitsInRange(loc_group,GetUnitX(Iv),GetUnitY(Iv),1100.,null)
+loop
+set loc_u=FirstOfGroup(loc_group)
+exitwhen loc_u==null
+call GroupRemoveUnit(loc_group,loc_u)
+if GetUnitTypeId(loc_u)==GetUnitTypeId(Iv) and loc_u!=Iv then
+call SetUnitPosition(loc_u,GetUnitX(CE),GetUnitY(CE))
+call IssueTargetOrderById(loc_u,851983,CE)
+else
+endif
+endloop
+call DestroyGroup(loc_group)
+endfunction
+// 
 
 function Omin_slash_Move takes unit Iv,unit CE returns nothing
 local real local_real=GetRandomReal(0,360)
@@ -5872,6 +5925,60 @@ call DestroyGroup(I2)
 set I2=null
 set CE=null
 endfunction
+
+// 大灵爆效果
+function lingbao_aoe takes unit Iv returns nothing
+local real loc_x = GetSpellTargetX()
+local real loc_y = GetSpellTargetY()
+local unit CE
+local group I2=CreateGroup()
+// 查目标点附近有没有陷阱
+call GroupEnumUnitsInRange(I2,loc_x,loc_y,600,null)
+loop
+set CE=FirstOfGroup(I2)
+exitwhen CE == null 
+call GroupRemoveUnit(I2,CE)
+if (GetUnitTypeId(CE) == 'n00L') then
+call KillUnit(CE)
+call bs(Iv, loc_x, loc_y, 600, bk(Iv, 3, 3), 1, 0)
+call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Resurrect\\ResurrectTarget.mdl",GetUnitX(CE),GetUnitY(CE)))
+  
+endif
+
+endloop
+// 
+
+
+call DestroyGroup(I2)
+endfunction
+
+// 马忠F大招效果
+function mazhong_f takes unit Iv returns nothing
+local real loc_x = GetSpellTargetX()
+local real loc_y = GetSpellTargetY()
+local unit CE
+local group I2=CreateGroup()
+// 查目标点附近有没有陷阱
+call GroupEnumUnitsInRange(I2,loc_x,loc_y,300,null)
+loop
+set CE=FirstOfGroup(I2)
+exitwhen CE == null or GetUnitTypeId(CE) == 'n00L'
+call GroupRemoveUnit(I2,CE)
+endloop
+// 
+if GetUnitTypeId(CE) == 'n00L' then
+call SetUnitPosition(Iv,GetUnitX(CE),GetUnitY(CE))
+call KillUnit(CE)
+call bs(Iv, GetUnitX(CE), GetUnitY(CE), 300 + GetUnitAbilityLevel(Iv, 'Ab6i') *200, bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab6i') * 2), 1, 0)
+call DestroyEffect(AddSpecialEffect("Abilities\\Spells\\Human\\Resurrect\\ResurrectTarget.mdl",GetUnitX(CE),GetUnitY(CE)))
+call XV(Iv, 'Ab6i', 1, 10 - GetUnitAbilityLevel(Iv, 'Ab6i') *2) 
+
+else
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0,"目标点附近没有任意聚灵阵！")
+endif
+
+call DestroyGroup(I2)
+endfunction
 // 张鲁技能开始
 
 // 添加超负荷
@@ -5960,7 +6067,7 @@ elseif GetWidgetLife(Iv)>1 and loc_d>loc_r and GetUnitState(Iv, UNIT_STATE_MANA)
 set loc_x=loc_x+Cos(loc_a)*loc_r
 set loc_y=loc_y+Sin(loc_a)*loc_r
 
-call SetUnitState(Iv, UNIT_STATE_MANA, GetUnitState(Iv, UNIT_STATE_MANA) -(3 + loc_i * 2 + LoadReal(FS, GetHandleId(CS), 118) *0.02))
+call SetUnitState(Iv, UNIT_STATE_MANA, GetUnitState(Iv, UNIT_STATE_MANA) -(3 + loc_i * 2 + LoadReal(FS, GetHandleId(CS), 118) *0.01))
 // call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "|cffff0000当前法力值:" + R2S(GetUnitState(Iv, UNIT_STATE_MANA)))
 
 
@@ -6825,7 +6932,7 @@ elseif res <90 then
      set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
    if loc_level == 5 then
-    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,143)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
     if Iv == zongyu and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
     call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) -0.05)  
@@ -6844,7 +6951,7 @@ else
     set found_percent = 0
     set zongyu_R_enchance = zongyu_R_enchance +1
     if loc_level > 3 then   
-    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,143)],Iv)
     call DisplayTimedTextToForce(GetPlayersAll(),6.,GetUnitName(Iv) +"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
     call other_found_result(Iv)
     if  Iv ==zongyu  and GetUnitAbilityLevel(Iv, 'Ab28') >0 then
@@ -6871,11 +6978,11 @@ call other_found_result(Iv)
 call IncUnitAbilityLevel(Iv,'Ab28')
 endif
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了武功秘籍！他的拳法水平精进了！怒拳破等级突破了自身上限！")
-call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
+call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,143)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 else
 set zongyu_R_enchance = zongyu_R_enchance +1
-call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],Iv)
+call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,143)],Iv)
 call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000在墓穴中找到了极品宝物："+GetItemName(GetLastCreatedItem()))
 endif
 endif
@@ -7151,6 +7258,501 @@ call TriggerRegisterPlayerChatEvent(sos_listen,Player(7),"-sos",true)
 call TriggerAddAction(sos_listen,function Trig_listen_sos_action)
 endfunction
 
+function reset_red_cow takes nothing returns nothing 
+local player CC=Player(PLAYER_NEUTRAL_AGGRESSIVE)
+call RemoveUnit(CN)
+set CN=CreateUnit(CC,$4E6B6C6A,-4024.5,7205.6,200.02)
+call SetHeroLevel(CN,150,false)
+call SetUnitState(CN,UNIT_STATE_MANA,4810)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$41456572)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$414E6874)
+call SelectHeroSkill(CN,$41486473)
+call SelectHeroSkill(CN,$41486473)
+call IssueImmediateOrder(CN,"divineshield")
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$414E6361)
+call SelectHeroSkill(CN,$41486268)
+call SelectHeroSkill(CN,$41486268)
+call SelectHeroSkill(CN,$41486268)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41487463)
+call SelectHeroSkill(CN,$41486176)
+call SelectHeroSkill(CN,$41486176)
+call SelectHeroSkill(CN,$41486176)
+call SelectHeroSkill(CN,$41303131)
+call SelectHeroSkill(CN,$41303131)
+call IssueImmediateOrder(CN,"")
+call ExecuteFunc("jm")
+
+// 刑天
+call RemoveUnit(CQ)
+set CQ=CreateUnit(CC,$4E616B61,6106.5,2777.5,270.)
+call SetHeroLevel(CQ,150,false)
+call SetUnitState(CQ,UNIT_STATE_MANA,3450)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$41707866)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$414F6372)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call SelectHeroSkill(CQ,$41666165)
+call IssueImmediateOrder(CQ,"faeriefireon")
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$4155696D)
+call SelectHeroSkill(CQ,$414E7374)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call SelectHeroSkill(CQ,$41486268)
+call IssueImmediateOrder(CQ,"bloodluston")
+call ExecuteFunc("jp")
+// 黑牛
+call RemoveUnit(CO)
+set CO=CreateUnit(CC,$4E30304A,9864.2,13220.1,274.67)
+call SetHeroLevel(CO,150,false)
+call SetUnitState(CO,UNIT_STATE_MANA,710)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call SelectHeroSkill(CO,$41666165)
+call IssueImmediateOrder(CO,"faeriefireoff")
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call SelectHeroSkill(CO,$41303452)
+call IssueImmediateOrder(CO,"")
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$41486268)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414F6372)
+call SelectHeroSkill(CO,$414E7374)
+call SelectHeroSkill(CO,$414E7374)
+call SelectHeroSkill(CO,$414E7374)
+call SelectHeroSkill(CO,$414E7374)
+call IssueImmediateOrder(CO,"bloodluston")
+call SelectHeroSkill(CO,$414E6465)
+call ExecuteFunc("js")
+
+// 红牛
+call RemoveUnit(CP)
+set CP=CreateUnit(CC,$4E30304B,9347.9,13216.4,270.532)
+call SetHeroLevel(CP,150,false)
+call SetUnitState(CP,UNIT_STATE_MANA,1000)
+call SelectHeroSkill(CP,$41303435)
+call SelectHeroSkill(CP,$41303435)
+call SelectHeroSkill(CP,$41303435)
+call SelectHeroSkill(CP,$41303435)
+call IssueImmediateOrder(CP,"")
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call SelectHeroSkill(CP,$41303455)
+call IssueImmediateOrder(CP,"")
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$41636468)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call SelectHeroSkill(CP,$4130314A)
+call IssueImmediateOrder(CP,"")
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call SelectHeroSkill(CP,$4145696D)
+call IssueImmediateOrder(CP,"immolation")
+call IssueImmediateOrder(CP,"")
+call IssueImmediateOrder(CP,"bloodluston")
+call ExecuteFunc("jv")
+
+// 祝融
+call RemoveUnit(Ce)
+set Ce=CreateUnit(CC,$4E305A52,-10030.6,2265.9,268.62)
+call UnitAddAbility(Ce,'Ab53')
+call UnitMakeAbilityPermanent(Ce,true,'Ab53')
+call SetHeroLevel(Ce,200,false)
+call SelectHeroSkill(Ce,$41486176)
+call SelectHeroSkill(Ce,$41486176)
+call SelectHeroSkill(Ce,$41486176)
+call SelectHeroSkill(Ce,$41486176)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$41656E73)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call SelectHeroSkill(Ce,$4130334F)
+call IssueImmediateOrder(Ce,"")
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$414E6963)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call SelectHeroSkill(Ce,$41486473)
+call UnitAddItemToSlotById(Ce,$49303150,0)
+call UnitAddItemToSlotById(Ce,$49303234,1)
+call UnitAddItemToSlotById(Ce,$49303235,2)
+call UnitAddItemToSlotById(Ce,$49303236,3)
+call UnitAddItemToSlotById(Ce,$49303237,4)
+call UnitAddItemToSlotById(Ce,$49303049,5)
+
+// 黑蛇
+call RemoveUnit(Cl)
+set Cl=CreateUnit(CC,$4E423035,-11608.1,5817.1,196.92)
+// 魔法抗性
+call UnitAddAbility(Cl,'AT0R')
+call UnitMakeAbilityPermanent(Cl,true,'AT0R')
+call SetHeroLevel(Cl,150,false)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call SelectHeroSkill(Cl,$41413037)
+call IssueImmediateOrder(Cl,"")
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call SelectHeroSkill(Cl,$41474733)
+call IssueImmediateOrder(Cl,"")
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call SelectHeroSkill(Cl,$41413051)
+call IssueImmediateOrder(Cl,"")
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call SelectHeroSkill(Cl,$41475934)
+call IssueImmediateOrder(Cl,"")
+// 蚩尤魔刀
+call UnitAddItemToSlotById(Cl,$49303233,0)
+// 蚩尤摸头
+call UnitAddItemToSlotById(Cl,$49303248,1)
+// 蚩尤魔甲
+call UnitAddItemToSlotById(Cl,$49303235,2)
+// 蚩尤披风
+call UnitAddItemToSlotById(Cl,$49303237,3)
+// // 蚩尤战靴
+call UnitAddItemToSlotById(Cl,$49303236,4)
+// // 蚩尤护手
+call UnitAddItemToSlotById(Cl,$49303238,5)
+
+// 霸王
+// call RemoveUnit(Cm)
+// set Cm=CreateUnit(CC,$4E423044,12963.4,-10168.1,114.777)
+// call SetHeroLevel(Cm,200,false)
+// call SetUnitState(Cm,UNIT_STATE_MANA,100)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call SelectHeroSkill(Cm,$414A5331)
+// call IssueImmediateOrder(Cm,"")
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call SelectHeroSkill(Cm,$414A5333)
+// call IssueImmediateOrder(Cm,"")
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call SelectHeroSkill(Cm,$41534A32)
+// call IssueImmediateOrder(Cm,"")
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call SelectHeroSkill(Cm,$41303355)
+// call IssueImmediateOrder(Cm,"")
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call SelectHeroSkill(Cm,$41534A34)
+// call IssueImmediateOrder(Cm,"")
+// call UnitAddItemToSlotById(Cm,$49303252,0)
+// call UnitAddItemToSlotById(Cm,$49303248,1)
+// call UnitAddItemToSlotById(Cm,$49303235,2)
+// call UnitAddItemToSlotById(Cm,$49303237,3)
+// call UnitAddItemToSlotById(Cm,$49303236,4)
+// call UnitAddItemToSlotById(Cm,$49303245,5)
+
+
+// 蜘蛛boss
+call RemoveUnit(spider)
+set spider=CreateUnit(CC,$4E303032,-7535.7,-7173.,271.)
+call SetHeroLevel(spider,200,false)
+call SetUnitState(spider,UNIT_STATE_MANA,3000)
+// 学习铜墙铁壁
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SelectHeroSkill(spider,$4173736B)
+call SetUnitAbilityLevel(spider,$4173736B,9)
+// 学习招架
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+call SelectHeroSkill(spider,$41594C33)
+// 学习无敌
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+call SelectHeroSkill(spider,$41486473)
+// 学习万夫莫敌
+call SelectHeroSkill(spider,$415A4635)
+call SelectHeroSkill(spider,$415A4635)
+call SelectHeroSkill(spider,$415A4635)
+call SelectHeroSkill(spider,$415A4635)
+call ExecuteFunc("spiderEvent")
+
+// 蛇
+call RemoveUnit(she)
+set she=CreateUnit(CC,$4E303030,1878.7,7866.2,79.62)
+call SetHeroLevel(she,200,false)
+call SetUnitState(she,UNIT_STATE_MANA,1000)
+// 学习抗拒火环
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+call SelectHeroSkill(she,$41304642)
+// 学习燃灰
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+call SelectHeroSkill(she,$41623064)
+// 学习地裂 
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+call SelectHeroSkill(she,$414F7773)
+// 学习擒龙手
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+call SelectHeroSkill(she,$41303452)
+// 学习避实就虚 41304143
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call SelectHeroSkill(she,$41304143)
+call ExecuteFunc("sheEvent")
+
+endfunction
+
+
+
 function Trig_boss_time_off takes nothing returns nothing
 
 call DisplayTextToPlayer(Player(0), 0, 0, "|Cffff0000野怪刷新指令已重置")
@@ -7161,48 +7763,11 @@ function boss_rest_action takes nothing returns nothing
     local timer CS=CreateTimer()
 local integer Ix=GetHandleId(CS)
 if boss_rest then
-call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "妖兽们重新出现在世间，指令冷却5分钟")
+call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, "妖兽们重新出现在世间，指令冷却500秒")
 
 set boss_rest =false
-// 祝融复活
-call ReviveHero(Ce,-10000.,2257.,false)
-call SetUnitPosition(Ce,-10000.,2257.)
-// 霸王复活
-call ReviveHero(Cm,-14323.,1800.,false)
-call SetUnitPosition(Cm,-14323.,1800.)
-// 蛇复活
-call ReviveHero(Cl,-11666.,5800.,false)
-call SetUnitPosition(Cl,-11666.,5800.)
-// 蚩尤和门将复活
-call ReviveHero(Ck,-12400.,-2050.,false)
-call SetUnitPosition(Ck,-12400.,-2050.)
-call ReviveHero(Cg,12385.,11550.,false)
-call SetUnitPosition(Cg,12385.,11550.)
-call ReviveHero(Ch,12716.,9735.,false)
-call SetUnitPosition(Ch,12716.,9735.)
-call ReviveHero(Ci,12600.,7380.,false)
-call SetUnitPosition(Ci,12600.,7380.)
-call ReviveHero(Cj,12600.,5777.,false)
-call SetUnitPosition(Cj,12600.,5777.)
-// 项羽复活
-// call ReviveHeroLoc(CN,Mt[8],true)
-// 刑天复活
-// call ReviveHeroLoc(CQ,Jd[30],true)
-// 黑牛复活
-call ReviveHero(CO,9840.,13180.,false)
-call SetUnitPosition(CO,9840.,13180.)
-call ReviveHero(CP,9350.,13180.,false)
-call SetUnitPosition(CP,9350.,13180.)
-// 八岐蛇复活
-call ReviveHero(she,1878.7,7866.2,false)
-call SetUnitPosition(she,1878.7,7866.2)
-// 蜘蛛复活
-call ReviveHero(spider,-7535.7,-7173.,false)
-call SetUnitPosition(spider,-7535.7,-7173.)
-// 大男人复活
-call ReviveHero(Cf,-12125.,-7872.,false)
-call SetUnitPosition(Cf,-12125.,-7872.)
-call TimerStart(CS,600,false,function Trig_boss_time_off)
+call reset_red_cow()
+call TimerStart(CS,500,false,function Trig_boss_time_off)
 
 endif
 endfunction
@@ -8834,6 +9399,36 @@ call TriggerAddCondition(rongzhu_trig,Condition(function rongzhu_condition))
 call TriggerAddAction(rongzhu_trig,function rongzhu_actions)
 endfunction
 
+// 初始化拆分事件
+function chaifen_condition takes nothing returns boolean
+// return GetItemTypeId(GetManipulatedItem())=='IR04'
+return (GetItemTypeId(GetManipulatedItem())=='it1h')
+endfunction
+function chaifen_actions takes nothing returns nothing
+    local unit Iv = GetTriggerUnit()
+
+    if bC(Iv,'I00Y') then
+    call RemoveItem(aj(Iv,'I00Y'))
+    call UnitAddItem(Iv,CreateItem($676C736B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+    call UnitAddItem(Iv,CreateItem($6B336D32,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+    call UnitAddItem(Iv,CreateItem($676F7072,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+    call UnitAddItem(Iv,CreateItem($6B336D33,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+
+    elseif bC(Iv,'it0c') then
+call RemoveItem(aj(Iv,'it0c'))
+    call UnitAddItem(Iv,CreateItem($676C736B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+    call UnitAddItem(Iv,CreateItem($6B336D32,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+    call UnitAddItem(Iv,CreateItem($676F7072,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+    call UnitAddItem(Iv,CreateItem($6B336D33,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+
+    endif
+endfunction
+function init_chaifen takes nothing returns nothing
+set chaifen_trig=CreateTrigger()
+call TriggerRegisterAnyUnitEventBJ(chaifen_trig,EVENT_PLAYER_UNIT_PICKUP_ITEM)
+call TriggerAddCondition(chaifen_trig,Condition(function chaifen_condition))
+call TriggerAddAction(chaifen_trig,function chaifen_actions)
+endfunction
 
 function InitCustomTriggers takes nothing returns nothing
     call InitTrig_Xuyi1()
@@ -8857,11 +9452,13 @@ function InitCustomTriggers takes nothing returns nothing
     call YDWEItemAbilitySystemInit()
     call init_rongzhu()
     call timerInit()
+    call init_chaifen()
     // 
     call InitTrig_AnnihilateABlackHole()
     call InitTrig_AnnihilateABlackHole2()
     call InitTrig_S_DummyUnitDeath()
-    // call InitTrig_Coup_de_Grace()
+    call InitTrig_Coup_de_Grace()
+    call ConditionalTriggerExecute(gg_trg_Coup_de_Grace)
     // call liurui_R_init()
     // 
     call zhangjiao_Q_death_init()
@@ -9508,9 +10105,17 @@ local real attackTime =0
 // if JW == zongyu then 
 //     call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "技能等级:" + I2S( GetUnitAbilityLevel(JW, 'Ab27')))
 // endif
+// 形只影单攻击刷新流血效果
+if GetUnitAbilityLevel(JW, 'Ab5x') >0 then
+    if LoadInteger(hero_hash, GetHandleId(JW), StringHash("chixu_damage_time")) >0 then
+call SaveInteger(hero_hash,GetHandleId(JW),StringHash("chixu_damage_time"),10)
+    endif
+endif
+// 自动吞噬
 if GetUnitAbilityLevel(JW, 'Ab2r') >0 and IsUnitType(Ig, UNIT_TYPE_FLYING) == false and IsUnitType(Ig, UNIT_TYPE_HERO) == false and IsUnitType(Ig, UNIT_TYPE_STRUCTURE) == false and IsUnitType(Ig, UNIT_TYPE_STRUCTURE) == false and IsUnitEnemy(JW, GetOwningPlayer(Ig)) == true then
     call IssueTargetOrderById(JW, 852247,Ig)
 endif
+
 
 if  GetUnitAbilityLevel(JW, 'Ab26') >0 then
     call take_magic_damage(JW, Ig, (GetHeroAgi(JW, true))+(GetHeroInt(JW, true))+(GetHeroStr(JW, true)), true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
@@ -9566,19 +10171,33 @@ else
 endif
 endif
 
-// 心之钢
+// 心之钢叠加
 if bW(JW, $69743069) != null and LoadBoolean(FS,GetHandleId(JW),$130B62E4) == true  then
 call PlaySoundOnUnitBJ(gang,150,JW)
 // call DisplayTextToPlayer(GetOwningPlayer(JW), 0, 0, "|Cff00ff00心之钢攻击！" )
 call take_magic_damage(JW, Ig, LoadReal(FS,GetHandleId(Ig),$130B62E3) * .5, false, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
 call SetUnitState(JW,ConvertUnitState(22),LoadReal(FS,GetHandleId(JW),$130B62E5))
-if bC(JW,'it07') then
+if bC(JW, 'it07')  then
+    // 如果是力量英雄
+if(GetUnitPointValue(JW) == 4) then 
 call SetItemCharges(aj(JW,$69743069), GetItemCharges(aj(JW,$69743069)) + R2I(GetUnitState(JW, UNIT_STATE_MAX_LIFE) * 0.015))
 call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.015)
+else
+call SetItemCharges(aj(JW,$69743069), GetItemCharges(aj(JW,$69743069)) + R2I(GetUnitState(JW, UNIT_STATE_MAX_LIFE) * 0.008))
+call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.008)
+endif
 
 else
-call SetItemCharges(aj(JW,$69743069), GetItemCharges(aj(JW,$69743069)) + R2I(GetUnitState(JW, UNIT_STATE_MAX_LIFE) * 0.015))
-call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.015)
+
+// 如果是力量英雄
+if(GetUnitPointValue(JW) == 4) then 
+call SetItemCharges(aj(JW,$69743069), GetItemCharges(aj(JW,$69743069)) + R2I(GetUnitState(JW, UNIT_STATE_MAX_LIFE) * 0.01))
+call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.01)
+else
+call SetItemCharges(aj(JW,$69743069), GetItemCharges(aj(JW,$69743069)) + R2I(GetUnitState(JW, UNIT_STATE_MAX_LIFE) * 0.005))
+call SetUnitState(JW, ConvertUnitState(1), GetUnitState(JW, UNIT_STATE_MAX_LIFE) *1.005)
+endif
+
 
 endif
 
@@ -9719,20 +10338,7 @@ call SaveInteger(Ia,GetHandleId(JW),$41594D31,0)
 call DestroyEffect(LoadEffectHandle(Ia,GetHandleId(JW),$30656666))
 call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$6530594D,0,0,GetUnitX(JW),GetUnitY(JW),GetUnitFacing(JW),1),852218,GetUnitX(Ig),GetUnitY(Ig))
 call bv(JW,GetUnitState(JW,ConvertUnitState(21))*2,bN(JW,Ig),1500,110)
-// 无名W状态生成幻象
-elseif GetUnitAbilityLevel(JW,'Ab5l')>0 and IsUnitAlly(JW,Player(8))==true then
-    // 无名
-if GetUnitTypeId(JW)==$55647265 or GetUnitTypeId(JW)==$55303038 and IsUnitType(JW,UNIT_TYPE_HERO)==true then
-// 问天枪
-if GetRandomInt(1, 100) <= GetUnitAbilityLevel(JW, 'Ab5l')  then
-call UnitAddItem(JW,CreateItem($66676668,GetUnitX(JW),GetUnitY(JW)))
-endif
-// if bW(JW,$49303034)!=null and GetRandomInt(1,5)==3 then
-// call UnitAddItem(JW,CreateItem($66676668,GetUnitX(JW),GetUnitY(JW)))
-// elseif GetRandomInt(1,10)==5 then
-// call UnitAddItem(JW,CreateItem($66676668,GetUnitX(JW),GetUnitY(JW)))
-// endif
-endif
+
 elseif GetUnitAbilityLevel(JW,$41304C31)>0 and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and bW(JW,$6D6C7374)!=null or bW(JW,$676F626D)!=null then
 if GetRandomInt(2,5)==5 then
 set Jd[10]=GetUnitLoc(JW)
@@ -9748,6 +10354,12 @@ elseif bW(JW,$6C6E726E)!=null and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlay
 if GetRandomInt(GetUnitAbilityLevel(JW,$41303645),20)==20 then
     // 刘湛冲击波伤害
 call take_magic_damage(JW,Ig,GetEventDamage()+I2R((GetHeroAgi(JW, true) +GetHeroStr(JW,true))*5),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+endif
+elseif GetUnitAbilityLevel(JW, 'Ab34') >0 then
+if GetRandomInt(1,10)==3 then
+call bv(JW,bk(JW,1,3),bN(JW,Ig),1000,220)
+call IssuePointOrderById(XB(GetPlayerId(GetOwningPlayer(JW)),$65303939,$4130364B,1,GetUnitX(JW),GetUnitY(JW),0.,1),852125,GetUnitX(Ig),GetUnitY(Ig))
+
 endif
 endif
 if IsUnitAlly(JW,Player(8))==true and IsUnitType(JW,UNIT_TYPE_HERO)==true then
@@ -11403,7 +12015,7 @@ call SetUnitFlyHeight(CE,0,0.)
 call RemoveUnit(CE)
 set JJ=XB(GetPlayerId(GetOwningPlayer(Iv)),$65303939,$41333030,3,It,Iu,0,1.)
 call IssueImmediateOrderById(JJ,852127)
-call bs(Iv,It,Iu,330.,LoadReal(Ia,Ix,$3064616D),3,2)
+call bs(Iv,It,Iu,330.,LoadReal(Ia,Ix,$3064616D),0,0)
 call PauseTimer(CS)
 call DestroyTimer(CS)
 call FlushChildHashtable(Ia,Ix)
@@ -11412,6 +12024,7 @@ set Iv=null
 set CE=null
 set CS=null
 endfunction
+// 雷霆巨斧伤害
 function dd takes unit Iv,integer Pt,real It,real Iu returns nothing
 local timer CS=CreateTimer()
 local integer Ix=GetHandleId(CS)
@@ -11525,6 +12138,7 @@ endif
 set Iv=null
 set CE=null
 endfunction
+// 疾风一戟
 function di takes unit Ij,unit CE returns nothing
 local timer CS=CreateTimer()
 local integer Ix=GetHandleId(CS)
@@ -13646,7 +14260,7 @@ function fM takes unit Iv,real It,real Iu returns nothing
 local integer FN=0
 set FN=bf()
 set Hi[FN]=0
-set HO[FN]=bk(Iv,3,GetUnitAbilityLevel(Iv,$41303435)*2+3)*.03
+set HO[FN]=bk(Iv,3,GetUnitAbilityLevel(Iv,$41303435)*2+3)*.05
 set MX[FN]=Iv
 set Hj[FN]=It
 set Hk[FN]=Iu
@@ -13787,11 +14401,18 @@ endloop
 call DestroyGroup(I2)
 set I2=null
 endfunction
-function fU takes unit Iv,unit CE,real Ii returns real
-call SaveInteger(Ia,GetHandleId(Iv),$415A5957,LoadInteger(Ia,GetHandleId(Iv),$415A5957)+1)
-if LoadInteger(Ia,GetHandleId(Iv),$415A5957)>=3 and GetUnitState(CE,ConvertUnitState(0))>.405 then
-call SaveInteger(Ia,GetHandleId(Iv),$415A5957,0)
-call bd(Iv,CE,10,30,0,0,bk(Iv,0,GetUnitAbilityLevel(Iv,$415A5957))*.5,2)
+function fU takes unit Iv,unit CE,real Ii,integer ability_code returns real
+    local real loc_r = Ii + bk(Iv, 0, GetUnitAbilityLevel(Iv, ability_code)) * .5
+call SaveInteger(Ia,GetHandleId(Iv),ability_code,LoadInteger(Ia,GetHandleId(Iv),ability_code)+1)
+if LoadInteger(Ia,GetHandleId(Iv),ability_code)>=3 and GetUnitState(CE,ConvertUnitState(0))>.405 then
+call SaveInteger(Ia,GetHandleId(Iv),ability_code,0)
+
+call CreateTextTagUnitBJ("枪出如龙！" + R2S(loc_r), CE, 1., 15., 100., 100, 40., 20.)
+call SetTextTagPermanent(GetLastCreatedTextTag(),false)
+call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
+call SetTextTagLifespan(GetLastCreatedTextTag(),2.)
+
+call bd(Iv, CE, 10, 30, 0, 0, loc_r, 2)
 endif
 return I2R(GetHeroAgi(Iv,true))
 endfunction
@@ -15014,6 +15635,51 @@ set IQ=0
 set IR=0
 set IS=0
 endfunction
+
+function tiger_event takes nothing returns nothing
+local widget CT=null
+local unit CU=null
+local integer CW=0
+local boolean CV=true
+set CT=bj_lastDyingWidget
+if CT==null then
+set CU=GetTriggerUnit()
+endif
+if CU!=null then
+set CV=not IsUnitHidden(CU)
+if CV and GetChangingUnit()!=null then
+set CV=GetChangingUnitPrevOwner()==Player(PLAYER_NEUTRAL_AGGRESSIVE)
+endif
+endif
+if CV then
+call RandomDistReset()
+call RandomDistAddItem('it1a',100)
+set CW=RandomDistChoose()
+if CU!=null then
+call UnitDropItem(CU,CW)
+else
+call WidgetDropItem(CT,CW)
+endif
+// 兽魂掉落
+// call UnitAddItemByIdSwapped('it1a',GetTriggerUnit())
+// call UnitAddItemByIdSwapped('it1b',GetTriggerUnit())
+
+call RandomDistReset()
+
+call RandomDistAddItem('it1b',100)
+set CW=RandomDistChoose()
+if CU!=null then
+call UnitDropItem(CU,CW)
+else
+call WidgetDropItem(CT,CW)
+endif
+
+
+endif
+set bj_lastDyingWidget=null
+call DestroyTrigger(GetTriggeringTrigger())
+endfunction
+
 function fq takes nothing returns nothing
 local widget CT=null
 local unit CU=null
@@ -19569,6 +20235,13 @@ set CS=CreateTrigger()
 call TriggerRegisterUnitEvent(CS,Ca,EVENT_UNIT_DEATH)
 call TriggerRegisterUnitEvent(CS,Ca,EVENT_UNIT_CHANGE_OWNER)
 call TriggerAddAction(CS,function fq)
+// 虎麒麟
+set tiger = CreateUnit(CC, 'u00p', -5430, 939, 90)
+set CS=CreateTrigger()
+call TriggerRegisterUnitEvent(CS,tiger,EVENT_UNIT_DEATH)
+call TriggerRegisterUnitEvent(CS,tiger,EVENT_UNIT_CHANGE_OWNER)
+call TriggerAddAction(CS,function tiger_event)
+
 set Cb=CreateUnit(CC,$6E777764,-5483.8,3466.2,259.63)
 set CS=CreateTrigger()
 call TriggerRegisterUnitEvent(CS,Cb,EVENT_UNIT_DEATH)
@@ -19711,218 +20384,218 @@ call UnitAddItemToSlotById(Cf,'it0a',4)
 // 自然魂珠
 // call UnitAddItemToSlotById(Cf,'it0k',5)
 call UnitAddItemToSlotById(Cf,'I01P',5)
-set Cg=CreateUnit(CC,$4E423031,12314.4,11569.4,91.56)
-call SetHeroLevel(Cg,200,false)
-call SetUnitState(Cg,UNIT_STATE_MANA,260)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$41616D6B)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414E6874)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$414F7773)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41656E73)
-call SelectHeroSkill(Cg,$41486473)
-call UnitAddItemToSlotById(Cg,$726E7370,0)
-call UnitAddItemToSlotById(Cg,$6F666C67,1)
-call UnitAddItemToSlotById(Cg,$7368656E,2)
-call UnitAddItemToSlotById(Cg,$6667756E,3)
-call UnitAddItemToSlotById(Cg,$49303037,4)
-call UnitAddItemToSlotById(Cg,$6C656467,5)
-set Ch=CreateUnit(CC,$4E423032,12716.6,9732.8,126.48)
-call SetHeroLevel(Ch,200,false)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$41616D6B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call SelectHeroSkill(Ch,$4130414B)
-call IssueImmediateOrder(Ch,"")
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41487462)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call SelectHeroSkill(Ch,$41304433)
-call IssueImmediateOrder(Ch,"")
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call SelectHeroSkill(Ch,$414F7777)
-call UnitAddItemToSlotById(Ch,$73686377,0)
-call UnitAddItemToSlotById(Ch,$68627468,1)
-call UnitAddItemToSlotById(Ch,$72646530,2)
-call UnitAddItemToSlotById(Ch,$72616D32,3)
-call UnitAddItemToSlotById(Ch,$6F736C6F,4)
-call UnitAddItemToSlotById(Ch,$6C656467,5)
-set Ci=CreateUnit(CC,$4E423033,12623.7,7429.2,75.54)
-call SetHeroLevel(Ci,200,false)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41616D6B)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$41436662)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call SelectHeroSkill(Ci,$4130355A)
-call IssueImmediateOrder(Ci,"")
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41707267)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call SelectHeroSkill(Ci,$41436C73)
-call UnitAddItemToSlotById(Ci,$49303031,0)
-call UnitAddItemToSlotById(Ci,$49303032,1)
-call UnitAddItemToSlotById(Ci,$49303142,2)
-call UnitAddItemToSlotById(Ci,$49303049,3)
-call UnitAddItemToSlotById(Ci,$49303056,4)
-call UnitAddItemToSlotById(Ci,$6C656467,5)
-set Cj=CreateUnit(CC,$4E423034,12639.6,5776.6,99.49)
-call SetHeroLevel(Cj,200,false)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41616D6B)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call SelectHeroSkill(Cj,$41303831)
-call IssueImmediateOrder(Cj,"")
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call SelectHeroSkill(Cj,$41303830)
-call IssueImmediateOrder(Cj,"")
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call SelectHeroSkill(Cj,$41303758)
-call IssueImmediateOrder(Cj,"slowon")
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call SelectHeroSkill(Cj,$4130324A)
-call IssueImmediateOrder(Cj,"")
-call UnitAddItemToSlotById(Cj,$49303147,0)
-call UnitAddItemToSlotById(Cj,$49303145,1)
-call UnitAddItemToSlotById(Cj,$736F7237,2)
-call UnitAddItemToSlotById(Cj,$736F7238,3)
-call UnitAddItemToSlotById(Cj,$49303146,4)
-call UnitAddItemToSlotById(Cj,$49303150,5)
+set door_boss1=CreateUnit(CC,$4E423031,12314.4,11569.4,91.56)
+call SetHeroLevel(door_boss1,200,false)
+call SetUnitState(door_boss1,UNIT_STATE_MANA,260)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$41616D6B)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414E6874)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$414F7773)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41656E73)
+call SelectHeroSkill(door_boss1,$41486473)
+call UnitAddItemToSlotById(door_boss1,$726E7370,0)
+call UnitAddItemToSlotById(door_boss1,$6F666C67,1)
+call UnitAddItemToSlotById(door_boss1,$7368656E,2)
+call UnitAddItemToSlotById(door_boss1,$6667756E,3)
+call UnitAddItemToSlotById(door_boss1,$49303037,4)
+call UnitAddItemToSlotById(door_boss1,$6C656467,5)
+set door_boss2=CreateUnit(CC,$4E423032,12716.6,9732.8,126.48)
+call SetHeroLevel(door_boss2,200,false)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$41616D6B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call SelectHeroSkill(door_boss2,$4130414B)
+call IssueImmediateOrder(door_boss2,"")
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41487462)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call SelectHeroSkill(door_boss2,$41304433)
+call IssueImmediateOrder(door_boss2,"")
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call SelectHeroSkill(door_boss2,$414F7777)
+call UnitAddItemToSlotById(door_boss2,$73686377,0)
+call UnitAddItemToSlotById(door_boss2,$68627468,1)
+call UnitAddItemToSlotById(door_boss2,$72646530,2)
+call UnitAddItemToSlotById(door_boss2,$72616D32,3)
+call UnitAddItemToSlotById(door_boss2,$6F736C6F,4)
+call UnitAddItemToSlotById(door_boss2,$6C656467,5)
+set door_boss3=CreateUnit(CC,$4E423033,12623.7,7429.2,75.54)
+call SetHeroLevel(door_boss3,200,false)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41616D6B)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$41436662)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call SelectHeroSkill(door_boss3,$4130355A)
+call IssueImmediateOrder(door_boss3,"")
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41707267)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call SelectHeroSkill(door_boss3,$41436C73)
+call UnitAddItemToSlotById(door_boss3,$49303031,0)
+call UnitAddItemToSlotById(door_boss3,$49303032,1)
+call UnitAddItemToSlotById(door_boss3,$49303142,2)
+call UnitAddItemToSlotById(door_boss3,$49303049,3)
+call UnitAddItemToSlotById(door_boss3,$49303056,4)
+call UnitAddItemToSlotById(door_boss3,$6C656467,5)
+set door_boss4=CreateUnit(CC,$4E423034,12639.6,5776.6,99.49)
+call SetHeroLevel(door_boss4,200,false)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41616D6B)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call SelectHeroSkill(door_boss4,$41303831)
+call IssueImmediateOrder(door_boss4,"")
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call SelectHeroSkill(door_boss4,$41303830)
+call IssueImmediateOrder(door_boss4,"")
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call SelectHeroSkill(door_boss4,$41303758)
+call IssueImmediateOrder(door_boss4,"slowon")
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call SelectHeroSkill(door_boss4,$4130324A)
+call IssueImmediateOrder(door_boss4,"")
+call UnitAddItemToSlotById(door_boss4,$49303147,0)
+call UnitAddItemToSlotById(door_boss4,$49303145,1)
+call UnitAddItemToSlotById(door_boss4,$736F7237,2)
+call UnitAddItemToSlotById(door_boss4,$736F7238,3)
+call UnitAddItemToSlotById(door_boss4,$49303146,4)
+call UnitAddItemToSlotById(door_boss4,$49303150,5)
 set Ck=CreateUnit(CC,$4E423030,-12352.9,-1605.,300.01)
 // 魔法抗性
 call UnitAddAbility(Ck,'AT0R')
@@ -20137,7 +20810,7 @@ set CE=CreateUnit(CC,$6E666E70,-704.,-7616.,270.)
 set CJ=CreateUnit(CC,$6861726D,-6848.,13248.,270.)
 set CK=CreateUnit(CC,$68303031,-1856.,-6592.,270.)
 set CE=CreateUnit(CC,$68303052,-1894.,-7293.7,357.27)
-set rongzhu_factory=CreateUnit(CC,'B03R',-6848.,12848.,270.)
+set rongzhu_factory=CreateUnit(CC,'b002',-6848.,12848.,270.)
 
 endfunction
 function f6 takes nothing returns nothing
@@ -20195,10 +20868,13 @@ call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
 // PA
-set genie=CreateUnit(CC,'HA0I',-3422.2,-7867.1,277.77)
+set genie=CreateUnit(CC,'HA0I',-3522.2,-7867.1,277.77)
+call UnitAddItemToSlotById(genie,$72646531,0)
+call UnitAddItemToSlotById(genie,$636C666D,1)
+call UnitAddItemToSlotById(genie,$70656E72,2)
 // set genie=CreateUnit(CC,'u00o',-3522.2,-7867.1,277.77)
-call UnitAddItemToSlotById(liurui,'frgd',0)
-call UnitAddItemToSlotById(liurui,$70656E72,2)
+// call UnitAddItemToSlotById(genie,'it19',0)
+// call UnitAddItemToSlotById(liurui,$70656E72,2)
 // 刘璿
 set liurui=CreateUnit(CC,'HA07',-3422.2,-7867.1,277.77)
 call UnitMakeAbilityPermanent(liurui, true,'S005')
@@ -20405,6 +21081,7 @@ set CE=CreateUnit(CC,$68637468,-5509.,12858.4,1.048)
 set DH=CreateUnit(CC,$51544453,-3579.7,-6703.,272.15)
 call SetUnitState(DH,UNIT_STATE_MANA,350)
 call UnitAddItemToSlotById(DH,$72687468,0)
+// call UnitAddItemToSlotById(DH,'mgtk',0)
 call UnitAddItemToSlotById(DH,$6C676468,1)
 call UnitAddItemToSlotById(DH,$72616731,2)
 set CE=CreateUnit(CC,$68637468,-5888.3,13155.6,211.482)
@@ -20422,6 +21099,13 @@ call SetUnitState(DJ,UNIT_STATE_MANA,260)
 call UnitAddItemToSlotById(DJ,$706D6E61,0)
 call UnitAddItemToSlotById(DJ,$636C666D,1)
 call UnitAddItemToSlotById(DJ,$70656E72,2)
+// call UnitAddItemToSlotById(DJ,'it1b',0)
+// call UnitAddItemToSlotById(DJ,'I00Y',1)
+// call UnitAddItemToSlotById(DJ,'it0c',2)
+// call UnitAddItemToSlotById(DJ,'it0e',3)
+// call UnitAddItemToSlotById(DJ,'it13',4)
+// call UnitAddItemToSlotById(DJ,'it1g',5)
+
 // 黄忠
 set DK=CreateUnit(CC,$48303036,-3173.,-7107.2,282.02)
 // call SetUnitState(DK,UNIT_STATE_MANA,150)
@@ -20612,7 +21296,7 @@ call UnitAddItemToSlotById(Du,$70656E72,2)
 set Dv=CreateUnit(CC,$485A5930,-3399.9,-6921.6,274.418)
 call SetUnitState(Dv,UNIT_STATE_MANA,200)
 call UnitAddItem(Dv,CreateItem($72656A36,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
-// call UnitAddItem(Dv,CreateItem($736F7231,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+// call UnitAddItem(Dv,CreateItem('gobm',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 // call UnitAddItemToSlotById(Dv,$72656A36,0)
 // call UnitAddItemToSlotById(Dv,$736F7231,1)
 // 神秘商店
@@ -20902,7 +21586,7 @@ function gU takes nothing returns nothing
 local group KB
 local unit KC
 call ff()
-set hero_hash=InitHashtable()
+
 // 初始化YDWE哈希表
 set YDHT=InitHashtable()
 set YDLOC=InitHashtable()
@@ -20947,6 +21631,7 @@ call ShowUnitHide(DT)
 call ShowUnitHide(DS)
 call ShowUnitHide(CG)
 call ShowUnitHide(Ca)
+call ShowUnitHide(tiger)
 // 隐藏蛇
 call ShowUnitHide(she)
 call ShowUnitHide(spider)
@@ -21460,9 +22145,10 @@ local real defend_percent = 1
 local integer magic_defend_amout = magicDefendLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())])
 local integer magic_strike_percent = (100 - magicPercentStrikeLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())],100))
 local integer magic_strike_amout = (1000 - magicStrikeLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())],1000))
-
+local integer loc_i= 80
+local integer loc_num=0
 set defend_percent = (I2R(magic_defend_amout) / I2R(magic_defend_amout + 100))
-
+ 
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前攻击速度  |cff00ff00"+R2S(GetUnitState(Ib[GetConvertedPlayerId(GetTriggerPlayer())],ConvertUnitState(81))))
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前攻击间隔  |cff00ff00"+R2S(GetUnitState(Ib[GetConvertedPlayerId(GetTriggerPlayer())],ConvertUnitState(37))))
 call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"当前移动速度  |cff00ff00"+R2S(GetUnitMoveSpeed(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
@@ -21471,8 +22157,15 @@ call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前魔抗减伤  |cff00ff
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前百分比法术穿透  |cff00ff00" + R2S(magic_strike_percent) + "%")
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前固定法术穿透  |cff00ff00" + R2S(magic_strike_amout) )
 call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前法术强度  |cff00ff00" + R2S(magicLevel(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
+// loop 
+// exitwhen loc_i==loc_num
 
-// call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前英雄ID:  |cff00ff00" + I2S(GetUnitTypeId(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
+// call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前基础属性‘" + I2S(loc_num) + "’  |cff00ff00:" + R2S(GetUnitState(Ib[GetConvertedPlayerId(GetTriggerPlayer())], ConvertUnitState(loc_num))))
+// set loc_num = loc_num+1
+// endloop
+// call UnitAddItem(Ib[GetConvertedPlayerId(GetTriggerPlayer())],CreateItem($66676668,GetUnitX(Ib[GetConvertedPlayerId(GetTriggerPlayer())]),GetUnitY(Ib[GetConvertedPlayerId(GetTriggerPlayer())])))
+
+// call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "当前英雄护甲:  |cff00ff00" + R2S(YDWEGetUnitArmor(Ib[GetConvertedPlayerId(GetTriggerPlayer())],'Ab6t')))
 
 endfunction
 function gz takes nothing returns nothing
@@ -21517,7 +22210,7 @@ local real Ii=GetEventDamage()
 local real loc_dmg =0
 local unit loc_unit =null
 // 马良Q伤害效果
-    // call DisplayTextToPlayer(GetOwningPlayer(Ig), 0, 0, "|cff00ff00回血了：" + R2S(Ii))
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00造成伤害：" + R2S(Ii))
 
 // 飞轮触发攻击特效
 if GetUnitTypeId(Ih) == 'u006'  then
@@ -21529,7 +22222,14 @@ if GetUnitTypeId(Ih) == 'e0ZQ'  then
 // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00飞轮海伤害" )
 set Ih = Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))]
 endif
-
+// 后羿弓45%穿透
+if GetUnitAbilityLevel(Ih, 'Ab6v') >0 then
+call EXSetEventDamage(GetEventDamage() * physicalStrike(Ih, Ig, 0.45))
+endif
+// 如果有含光剑且有恩赐解脱
+if bC(Ih, 'it19') and GetUnitAbilityLevel(Ih, 'Ab5s') >0 then
+call Serious_injury(Ih,Ig)
+endif
 
 // 马甲触发的伤害
 if GetUnitTypeId(Ih) == $65303939   then
@@ -21549,6 +22249,21 @@ endif
 else
 
 endif
+// 玄天套效果
+if GetUnitAbilityLevel(Ig, 'Ab6r') > 0 then
+    // 反弹伤害
+   set loc_dmg = bk(Ig, 1,1) 
+    call take_magic_damage(Ig, Ih, loc_dmg, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+    // 重伤
+   call Serious_injury(Ig, Ih) 
+//    伤害减半
+if GetEventDamage() >= GetUnitState(Ig, UNIT_STATE_LIFE) *0.1 then
+call EXSetEventDamage(GetEventDamage()*.5)
+    
+endif
+
+endif
+
 
 if GetUnitTypeId(Ig)==$48616E74 then
 if GetEventDamage()>=GetUnitState(Ig,UNIT_STATE_LIFE) and LoadInteger(bj_lastCreatedHashtable,$6B6D3030,1)>0 then
@@ -21561,14 +22276,30 @@ endif
 else
 endif
 
-// 
+// 聚灵杖特效伤害
+if GetUnitAbilityLevel(Ih, 'Ab6j') > 0 and YDWEIsEventAttackDamage() then
+set loc_dmg = bk(Ih, 5,6) 
+call take_magic_damage(Ih, Ig, loc_dmg, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+ 
+endif
+
+// 罔象毒牙特效伤害
+if GetUnitAbilityLevel(Ih, 'Ab6l') > 0 and YDWEIsEventAttackDamage() then
+set loc_dmg = bk(Ih, 5,2) 
+call take_magic_damage(Ih, Ig, loc_dmg, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+ 
+endif
+
 // 魔龙刀真伤
-if GetUnitAbilityLevel(Ih, 'Ab16') > 0 then
-    if YDWEIsEventAttackDamage() then
-        // call textToPlayer(GetOwningPlayer(Ih), 0, 0, "三倍真伤！" + R2S(GetEventDamage() *3))
-        call take_magic_damage(Ih, Ig,GetUnitState(Ih,ConvertUnitState(21)) *3, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+if GetUnitAbilityLevel(Ih, 'Ab16') > 0 and YDWEIsEventAttackDamage() then
     
-    endif
+call take_magic_damage(Ih, Ig, GetEventDamage() *2 + GetUnitState(Ih, ConvertUnitState(21)) * 3, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+// call take_magic_damage(Ih, Ig,GetUnitState(Ih,ConvertUnitState(21)) *3, false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+
+    // if YDWEIsEventAttackDamage() then
+        // call textToPlayer(GetOwningPlayer(Ih), 0, 0, "三倍真伤！" + R2S(GetEventDamage() *3))
+    
+    // endif
 endif
 // 张角被动
 if Ih == zhangjiao and GetUnitAbilityLevel(Ih, 'Ab3y') > 0 and IsUnitType(Ih, UNIT_TYPE_HERO) then
@@ -21665,19 +22396,23 @@ if Ig == yanyu and GetUnitAbilityLevel(Ig, 'Ab2g') >0 then
   endif
 endif
 // 难7位移方式和移除debuff
-if Gq>=7 then
-if GetUnitPointValue(Ig)!=9 and IsUnitType(Ig,UNIT_TYPE_HERO)==true and GetOwningPlayer(Ig)==Player(9) or GetOwningPlayer(Ig)==Player(10) then
-call EXSetUnitMoveType(Ig,32)
-if GetUnitState(Ig,UNIT_STATE_LIFE)<=GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.5 then
-call UnitRemoveBuffs(Ig,false,true)
-call UnitRemoveBuffsEx(Ig,false,true,false,false,true,true,false)
-else
-endif
-else
-endif
-else
-endif
+// if Gq>=7 then
+// if GetUnitPointValue(Ig)!=9 and IsUnitType(Ig,UNIT_TYPE_HERO)==true and GetOwningPlayer(Ig)==Player(9) or GetOwningPlayer(Ig)==Player(10) then
+// call EXSetUnitMoveType(Ig,32)
+// if GetUnitState(Ig,UNIT_STATE_LIFE)<=GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.5 then
+// call UnitRemoveBuffs(Ig,false,true)
+// call UnitRemoveBuffsEx(Ig,false,true,false,false,true,true,false)
+// else
+// endif
+// else
+// endif
+// else
+// endif
+// 金箍棒攻击造成范围伤害
+if GetUnitAbilityLevel(Ih, 'Ab6g') >0 and YDWEIsEventAttackDamage()  then
+call bs(Ih, GetUnitX(Ig), GetUnitY(Ig), 330., GetUnitState(Ih,ConvertUnitState(21)) *1.8, 0, 0)
 
+endif
 if GetUnitTypeId(GetTriggerUnit())==$65303138 then
 call SetUnitX(GetTriggerUnit(),-695.)
 call SetUnitY(GetTriggerUnit(),-8062.)
@@ -21856,7 +22591,9 @@ if (GetUnitAbilityLevel(Ih,$41303041)>=1 or bC(Ih,'it07')==true) and bC(Ig,$6974
 if IsUnitAlly(Ih,Player(8))==true then
     if GetUnitState(Ih, UNIT_STATE_MAX_LIFE) >4000000 then
     else
-call EXSetEventDamage((GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.1)*1.)
+// call EXSetEventDamage((GetEventDamage()+GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.1)*1.)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.1,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+
     endif
 
 
@@ -21867,14 +22604,22 @@ else
 endif
 // 增加亮银枪伤害
 if bC(Ih,'gobm')==true and bC(Ig,$69743039)==false then
+// 9/1概率触发击飞
+if GetRandomInt(0, 2) == 1 then
+    // 赵云
+    if GetUnitAbilityLevel(Ih, 'AZYW') >0 then
+        call fU(Ih, Ig, Ii*1.5, 'AZYW')
+    elseif GetUnitAbilityLevel(Ih, 'Ab0b') >0 then
+        // 
+        call fU(Ih, Ig, Ii*1.5, 'Ab0b')
+    else
+        call fU(Ih, Ig, Ii, 'A0CK')
+    endif
 
-if IsUnitAlly(Ih,Player(8))==true then
-//    call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00枪出如龙！造成伤害：" + "物品次数--" + I2S(GetItemCharges(bW(Ih, $676F626D))) + "实际伤害--" + R2S(bk(Ih, 2, 2) * (1. + GetItemCharges(bW(Ih, $676F626D)) * .4) ))
-    call bs(Ih, GetUnitX(Ig), GetUnitY(Ig), 330.,  bk(Ih, 2, GetItemCharges(bW(Ih, $676F626D))) *0.5 + 1000 * (1. + GetItemCharges(bW(Ih, $676F626D))), 0, 0)
-// call EXSetEventDamage(GetEventDamage()+(GetHeroAgi(Ih,true))*(6.+GetItemCharges(aj(GetTriggerUnit(),$676F626D))*.5))
-else
-call take_magic_damage(Ih,Ig,GetUnitState(Ih,UNIT_STATE_MAX_LIFE)*.01,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 endif
+
+call bs(Ih, GetUnitX(Ig), GetUnitY(Ig), 330., GetUnitState(Ih,ConvertUnitState(21))  + 1000 * (1. + GetItemCharges(bW(Ih, $676F626D))), 0, 0)
+
 else
 endif
 
@@ -21910,9 +22655,9 @@ endif
 else
 endif
 // 马忠淬毒箭效果
-if GetUnitAbilityLevel(Ih,$414F414F)>0 then
+if GetUnitAbilityLevel(Ih,$4130414F)>0 then
     // GetEventDamage()
- call take_magic_damage(Ih,Ig,GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.01,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+ call take_magic_damage(Ih, Ig, GetEventDamage() + gold_time *20 + bk(Ih, 2, GetUnitAbilityLevel(Ih, $4130414F)) * 0.1, false, false, ATTACK_TYPE_PIERCE, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 // call EXSetEventDamage(GetEventDamage()+bk(Ih,2,GetUnitAbilityLevel(Ih,$414F414F))+GetPlayerState(GetTriggerPlayer(),PLAYER_STATE_RESOURCE_GOLD)*.001)
 else
 endif
@@ -21960,8 +22705,8 @@ else
 endif
 else
 endif
-// 玄冰真气冰冻、九龙真气
-if UnitHasBuffBJ(Ig,$42556661)==true or GetUnitAbilityLevel(Ig,'Ab5n')>0 then
+// 玄冰真气冰冻、九龙真气、冰甲
+if UnitHasBuffBJ(Ig,$42556661)==true or GetUnitAbilityLevel(Ig,'Ab5n')>0 or GetUnitAbilityLevel(Ig,'Ab6p')>0 then
     // 如果是黄月英，则直接冰冻
 if GetUnitAbilityLevel(Ig,'S006')>0 then
 call IssueTargetOrder(CreateUnit(GetOwningPlayer(Ig),$6530304D,GetUnitX(Ih),GetUnitY(Ih),270.),"thunderbolt",Ih)
@@ -21986,13 +22731,15 @@ endif
 else
 endif
 call cQ(Ih,Ig)
-if GetUnitAbilityLevel(Ih, 'Ab5l') >0 and GetUnitTypeId(Ih) == $55647265 then
-if GetRandomInt(1, 100) <= GetUnitAbilityLevel(Ih, 'Ab5l')  then
-call UnitAddItem(Ih,CreateItem($66676668,0,0))
-else
-endif
-else
-endif
+// if GetUnitAbilityLevel(Ih, 'Ab5l') >0 and GetUnitTypeId(Ih) == $55647265 then
+// if GetRandomInt(1, 100) <= GetUnitAbilityLevel(Ih, 'Ab5l')  then
+// // call UnitAddItem(Ih,CreateItem($66676668,0,0))
+// call UnitAddItemByIdSwapped($66676668,Ih)
+// call wuming_w_acion(Ih,Ig)
+// else
+// endif
+// else
+// endif
 if GetUnitAbilityLevel(Ih,$4130414B)>=1 then
 if GetRandomInt(1,5)<=2 then
 call SetUnitAnimation(Ih,"spin")
@@ -22012,7 +22759,7 @@ else
 
 call take_magic_damage(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(21))+GetUnitState(Ih,ConvertUnitState(1)))*.01*I2R(GetUnitAbilityLevel(Ih,$415A4635)+4),false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
     else
-call take_magic_damage(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(1)))*.001,false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,(GetUnitState(Ih,ConvertUnitState(1)))*.001,false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_NORMAL,WEAPON_TYPE_WHOKNOWS)
 
     endif
 
@@ -22111,7 +22858,7 @@ if LoadInteger(Ia,GetHandleId(Ih),$41623076)>=3 then
 call SaveInteger(Ia,GetHandleId(Ih),$41623076,0)
 // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00卡牌骗术！" + R2S(I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076)))
 call take_magic_damage(Ih,Ig,I2R(GetHeroInt(Ih,true))*GetUnitAbilityLevel(Ih, $41623076),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
-if GetRandomInt(1, 6) ==6 and bC(Ih, $69743065) == false then
+if GetRandomInt(1, 6) ==6 and bC(Ih, 'it0e') == false then
 
     // 黄牌眩晕
 if GetRandomInt(1, 6) < 3 then
@@ -22131,7 +22878,7 @@ call take_magic_damage(Ih,Ig,bk(Ih, 3, GetUnitAbilityLevel(Ih, $41623076)) *0.3,
 endif
 else
 // 如果有专属
-if bC(Ih,$69743065)== true then
+if bC(Ih,'it0e')== true then
   
     if GetRandomInt(1, 8) < 3 then
 call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|Cff00ff00真黄牌大师！"  )
@@ -22159,7 +22906,7 @@ call d4(GetEventDamageSource(),GetTriggerUnit())
 else
     // 马忠大招狂暴伤害
 if UnitHasBuffBJ(GetEventDamageSource(),$42303234)==true then
-call take_magic_damage(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304151)*1000)+bk(Ih,2,GetUnitAbilityLevel(Ih,$41304151)+2),false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,I2R(GetUnitAbilityLevel(Ih,$41304151)*1000)+bk(Ih,2,GetUnitAbilityLevel(Ih,$41304151)+2),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
 else
 if GetRandomReal(0,100.)<=20. and GetUnitAbilityLevel(Ih,$41303645)>0 then
 call bv(Ih,bk(Ih,1,GetUnitAbilityLevel(Ih,$41303645)),bN(Ih,Ig),1000,220)
@@ -22201,9 +22948,10 @@ else
 if GetUnitTypeId(Ih)==$48594A30 then
 call cD(Ih,Ig,300,bk(Ih,0,2),6,bN(Ih,Ig))
 else
+    // 赵云W被动击飞
 if GetUnitAbilityLevel(Ih,$425A5957)>0 then
 call SetUnitState(Ih,UNIT_STATE_LIFE,(GetUnitState(Ih,UNIT_STATE_MAX_LIFE)-GetUnitState(Ih,UNIT_STATE_LIFE))*.05+GetUnitState(Ih,UNIT_STATE_LIFE))
-call fU(Ih,Ig,Ii)
+call fU(Ih, Ig, Ii,$415A5957)
 else
 if GetUnitAbilityLevel(Ih,$42475957)>0 then
 call take_magic_damage(Ih,Ig,bk(Ih,0,GetUnitAbilityLevel(Ih,$41475957))*.3+GetUnitState(Ih,ConvertUnitState(21)),false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_METAL_HEAVY_SLICE)
@@ -22289,7 +23037,7 @@ else
 endif
 // 赤霄剑真伤
 if GetUnitAbilityLevel(GetEventDamageSource(),$41534A38)>0 and 0!=EXGetEventDamageData(JI)==true then
-call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*1.,false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 // 霸王套真伤
@@ -22298,8 +23046,10 @@ call take_magic_damage(Ih,Ig,4500.,false,false,ATTACK_TYPE_CHAOS,DAMAGE_TYPE_UNI
 else
 endif
 // A0BE，ASJ4，A07H
+// 两倍真伤
 if GetUnitAbilityLevel(Ih,$41304245)>0 or GetUnitAbilityLevel(Ih,$41534A34)>0 or GetUnitAbilityLevel(Ih,$41303748)>=1 and 0!=EXGetEventDamageData(JI)==true and IsUnitType(Ih,UNIT_TYPE_HERO)==true then
-call take_magic_damage(Ih,Ig,GetUnitState(Ih,ConvertUnitState(21))*2.,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_UNIVERSAL,WEAPON_TYPE_WHOKNOWS)
+set loc_dmg = GetEventDamage() + (GetUnitState(Ih, ConvertUnitState(21)) * 2.) *physicalStrike(Ih,Ig,0.45)
+    call take_magic_damage(Ih, Ig, GetEventDamage()+GetUnitState(Ih, ConvertUnitState(21)) * 2., false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
 else
     // 貂蝉天赋真伤
 if GetUnitAbilityLevel(Ih,$41594D30)>0 then
@@ -22328,9 +23078,9 @@ if GetUnitAbilityLevelSwapped($41304341,GetEventDamageSource())>=1 then
 call take_magic_damage(Ih,Ig,bO(Ih,Ig)*2+I2R(GetHeroLevel(Ih))*15,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
-if bC(Ih,$666C6167)==true and IsPlayerAlly(GetOwningPlayer(Ih),GetOwningPlayer(Ig))==false then
+if (bC(Ih,$666C6167)==true or bC(Ih,'I03D')==true ) and IsPlayerAlly(GetOwningPlayer(Ih),GetOwningPlayer(Ig))==false then
 call take_magic_damage(Ih,Ig,I2R(GetHeroAgi(Ih,true)),false,false,ATTACK_TYPE_MELEE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
-if GetUnitAbilityLevelSwapped($4130354A,Ig)<1 and GetRandomInt(1,10)==8 then
+if GetUnitAbilityLevelSwapped($4130354A,Ig)<1  then
 set Jd[5]=GetUnitLoc(Ig)
 call CreateTextTagLocBJ("破防箭技",Jd[5],1.,15.,100.,100,100.,20.)
 set Jc[9]=GetLastCreatedTextTag()
@@ -22345,10 +23095,12 @@ else
 endif
 else
 endif
+//  马忠陷阱
 if GetUnitTypeId(Ih)==$6E30304C then
-set HP=0.+I2R(GetHeroAgi(Ib[GetConvertedPlayerId(GetOwningPlayer(GetEventDamageSource()))],true)+50)*I2R(GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetEventDamageSource()))],$4130414E))
+set loc_unit = Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))]
+set HP = bk(loc_unit, 2, GetUnitAbilityLevel(loc_unit, 'Ab6j') + GetUnitAbilityLevel(loc_unit, 'A0AN')) + gold_time * GetUnitLevel(loc_unit)
 call IssueImmediateOrderById(CreateUnit(GetOwningPlayer(Ih),$65303130,GetUnitX(Ig),GetUnitY(Ig),0),852127)
-call take_magic_damage(Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))],Ig,HP,false,false,ATTACK_TYPE_PIERCE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(loc_unit,Ig,HP,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 else
 endif
 if GetUnitTypeId(Ih)==$65303144 then
@@ -24386,6 +25138,7 @@ set Mr=CreateTrigger()
 call TriggerAddAction(Mr,function iS)
 endfunction
 function iU takes nothing returns nothing
+    local unit loc_u=null
 set Mt[7]=GetUnitLoc(GetTriggerUnit())
 if GetItemTypeId(GetManipulatedItem())==$6B336D33 then
 call CreateNUnitsAtLoc(1,$68706878,GetOwningPlayer(GetTriggerUnit()),Mt[7],bj_UNIT_FACING)
@@ -24401,6 +25154,13 @@ else
 endif
 if GetItemTypeId(GetManipulatedItem())==$6B336D32 then
 call CreateNUnitsAtLoc(1,$6E677264,GetOwningPlayer(GetTriggerUnit()),Mt[7],bj_UNIT_FACING)
+else
+endif
+// 虎麒麟召唤
+if GetItemTypeId(GetManipulatedItem())=='it1b' then
+set loc_u = CreateUnit(GetOwningPlayer(GetTriggerUnit()), 'u00p', GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()), 0)
+call UnitAddAbility(loc_u, 'A07I')
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'A07I')
 else
 endif
 if IsItemPowerup(GetManipulatedItem())==true and GetItemType(GetLastCreatedItem())==GetItemType(GetManipulatedItem()) then
@@ -24694,35 +25454,51 @@ elseif bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$49303257)==
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了霸龙偃月刀")
 call SetUnitState(GetTriggerUnit(),ConvertUnitState(37),GetUnitState(GetTriggerUnit(),ConvertUnitState(37))-.3)
 // 如果有青龙器魂+朱雀武套+朱雀魂+三国志
-elseif bC(GetTriggerUnit(),'ledg')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$6F666972)==true and bC(GetTriggerUnit(),$63726474)==true and bC(GetTriggerUnit(),$49303143)==true and bC(GetTriggerUnit(),$6B336D33)==true then
+elseif bC(GetTriggerUnit(),'ledg')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$6F666972)==true and bC(GetTriggerUnit(),$63726474)==true and bC(GetTriggerUnit(),$49303143)==true and (bC(GetTriggerUnit(),$6B336D33)==true or bC(GetTriggerUnit(),'I00B')==true) then
    call RemoveItem(aj(GetTriggerUnit(),$69743064))
    call RemoveItem(aj(GetTriggerUnit(),$6F666972))
     call RemoveItem(aj(GetTriggerUnit(),$63726474))
    call RemoveItem(aj(GetTriggerUnit(),$49303143))
      call RemoveItem(aj(GetTriggerUnit(),$6B336D33))
        call RemoveItem(aj(GetTriggerUnit(),'ledg'))
+call RemoveItem(aj(GetTriggerUnit(),'I00B'))
+
    call UnitAddItem(GetTriggerUnit(),CreateItem($69743038,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了烛龙偃月刀")
 // 如果有青龙器魂+玄武套+玄武魂+盘古斧
-elseif bC(GetTriggerUnit(),'ocor')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$7368656E)==true and bC(GetTriggerUnit(),$6667756E)==true and bC(GetTriggerUnit(),$676F7072)==true and bC(GetTriggerUnit(),$676F7072)==true then
+elseif bC(GetTriggerUnit(),'ocor')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$7368656E)==true and bC(GetTriggerUnit(),$6667756E)==true  and (bC(GetTriggerUnit(),'gopr')==true or bC(GetTriggerUnit(),'I00B')==true) then
    call RemoveItem(aj(GetTriggerUnit(),$69743064))
    call RemoveItem(aj(GetTriggerUnit(),$7368656E))
     call RemoveItem(aj(GetTriggerUnit(),$6667756E))
    call RemoveItem(aj(GetTriggerUnit(),$6F666C67))
-    call RemoveItem(aj(GetTriggerUnit(),$676F7072))
+    call RemoveItem(aj(GetTriggerUnit(),'gopr'))
     call RemoveItem(aj(GetTriggerUnit(),'ocor'))
+call RemoveItem(aj(GetTriggerUnit(),'I00B'))
+
    call UnitAddItem(GetTriggerUnit(),CreateItem($69743037,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了盘龙偃月刀")
 // 如果有青龙器魂+白虎套+白虎魂+三尖刀
-elseif bC(GetTriggerUnit(),'I02I')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$72616D32)==true and bC(GetTriggerUnit(),$72646530)==true and bC(GetTriggerUnit(),$68627468)==true and bC(GetTriggerUnit(),$676C736B)==true then
+elseif bC(GetTriggerUnit(),'I02I')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$72616D32)==true and bC(GetTriggerUnit(),$72646530)==true and bC(GetTriggerUnit(),$68627468)==true and ((bC(GetTriggerUnit(),$676C736B)==true or bC(GetTriggerUnit(),'I00B')==true ))then
    call RemoveItem(aj(GetTriggerUnit(),$69743064))
    call RemoveItem(aj(GetTriggerUnit(),$72616D32))
     call RemoveItem(aj(GetTriggerUnit(),$72646530))
    call RemoveItem(aj(GetTriggerUnit(),$68627468))
      call RemoveItem(aj(GetTriggerUnit(),$676C736B))
       call RemoveItem(aj(GetTriggerUnit(),'I02I'))
+call RemoveItem(aj(GetTriggerUnit(),'I00B'))
+
    call UnitAddItem(GetTriggerUnit(),CreateItem($69743036,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了苍龙偃月刀")
+//聚灵杖
+elseif bC(GetTriggerUnit(),'I00F')==true and bC(GetTriggerUnit(),'I00I')==true and bC(GetTriggerUnit(),'I00B')==true and bC(GetTriggerUnit(),'srtl')==true and bC(GetTriggerUnit(),'ledg')==true and bC(GetTriggerUnit(),'it1f')==true then
+   call RemoveItem(aj(GetTriggerUnit(),'I00F'))
+   call RemoveItem(aj(GetTriggerUnit(),'I00I'))
+   call RemoveItem(aj(GetTriggerUnit(),'I00B'))
+   call RemoveItem(aj(GetTriggerUnit(),'srtl'))
+   call RemoveItem(aj(GetTriggerUnit(),'ledg'))
+   call RemoveItem(aj(GetTriggerUnit(),'it1f'))
+   call UnitAddItem(GetTriggerUnit(),CreateItem('it1e',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了聚灵杖")
 //勾魂镰刀
 elseif bC(GetTriggerUnit(),'srtl')==true and bC(GetTriggerUnit(),'I001')==true and bC(GetTriggerUnit(),'I002')==true and bC(GetTriggerUnit(),'it12')==true and bC(GetTriggerUnit(),'ledg')==true then
    call RemoveItem(aj(GetTriggerUnit(),'srtl'))
@@ -24733,12 +25509,13 @@ elseif bC(GetTriggerUnit(),'srtl')==true and bC(GetTriggerUnit(),'I001')==true a
    call UnitAddItem(GetTriggerUnit(),CreateItem('it17',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了勾魂镰刀")
 //如果有青龙器魂+玄铁腰带+玄铁手机+青龙魂+飞刀
-elseif bC(GetTriggerUnit(),'I01V')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$49303045)==true and bC(GetTriggerUnit(),$49303044)==true and bC(GetTriggerUnit(),$6B336D32)==true then
+elseif bC(GetTriggerUnit(),'I01V')==true and bC(GetTriggerUnit(),$69743064)==true and bC(GetTriggerUnit(),$49303045)==true and bC(GetTriggerUnit(),$49303044)==true and (bC(GetTriggerUnit(),$6B336D32)==true or bC(GetTriggerUnit(),'I00B')==true) then
 call RemoveItem(aj(GetTriggerUnit(),$69743064))
 call RemoveItem(aj(GetTriggerUnit(),$49303045))
 call RemoveItem(aj(GetTriggerUnit(),$49303044))
 call RemoveItem(aj(GetTriggerUnit(),$6B336D32))
 call RemoveItem(aj(GetTriggerUnit(),'I01V'))
+call RemoveItem(aj(GetTriggerUnit(),'I00B'))
 call UnitAddItem(GetTriggerUnit(),CreateItem($69743035,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetUnitName(GetTriggerUnit())+"打造了玄龙偃月刀")
 // 打造心之钢
@@ -25563,8 +26340,8 @@ set LJ[64]='it10'
 set LJ[65]='it11'
 // 强化石
 set LJ[66]='dkfw'
-// 优质兽皮
-set LJ[67]='srrc'
+// 10个天盾
+set LJ[67]='it1c'
 // 藏宝图
 set LJ[68]='tlum'
 // 仙魔书
@@ -25768,6 +26545,12 @@ if GetUnitTypeId(GetTriggerUnit())==$65647279 then
 call CreateItemLoc(LJ[GetRandomInt(13,62)],Mt[3])
 else
 endif
+
+if GetUnitTypeId(GetTriggerUnit())=='u00p' then
+call CreateItemLoc('it1b',Mt[6])
+
+endif
+
 call RemoveLocation(Mt[3])
 else
 endif
@@ -25830,10 +26613,10 @@ function ja takes nothing returns nothing
 call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(Ck,-12400.,-2050.,false)
-call ReviveHero(Cg,12385.,11550.,false)
-call ReviveHero(Ch,12716.,9735.,false)
-call ReviveHero(Ci,12600.,7380.,false)
-call ReviveHero(Cj,12600.,5777.,false)
+// call ReviveHero(door_boss1,12385.,11550.,false)
+// call ReviveHero(door_boss2,12716.,9735.,false)
+// call ReviveHero(door_boss3,12600.,7380.,false)
+// call ReviveHero(door_boss4,12600.,5777.,false)
 call SetUnitInvulnerable(Ck,true)
 endfunction
 // 死亡触发函数
@@ -25857,6 +26640,14 @@ local real loc_distance = SquareRoot((GetUnitX(GetTriggerUnit()) -GetUnitX(loc_u
 // call archeryEvent(3)
 // endif
 // 
+//  call DisplayTextToPlayer(GetLocalPlayer(), 0, 0, I2S( GetUnitTypeId(GetTriggerUnit())))
+// if GetUnitTypeId(GetTriggerUnit()) == 'u00p'  then
+//     // call UnitDropItem(GetTriggerUnit(), 'it1b')
+//     call textToPlayer(GetLocalPlayer(), 0, 0, "胡麒死亡")
+// call CreateItem('it1b',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+
+// endif
+
 if killer == zhuiSuiZhe then
 if IsUnitType(GetTriggerUnit(), UNIT_TYPE_HERO) == true then
 call AddHeroXPSwapped(GetUnitLevel(C5) * GetRandomInt(1, GetUnitLevel(C5) ) *20, zhuGeGuo, true)
@@ -26070,14 +26861,26 @@ call CreateItem($49303249,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
 endif
-// 1/6概率出雷霆之力
-if GetRandomInt(0,5)==5 then
+// 1/4概率出雷霆之力
+if GetRandomInt(0,4)==4 then
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
+// 1/6概率出青龙刀
+if GetRandomInt(0,6)==4 then
+call CreateItem($73666F67,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
  // 1/50的概率出蚩尤魔刀
 if GetRandomInt(0,50)==27 then
 call CreateItem($49303233,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
+ // 1/50的概率出蚩尤披风
+if GetRandomInt(0,50)==27 then
+call CreateItem($49303237,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
 // 1/5的概率出天外陨铁
@@ -26095,14 +26898,20 @@ call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|cffffcc00成功击杀蚩尤,请�
 set MG=CreateTimer()
 call TimerStart(MG,60.,false,function ja)
 else
-    // 蛇
+    // 蛇死亡掉落
 if GetTriggerUnit()==Cl then
     // 金箍棒掉落
 if GetUnitTypeId(GetKillingUnitBJ())=='H00Q' or GetUnitTypeId(GetKillingUnitBJ())=='QTDS' then
 call CreateItem($6D67746B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
 endif
-if lei_ting > 5 then
+
+// 含光剑掉落
+if GetUnitAbilityLevel(GetKillingUnitBJ(), 'Ab5s') > 0 or GetRandomInt(1, 5) == 3 then
+call CreateItem('it19',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+endif
+
+if lei_ting > 4 then
     set lei_ting = 0
 call CreateItem($49303042,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
@@ -26173,7 +26982,7 @@ call CreateItem('I02T',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 elseif  bawang_tao == 3 then
 call CreateItem('I02V',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
-set bawang_tao =1
+set bawang_tao =0
 endif
 
 
@@ -26185,6 +26994,11 @@ if GetTriggerUnit()==Ce then
     if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit) and archeryTime<120 then
 call archeryEvent(6)
 endif
+
+if GetRandomInt(0, 50) < 3 then
+call CreateItem('I00I',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+endif
+
 
 if GetRandomInt(0,5)==0 then
 call CreateItem('it10',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
@@ -26321,7 +27135,7 @@ call UnitAddItemToSlotById(CN,'rde0',1)
 // 项羽护手
 call UnitAddItemToSlotById(CN,'ram2',2)
 // 项羽铠甲
-call UnitAddItemToSlotById(CN,'rde0',3)
+call UnitAddItemToSlotById(CN,'hbth',3)
 endif
 call TransmissionFromUnitWithNameBJ(GetPlayersAll(),CN,"项羽之魂",null,"骓不逝兮可奈何！虞兮虞兮奈若何！
 孤早已化为一抔黄土，为何汝们还不愿孤安息！",bj_TIMETYPE_ADD,0,true)
@@ -26613,9 +27427,358 @@ call TriggerRegisterUnitEvent(NN,CO,EVENT_UNIT_DEATH)
 call TriggerAddAction(NN,function jr)
 endfunction
 
+// 门将事件
+
+function door_boss1Born takes nothing returns nothing
+call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
+call DestroyTimer(GetExpiredTimer())
+call ReviveHero(door_boss1,12385,11550,false)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00魔魂：魑再次出现在玄武洞窟")
+if huntingFinish==true  then 
+call UnitAddAbility(door_boss1,'Ab3p')
+endif
+if Gq>=6 then
+call ModifyHeroStat(bj_HEROSTAT_STR,door_boss1,bj_MODIFYMETHOD_ADD,60)
+call ModifyHeroStat(bj_HEROSTAT_AGI,door_boss1,bj_MODIFYMETHOD_ADD,10)
+call ModifyHeroStat(bj_HEROSTAT_INT,door_boss1,bj_MODIFYMETHOD_ADD,10)
+else
+endif
+
+
+// if huntingFinish==true and archeryTime<80 and GetRandomInt(1,5)>2 then 
+//     set huntingBoss[2]=true
+//     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00 夔牛（黑）已被标记！")
+// else
+//     set huntingBoss[2]=false
+// endif
+endfunction
+
+function door_boss1Death takes nothing returns nothing
+local timer MG
+
+local unit killer = GetKillingUnitBJ()
+if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit)  then
+call archeryEvent(4)
+endif
+if Gq>7 then
+call AddHeroXPSwapped(GetUnitLevel(killer)*100,killer,true)
+endif
+set Jd[66]=GetUnitLoc(GetTriggerUnit())
+if Gq >6 then
+call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
+else
+call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+endif
+
+if GetRandomInt(1,20)==2 then
+    call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+
+endif
+
+if GetRandomInt(0,5)==0 then
+call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
+if GetRandomInt(1,5)==3 then
+    if Gq <7 then
+        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
+    else
+        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
+    endif
+endif
+
+if GetRandomInt(1,7)==7 then
+call CreateItemLoc($636E686E,Jd[66])
+else
+if GetRandomInt(1,10)==7 then
+call CreateItemLoc($73656872,Jd[66])
+else
+endif
+endif
+
+// 3%概率掉落体术强化
+if Gq>=7 and GetRandomInt(1, 100) > 97 then
+call SetItemInvulnerable(CreateItem('I02K',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+endif
+
+call RemoveLocation(Jd[66])
+set MG=CreateTimer()
+call TimerStart(MG,60.,false,function door_boss1Born)
+set MG=null
+endfunction
+
+function door_boss1_Event takes nothing returns nothing
+set door_boss1_trig=CreateTrigger()
+call TriggerRegisterUnitEvent(door_boss1_trig,door_boss1,EVENT_UNIT_DEATH)
+call TriggerAddAction(door_boss1_trig,function door_boss1Death)
+endfunction
+
+
+function door_boss2Born takes nothing returns nothing
+call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
+call DestroyTimer(GetExpiredTimer())
+call ReviveHero(door_boss2,12716.,9735.,false)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00魔魂：魅再次出现在玄武洞窟")
+if huntingFinish==true  then 
+call UnitAddAbility(door_boss2,'Ab3p')
+endif
+if Gq>=6 then
+call ModifyHeroStat(bj_HEROSTAT_STR,door_boss2,bj_MODIFYMETHOD_ADD,10)
+call ModifyHeroStat(bj_HEROSTAT_AGI,door_boss2,bj_MODIFYMETHOD_ADD,60)
+call ModifyHeroStat(bj_HEROSTAT_INT,door_boss2,bj_MODIFYMETHOD_ADD,10)
+else
+endif
+
+
+// if huntingFinish==true and archeryTime<80 and GetRandomInt(1,5)>2 then 
+//     set huntingBoss[2]=true
+//     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00 夔牛（黑）已被标记！")
+// else
+//     set huntingBoss[2]=false
+// endif
+endfunction
+
+function door_boss2Death takes nothing returns nothing
+local timer MG
+
+local unit killer = GetKillingUnitBJ()
+if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit)  then
+call archeryEvent(4)
+endif
+if Gq>7 then
+call AddHeroXPSwapped(GetUnitLevel(killer)*100,killer,true)
+endif
+set Jd[66]=GetUnitLoc(GetTriggerUnit())
+if Gq >6 then
+call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
+else
+call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+endif
+
+if GetRandomInt(1,20)==2 then
+    call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+
+else
+endif
+
+if GetRandomInt(0,5)==0 then
+call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
+if GetRandomInt(1,5)==3 then
+    if Gq <7 then
+        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
+    else
+        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
+    endif
+endif
+
+if GetRandomInt(1,7)==7 then
+call CreateItemLoc($636E686E,Jd[66])
+else
+if GetRandomInt(1,10)==7 then
+call CreateItemLoc($73656872,Jd[66])
+else
+endif
+endif
+
+// 3%概率掉落战鼓
+if Gq>=7 and GetRandomInt(1, 100) > 97 then
+call SetItemInvulnerable(CreateItem('I02J',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+endif
+
+call RemoveLocation(Jd[66])
+set MG=CreateTimer()
+call TimerStart(MG,60.,false,function door_boss2Born)
+set MG=null
+endfunction
+
+function door_boss2_Event takes nothing returns nothing
+set door_boss2_trig=CreateTrigger()
+call TriggerRegisterUnitEvent(door_boss2_trig,door_boss2,EVENT_UNIT_DEATH)
+call TriggerAddAction(door_boss2_trig,function door_boss2Death)
+endfunction
+
+
+function door_boss3Born takes nothing returns nothing
+call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
+call DestroyTimer(GetExpiredTimer())
+call ReviveHero(door_boss3,12600.,7380.,false)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00魔魂：魍再次出现在玄武洞窟")
+if huntingFinish==true  then 
+call UnitAddAbility(door_boss3,'Ab3p')
+endif
+if Gq>=6 then
+call ModifyHeroStat(bj_HEROSTAT_STR,door_boss3,bj_MODIFYMETHOD_ADD,10)
+call ModifyHeroStat(bj_HEROSTAT_AGI,door_boss3,bj_MODIFYMETHOD_ADD,10)
+call ModifyHeroStat(bj_HEROSTAT_INT,door_boss3,bj_MODIFYMETHOD_ADD,60)
+else
+endif
+
+
+// if huntingFinish==true and archeryTime<80 and GetRandomInt(1,5)>2 then 
+//     set huntingBoss[2]=true
+//     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00 夔牛（黑）已被标记！")
+// else
+//     set huntingBoss[2]=false
+// endif
+endfunction
+
+function door_boss3Death takes nothing returns nothing
+local timer MG
+
+local unit killer = GetKillingUnitBJ()
+if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit)  then
+call archeryEvent(4)
+endif
+if Gq>7 then
+call AddHeroXPSwapped(GetUnitLevel(killer)*100,killer,true)
+endif
+set Jd[66]=GetUnitLoc(GetTriggerUnit())
+if Gq >6 then
+call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
+else
+call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+endif
+
+if GetRandomInt(1,20)==2 then
+    call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+
+else
+endif
+
+if GetRandomInt(0,5)==0 then
+call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
+if GetRandomInt(1,5)==3 then
+    if Gq <7 then
+        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
+    else
+        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
+    endif
+endif
+
+if GetRandomInt(1,7)==7 then
+call CreateItemLoc($636E686E,Jd[66])
+else
+if GetRandomInt(1,10)==7 then
+call CreateItemLoc($73656872,Jd[66])
+else
+endif
+endif
+
+// 3%概率掉落智力强化
+if Gq>=7 and GetRandomInt(1, 100) > 97 then
+call SetItemInvulnerable(CreateItem('I02L',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+endif
+
+call RemoveLocation(Jd[66])
+set MG=CreateTimer()
+call TimerStart(MG,60.,false,function door_boss3Born)
+set MG=null
+endfunction
+
+function door_boss3_Event takes nothing returns nothing
+set door_boss3_trig=CreateTrigger()
+call TriggerRegisterUnitEvent(door_boss3_trig,door_boss3,EVENT_UNIT_DEATH)
+call TriggerAddAction(door_boss3_trig,function door_boss3Death)
+endfunction
+
+
+function door_boss4Born takes nothing returns nothing
+call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
+call DestroyTimer(GetExpiredTimer())
+call ReviveHero(door_boss4,12600.,5777.,false)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00魔魂：魉再次出现在玄武洞窟")
+if huntingFinish==true  then 
+call UnitAddAbility(door_boss4,'Ab3p')
+endif
+if Gq>=6 then
+call ModifyHeroStat(bj_HEROSTAT_STR,door_boss4,bj_MODIFYMETHOD_ADD,30)
+call ModifyHeroStat(bj_HEROSTAT_AGI,door_boss4,bj_MODIFYMETHOD_ADD,30)
+call ModifyHeroStat(bj_HEROSTAT_INT,door_boss4,bj_MODIFYMETHOD_ADD,30)
+else
+endif
+
+
+// if huntingFinish==true and archeryTime<80 and GetRandomInt(1,5)>2 then 
+//     set huntingBoss[2]=true
+//     call DisplayTextToForce(GetPlayersAll(),"|Cff00ff00 夔牛（黑）已被标记！")
+// else
+//     set huntingBoss[2]=false
+// endif
+endfunction
+
+function door_boss4Death takes nothing returns nothing
+local timer MG
+
+local unit killer = GetKillingUnitBJ()
+if GetUnitTypeId(killer) == GetUnitTypeId(huntingUnit)  then
+call archeryEvent(4)
+endif
+if Gq>7 then
+call AddHeroXPSwapped(GetUnitLevel(killer)*100,killer,true)
+endif
+set Jd[66]=GetUnitLoc(GetTriggerUnit())
+if Gq >6 then
+call CreateItemLoc(hight_level_item_pool[GetRandomInt(13,79)],Jd[66])
+else
+call CreateItemLoc(LJ[GetRandomInt(13,63)],Jd[66])
+endif
+
+if GetRandomInt(1,20)==2 then
+    call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+
+else
+endif
+
+if GetRandomInt(0,5)==0 then
+call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+else
+endif
+
+if GetRandomInt(1,5)==3 then
+    if Gq <7 then
+        call CreateItemLoc(LJ[GetRandomInt(71,78)],Jd[66])
+    else
+        call CreateItemLoc(hight_level_item_pool[GetRandomInt(71,79)],Jd[66])
+    endif
+endif
+
+if GetRandomInt(1,7)==7 then
+call CreateItemLoc($636E686E,Jd[66])
+else
+if GetRandomInt(1,10)==7 then
+call CreateItemLoc($73656872,Jd[66])
+else
+endif
+endif
+
+// 3%概率掉落属性强化
+if Gq>=7 and GetRandomInt(1, 100) > 97 then
+call SetItemInvulnerable(CreateItem('I02M',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
+endif
+
+call RemoveLocation(Jd[66])
+set MG=CreateTimer()
+call TimerStart(MG,60.,false,function door_boss4Born)
+set MG=null
+endfunction
+
+function door_boss4_Event takes nothing returns nothing
+set door_boss4_trig=CreateTrigger()
+call TriggerRegisterUnitEvent(door_boss4_trig,door_boss4,EVENT_UNIT_DEATH)
+call TriggerAddAction(door_boss4_trig,function door_boss4Death)
+endfunction
+
 // 大蛇事件
 function sheBorn takes nothing returns nothing
-// call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
+call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(she,1878.7,7866.2,false)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00八岐化蛇再次出现在玄武洞窟")
@@ -26686,6 +27849,12 @@ else
 call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 endif
 
+// 3%掉落玄天战盔
+if GetRandomInt(1, 100) <2 then
+    call CreateItem('it1d',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+
+endif
+
 if GetRandomInt(0,5)==0 then
 call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
@@ -26708,23 +27877,8 @@ else
 endif
 endif
 
-// if GetRandomInt(1,5)==3 then
-// if GetRandomInt(1,20)==19 then
-// call SetItemInvulnerable(CreateItem($4930324E,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-// elseif GetRandomInt(1,20)==11 then
-// call SetItemInvulnerable(CreateItem($4930324D,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-// elseif GetRandomInt(1,20)==11 then
-// call SetItemInvulnerable(CreateItem($4930324A,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-// elseif GetRandomInt(1,20)==11 then
-// call SetItemInvulnerable(CreateItem($4930324C,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-// elseif GetRandomInt(1,20)==11 then
-// call SetItemInvulnerable(CreateItem($4930324B,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
-// else
-// endif
-// endif
-
-// 30%概率掉落幸运币
-if GetRandomInt(1, 10) > 7 then
+// 10%概率掉落幸运币
+if GetRandomInt(1, 10) > 9 then
 call SetItemInvulnerable(CreateItem($69743067,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())),true)
 endif
 
@@ -26739,9 +27893,11 @@ set she_trg=CreateTrigger()
 call TriggerRegisterUnitEvent(she_trg,she,EVENT_UNIT_DEATH)
 call TriggerAddAction(she_trg,function sheDeath)
 endfunction
+
+
 // 蜘蛛事件
 function spiderBorn takes nothing returns nothing
-// call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
+call FlushChildHashtable(FT,GetHandleId(GetExpiredTimer()))
 call DestroyTimer(GetExpiredTimer())
 call ReviveHero(spider,-7535.7,-7173.,false)
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,"|Cff00ff00蜘蛛罔象再次出现在丛林深处")
@@ -26811,6 +27967,12 @@ if GetRandomInt(1,10)==2 then
 else
 call CreateItem($646B6677,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 endif
+// 10%掉落毒牙
+if GetRandomInt(1,10)==2 then
+else
+call CreateItem('it1f',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+endif
+
 // 玄铁掉落
 if GetRandomInt(0,5)==0 then
 call CreateItem('it11',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
@@ -27276,13 +28438,13 @@ set isSpeed = true
 else
 endif
 if provision == 50 then
-call DisplayTimedTextToForce(GetPlayersAll(),2.,"后主刘禅不忍运粮将士不易，从内库赏赐一件随机极品装备！")
-call CreateItemLoc(hight_level_item_pool[GetRandomInt(99,134)], Mt[5])
+call DisplayTimedTextToForce(GetPlayersAll(),2.,"后主刘禅不忍运粮将士不易，赏赐九幽玄冰甲！")
+call UnitAddItemByIdSwapped('it1g',Nc)
 endif
 if provision == 100 then
 call DisplayTimedTextToForce(GetPlayersAll(),2.,"后主刘禅不忍运粮将士不易，赏赐追日靴！")
-
-call CreateItemLoc('I000', Mt[5])
+call UnitAddItemByIdSwapped('I000',Nc)
+// call CreateItemLoc('I000', Mt[5])
 endif
 if GetRandomInt(1,3)==3 then
 call CreateItemLoc(ChooseRandomItemExBJ(GetRandomInt(3,8),ITEM_TYPE_PERMANENT),Mt[5])
@@ -27302,7 +28464,8 @@ call UnitAddItemByIdSwapped(LJ[GetRandomInt(23,62)],Nc)
 call DisplayTextToForce(GetPlayersAll(),"后主刘禅恩赐"+(GetItemName(GetLastCreatedItem())+"犒赏各们将军！"))
 else
 endif
-call AddHeroXPSwapped(provision*GetUnitLevel(C5)*60,Nc,true)
+call AddHeroXPSwapped(provision*GetUnitLevel(C5)*20,Nc,true)
+call AddHeroXPSwapped(provision*GetUnitLevel(C5)*20,Dz,true)
 
 call RemoveUnit(GetTriggerUnit())
 call RemoveLocation(Mt[5])
@@ -30177,7 +31340,7 @@ else
 call DoNothing()
 endif
 
-if Gq==7 or IN==true then
+if Gq >6 then
 if GetItemTypeId(GetManipulatedItem())==$676C736B or GetItemTypeId(GetManipulatedItem())==$676F7072 or GetItemTypeId(GetManipulatedItem())==$6B336D33 or GetItemTypeId(GetManipulatedItem())==$6B336D32 then
 if bC(GetTriggerUnit(),$676C736B)==true and bC(GetTriggerUnit(),$6B336D32)==true and bC(GetTriggerUnit(),$676F7072)==true and bC(GetTriggerUnit(),$6B336D33)==true then
 call RemoveItem(aj(GetTriggerUnit(),$676C736B))
@@ -30186,12 +31349,47 @@ call RemoveItem(aj(GetTriggerUnit(),$676F7072))
 call RemoveItem(aj(GetTriggerUnit(),$6B336D33))
 call UnitAddItem(GetTriggerUnit(),CreateItem($49303059,GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit())))
 call DisplayTextToPlayer(GetLocalPlayer(),0,0,GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+" |Cff00ff00合成了麒麟戒指！！！")
+call ShowUnitShow(tiger)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0," |Cff00ff00四圣兽出，虎麒麟现！！！")
+
 else
 endif
 else
 endif
 else
 endif
+// 虎麒麟
+if GetItemTypeId(GetManipulatedItem())==$676C736B or GetItemTypeId(GetManipulatedItem())==$676F7072 or GetItemTypeId(GetManipulatedItem())==$6B336D33 or GetItemTypeId(GetManipulatedItem())==$6B336D32 then
+if bC(GetTriggerUnit(),$676C736B)==true and bC(GetTriggerUnit(),$6B336D32)==true and bC(GetTriggerUnit(),$676F7072)==true and bC(GetTriggerUnit(),$6B336D33)==true then
+call ShowUnitShow(tiger)
+call DisplayTextToPlayer(GetLocalPlayer(),0,0," |Cff00ff00四圣兽出，虎麒麟现！！！")
+else
+endif
+else
+endif
+// 携带赌狗和麒麟时增加20%经验获取
+if GetItemTypeId(GetManipulatedItem())==$49303059 or GetItemTypeId(GetManipulatedItem())=='it0c' then
+    if LoadBoolean(hero_hash, GetHandleId(GetTriggerUnit()), StringHash("exp_ring")) == false then
+    call SetPlayerHandicapXPBJ(GetOwningPlayer(GetTriggerUnit()), GetPlayerHandicapXPBJ(GetOwningPlayer(GetTriggerUnit())) + 20)
+    call SaveBoolean(hero_hash, GetHandleId(GetTriggerUnit()), StringHash("exp_ring"), true)
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, " |Cff00ff00" + GetUnitName(GetTriggerUnit()) + "戴上了麒麟/赌狗戒指，经验获取提高20%！")
+
+    endif
+endif
+
+// 凑齐玄天套
+
+if GetItemTypeId(GetManipulatedItem())=='it1d' or GetItemTypeId(GetManipulatedItem())=='it13' or GetItemTypeId(GetManipulatedItem())=='it09'  then
+if bC(GetTriggerUnit(),'it1d')==true and bC(GetTriggerUnit(),'it13')==true and bC(GetTriggerUnit(),'it09')==true then
+call UnitAddAbility(GetTriggerUnit(),'Ab6r')
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6r')
+
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"恭喜！你集齐了 |Cff00ff00玄天套装")
+
+endif
+endif
+
+
 
 // if GetItemTypeId(GetManipulatedItem())==$6A64726E or GetItemTypeId(GetManipulatedItem())==$6D6E7366 or GetItemTypeId(GetManipulatedItem())==$49303251 or GetItemTypeId(GetManipulatedItem())==$6D6C7374 or GetItemTypeId(GetManipulatedItem())==$6D67746B or GetItemTypeId(GetManipulatedItem())==$49303342 or GetItemTypeId(GetManipulatedItem())==$666C6167 or GetItemTypeId(GetManipulatedItem())==$676F626D or GetItemTypeId(GetManipulatedItem())==$49303233 or GetItemTypeId(GetManipulatedItem())==$49303344 or GetItemTypeId(GetSpellTargetItem())==$73747067 or GetItemTypeId(GetSpellTargetItem())==$6F636F72 or GetItemTypeId(GetSpellTargetItem())==$49303147 then
 // if GetItemCharges(GetManipulatedItem())>0 then
@@ -30213,7 +31411,7 @@ call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffFF0000你智
 else
 endif
 // 其他人捡起落宝铜钱
-if GetItemTypeId(GetManipulatedItem())==$69743065 and GetTriggerUnit()!=sunQian  then
+if GetItemTypeId(GetManipulatedItem()) == 'it0e' and not (GetTriggerUnit() == sunQian or GetTriggerUnit() == DJ) then
 call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffFF0000你没有这个气运！|r")
 else
@@ -30229,6 +31427,10 @@ if GetItemTypeId(GetManipulatedItem())==$69743066 and GetTriggerUnit()!=zhuiSuiZ
 call UnitRemoveItemSwapped(GetManipulatedItem(),GetTriggerUnit())
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffFF0000你没有这个实力！|r")
 else
+endif
+
+if GetItemTypeId(GetManipulatedItem())=='it19' then
+call SetUnitState(GetTriggerUnit(), ConvertUnitState(37), GetUnitState(GetTriggerUnit(), ConvertUnitState(37)) -0.15)
 endif
 // 混元霹雳手
 if GetItemTypeId(GetManipulatedItem())==$69743061  then
@@ -30300,6 +31502,27 @@ endfunction
 function oi takes nothing returns nothing
 local integer levelNumber = 0   //申明变量 改动1
 local unit Iv=GetTriggerUnit()
+
+if GetItemTypeId(GetManipulatedItem())=='it19' then
+call SetUnitState(Iv, ConvertUnitState(37), GetUnitState(Iv, ConvertUnitState(37)) + 0.15)
+endif
+
+if GetItemTypeId(GetManipulatedItem())==$49303059 or GetItemTypeId(GetManipulatedItem())=='it0c' then
+    if LoadBoolean(hero_hash, GetHandleId(GetTriggerUnit()), StringHash("exp_ring")) == true then
+    call SetPlayerHandicapXPBJ(GetOwningPlayer(GetTriggerUnit()), GetPlayerHandicapXPBJ(GetOwningPlayer(GetTriggerUnit())) -20)
+    call SaveBoolean(hero_hash, GetHandleId(GetTriggerUnit()), StringHash("exp_ring"), false)
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, " |Cff00ff00" + GetUnitName(GetTriggerUnit()) + "取下麒麟/赌狗戒指，经验获取减少20%！")
+
+    endif
+endif
+// 脱下玄天套装
+if GetItemTypeId(GetManipulatedItem())=='it1d' or GetItemTypeId(GetManipulatedItem())=='it13' or GetItemTypeId(GetManipulatedItem())=='it09'  then
+    if bC(GetTriggerUnit(),'it1d')==true and bC(GetTriggerUnit(),'it13')==true and bC(GetTriggerUnit(),'it09')==true then
+    call UnitRemoveAbility(GetTriggerUnit(),'Ab6r')
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cffff0000你失去了 |Cff00ff00玄天套装|Cffff0000所附加的属性。")
+
+    endif
+endif
 // 混元霹雳手
 if GetItemTypeId(GetManipulatedItem())==$69743061  then
 // call UnitRemoveAbility(GetTriggerUnit(),$41304639)
@@ -30609,7 +31832,7 @@ call TriggerRegisterPlayerUnitEventSimple(PN,Player(15),EVENT_PLAYER_UNIT_DEATH)
 call TriggerAddAction(PN,function os)
 endfunction
 function ou takes nothing returns boolean
-return GetSpellAbilityId()==$414E6874 or GetSpellAbilityId()==$415A4657
+return GetSpellAbilityId()==$414E6874 or GetSpellAbilityId()==$415A4657 or GetSpellAbilityId()=='Ab69'
 endfunction
 function ov takes nothing returns nothing
 call take_magic_damage(MX[8000],GetEnumUnit(),I2R(R2I(GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE))*2),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
@@ -30617,6 +31840,7 @@ endfunction
 function ow takes nothing returns nothing
 call take_magic_damage(MX[8000],GetEnumUnit(),I2R(R2I(GetUnitState(GetEnumUnit(),UNIT_STATE_MAX_LIFE))*2),false,false,ATTACK_TYPE_SIEGE,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 endfunction
+// 狮子吼加强
 function ox takes nothing returns nothing
 local group KB
 local unit KC
@@ -30624,8 +31848,8 @@ local unit Iv=GetTriggerUnit()
 local integer JS=GetUnitAbilityLevel(Iv,GetSpellAbilityId())
 local real JT=bk(GetTriggerUnit(),1,JS)
 if IsUnitAlly(Iv,Player(8))==true then
-if GetUnitAbilityLevel(Iv,$4130385A)>0 or bC(Iv,$726E7370)==true then
-call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"|cFFFF66FF张苞：燕人张苞在此！！！")
+if GetUnitAbilityLevel(Iv,$4130385A)>0 or bC(Iv,$726E7370)==true or bC(Iv,'it04')==true or bC(Iv,'it0b')==true or bC(Iv,'it07')==true then
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "|cFFFF66FF" + GetUnitName(Iv) + "：燕人" + GetUnitName(Iv) + "在此！！！")
 set KB=CreateGroup()
 call GroupEnumUnitsInRange(KB,GetUnitX(Iv),GetUnitY(Iv),880.,null)
 loop
@@ -30647,7 +31871,7 @@ set MX[8000]=Iv
 call ForGroupBJ(Hx[1],function ow)
 else
 if GetRandomInt(1,3)==1 then
-call DisplayTextToPlayer(GetTriggerPlayer(),0,0,"|cFFFF66FF张苞：燕人张苞在此！！！")
+call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, "|cFFFF66FF" + GetUnitName(Iv) + "：燕人" + GetUnitName(Iv) + "在此！！！")
 set KB=CreateGroup()
 call GroupEnumUnitsInRange(KB,GetUnitX(Iv),GetUnitY(Iv),512,null)
 loop
@@ -31070,7 +32294,7 @@ endfunction
 
 function pa takes nothing returns boolean
     // 如果带了无字天书、落宝铜钱、混元霹雳手
-return bC(GetTriggerUnit(),$72656A32)==true or bC(GetTriggerUnit(),$69743065)==true or bC(GetTriggerUnit(),$69743061)==true and GetUnitTypeId(GetTriggerUnit())!=$4E74696E
+return bC(GetTriggerUnit(),$72656A32)==true or bC(GetTriggerUnit(),'it0e')==true or bC(GetTriggerUnit(),$69743061)==true and GetUnitTypeId(GetTriggerUnit())!=$4E74696E
 endfunction
 function pb takes nothing returns boolean
 return IsUnitIllusionBJ(GetFilterUnit())==true
@@ -31102,7 +32326,7 @@ call TriggerAddCondition(Ph,Condition(function pa))
 call TriggerAddAction(Ph,function pc)
 endfunction
 function pe takes nothing returns boolean
-return GetItemTypeId(GetManipulatedItem())==$72656A32 or bC(GetTriggerUnit(),$69743065)==true or bC(GetTriggerUnit(),$69743061)==true and UnitHasBuffBJ(GetTriggerUnit(),$42303054)==true
+return GetItemTypeId(GetManipulatedItem())==$72656A32 or bC(GetTriggerUnit(),'it0e')==true or bC(GetTriggerUnit(),$69743061)==true and UnitHasBuffBJ(GetTriggerUnit(),$42303054)==true
 endfunction
 function pf takes nothing returns nothing
 // call UnitRemoveAbility(GetTriggerUnit(),$42303054)
@@ -31579,6 +32803,12 @@ endfunction
 
 function qC takes nothing returns nothing
     // 学习技能监听
+    
+    if GetLearnedSkillBJ() == 'Ab5w' then
+    // call textToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "学习虚无")
+    call genie_study_r(GetTriggerUnit(),'Ab5w')
+    endif
+    
     if GetLearnedSkillBJ() == 'Ab5a' then
     // call textToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "学习腐化")
     call maliang_study_r(GetTriggerUnit(),'Ab5a')
@@ -32603,16 +33833,16 @@ call IncUnitAbilityLevelSwapped($41485A52,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00烈焰之矢的等级已经提升了！")
 endif
 elseif GetUnitTypeId(Iv)==$4530305A or GetUnitTypeId(Iv)==$48303059 then
-if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($41304151,Iv)<1 then
-call UnitAddAbilityBJ($41304151,Iv)
-call UnitMakeAbilityPermanent(Iv,true,$41304151)
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00狂暴！")
-elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped($41304151,Iv)==1 then
-call IncUnitAbilityLevel(Iv,$41304151)
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00狂暴的等级已经提升至2级！")
-elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped($41304151,Iv)==2 then
-call IncUnitAbilityLevel(Iv,$41304151)
-call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00狂暴的等级已经提升至3级！")
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab6i',Iv)<1 then
+call UnitAddAbilityBJ('Ab6i',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab6i')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00聚灵大阵！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab6i',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab6i')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00聚灵大阵的等级已经提升至2级！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab6i',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab6i')
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00聚灵大阵的等级已经提升至3级！")
 endif
 // 赵云
 elseif GetUnitAbilityLevel(Iv,$41304C31)>0 then
@@ -32822,15 +34052,15 @@ call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff
 endif
 elseif Iv==Cs then
 if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped($41303131,Iv)<1 then
-call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
+// call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
 call UnitAddAbilityBJ($41303131,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00天生蛮力！获得额外的100点力量！")
 elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped($41303131,Iv)==1 then
-call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
+// call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
 call IncUnitAbilityLevelSwapped($41303131,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00天生蛮力的等级已经提升了！获得额外的100点力量！")
 elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped($41303131,Iv)==2 then
-call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
+// call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
 call IncUnitAbilityLevelSwapped($41303131,Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00天生蛮力的等级已经提升了！获得额外的100点力量！")
 endif
@@ -33404,7 +34634,9 @@ call UnitDamageTargetBJ(RD, RE, GetUnitState(GetTriggerUnit(), ConvertUnitState(
 else
 call UnitDamageTargetBJ(RD, RE, GetUnitState(GetTriggerUnit(), ConvertUnitState(21))*3 + I2R(GetHeroStr(RD, true)) * (I2R(GetUnitAbilityLevelSwapped($414E656E, RD)) * 3.), ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED)
 endif
-call UnitAddItem(RD,CreateItem($66676668,GetUnitX(RD),GetUnitY(RD)))
+call UnitAddItemByIdSwapped($66676668,RD)
+
+// call UnitAddItem(RD,CreateItem($66676668,GetUnitX(RD),GetUnitY(RD)))
 call SetUnitAnimation(RE,"Death")
 call TriggerSleepAction(.3)
 if IsUnitAliveBJ(RE)==true then
@@ -34276,19 +35508,60 @@ local real JT=0.
 if GetSpellAbilityId()==$4130414D then
 set JT=bk(GetTriggerUnit(),2,GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId()))*.5
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,GF[GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))]+GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"温柔地对"+GetUnitName(GetSpellTargetUnit())+"说：“弟弟乖，跟哥哥走，哥哥给你买糖吃。”")
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cffffff00卖出"+(GetUnitName(GetSpellTargetUnit())+("  你获得了："+(I2S(300*GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId()))+("金钱以及 "+(I2S(100*GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId()))+"点经验。"))))))
-call AdjustPlayerStateBJ(300*GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId()),GetOwningPlayer(GetTriggerUnit()),PLAYER_STATE_RESOURCE_GOLD)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|Cffffff00卖出" + (GetUnitName(GetSpellTargetUnit()) + ("  你获得了：" + (I2S(5 * gold_time * GetUnitAbilityLevel(GetTriggerUnit(), GetSpellAbilityId()) + 100 * GetUnitAbilityLevel(GetTriggerUnit(), GetSpellAbilityId())) + ("金钱以及 " + (I2S(100 * GetUnitAbilityLevel(GetTriggerUnit(), GetSpellAbilityId())) + "点经验。"))))))
+call AdjustPlayerStateBJ(5 * gold_time * GetUnitAbilityLevel(GetTriggerUnit(), GetSpellAbilityId()) + 100 * GetUnitAbilityLevel(GetTriggerUnit(), GetSpellAbilityId()), GetOwningPlayer(GetTriggerUnit()), PLAYER_STATE_RESOURCE_GOLD)
 call AddHeroXP(GetTriggerUnit(),100*GetUnitAbilityLevel(GetTriggerUnit(),GetSpellAbilityId()),false)
 call bs(GetTriggerUnit(),GetUnitX(GetSpellTargetUnit()),GetUnitY(GetSpellTargetUnit()),330,JT,2,0)
-else
+if bC(GetTriggerUnit(),'it0e') then
+set gold_time = gold_time+1
+endif
+set gold_time = gold_time+1
+if gold_time > 49 and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab6h') ==1 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+elseif gold_time > 99 and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab6h') ==2 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+elseif gold_time > 149 and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab6h') ==3 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+elseif gold_time > 199 and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab6h') ==4 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+elseif gold_time > 249 and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab6h') ==5 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+elseif gold_time > 299 and GetUnitAbilityLevel(GetTriggerUnit(), 'Ab6h') ==6 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+elseif gold_time > 349 and GetUnitAbilityLevel(GetTriggerUnit(),'Ab6h') ==7 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+elseif gold_time > 399 and GetUnitAbilityLevel(GetTriggerUnit(),'Ab6h') ==8 then
+call IncUnitAbilityLevelSwapped('Ab6h',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab6h') 
+call DisplayTimedTextToForce(GetPlayersAll(), 5., "|Cffffff00马忠的追踪术等级提升了！")
+endif
 endif
 if GetSpellAbilityId()==$4130414E and GetUnitAbilityLevel(GetTriggerUnit(),$41304150)>0 then
+
 set FZ=GetUnitAbilityLevel(GetTriggerUnit(),$41304150)
 call UnitRemoveAbility(GetTriggerUnit(),$41304150)
 call UnitAddAbility(GetTriggerUnit(),$41304150)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41304150)
 call SetUnitAbilityLevel(GetTriggerUnit(),$41304150,FZ)
 else
+endif
+// 闪烁的时候布置陷阱
+if (GetSpellAbilityId()=='A0EW' or GetSpellAbilityId()=='AEbl' or GetSpellAbilityId()=='A0AP') and GetUnitAbilityLevel(GetTriggerUnit(),'A0AN')>0 then
+call CreateUnit(GetOwningPlayer(GetTriggerUnit()), 'n00L', GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()), 200.02)
 endif
 endfunction
 function sz takes nothing returns nothing
@@ -34488,7 +35761,7 @@ local boolean success =false
 // 孙乾偷东西-偷天换日
 if GetSpellAbilityId()==$41623074  then
     // 如果没有 专属
-    if bC(Iv, $69743065) == false then
+    if bC(Iv, 'it0e') == false then
  // 偷非英雄单位
     if IsUnitType(GetSpellTargetUnit(),UNIT_TYPE_HERO)==false then
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"你怎么忍心对这么穷的小兵下手呢？当然是什么都没偷到啊")
@@ -34520,7 +35793,7 @@ if GetSpellAbilityId()==$41623074  then
     endif
      // 四阶段偷装备
     if GetUnitAbilityLevel(Iv, $41623074) == 4 and GetRandomInt(1, 50) == 2 then
-    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,134)],GetTriggerUnit())
+    call UnitAddItemByIdSwapped(hight_level_item_pool[GetRandomInt(99,143)],GetTriggerUnit())
     call DisplayTimedTextToForce(GetPlayersAll(),6.,"|cffff0000从"+GetUnitName(GetSpellTargetUnit())+("|cffff0000身上偷到了极品宝物："+GetItemName(GetLastCreatedItem())))
     // 如果偷到的装备是追日靴
     if GetItemTypeId(GetLastCreatedItem()) == $49303030 then
@@ -34602,6 +35875,11 @@ else
 endif
 if GetSpellAbilityId()==$41303159 then
 set Mt[6]=GetUnitLoc(GetTriggerUnit())
+if GetUnitTypeId(GetTriggerUnit())=='u00p' then
+call CreateItemLoc('it1b',Mt[6])
+
+endif
+
 if GetUnitTypeId(GetTriggerUnit())==$68706878 then
 call CreateItemLoc($6B336D33,Mt[6])
 else
@@ -34745,7 +36023,7 @@ set CE=FirstOfGroup(I2)
 exitwhen CE==null
 call GroupRemoveUnit(I2,CE)
 if GetUnitState(CE,UNIT_STATE_LIFE)>.405 and IsUnitEnemy(CE,GetOwningPlayer(Ij))==true and IsUnitType(CE,UNIT_TYPE_STRUCTURE)==false and GetUnitTypeId(CE) != GetUnitTypeId(she)  then
-call take_magic_damage(Ij,CE,Ii,false,false,I,N,WEAPON_TYPE_WHOKNOWS)
+call take_magic_damage(Ij,CE,Ii,false,false,ATTACK_TYPE_NORMAL,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
 if GetUnitState(CE,UNIT_STATE_LIFE)>0 then
 call DestroyEffect(AddSpecialEffectTarget("Abilities\\Spells\\Undead\\AnimateDead\\AnimateDeadTarget.mdl",CE,"overhead"))
 endif
@@ -34814,6 +36092,45 @@ local real Iu=0.
 local unit Pr=null
 local group I2=CreateGroup()
 
+
+// 冰甲
+if GetUnitAbilityLevel(Iv, 'Ab6p') > 0 then
+    //护盾值
+call SaveReal(Ia, GetHandleId(Iv), $30304844, bk(Iv, 3,1))
+// 护盾特效
+call UnitAddAbility(Iv,$41304844)
+if HaveSavedInteger(FS,GetHandleId(Iv),$130B62EC)==true then
+if LoadReal(FS,GetHandleId(Iv),$A9F08262)<=0. then
+call SaveReal(FS,GetHandleId(Iv),$130B62EC,4.)
+set CS=CreateTimer()
+set Ix=GetHandleId(CS)
+call SaveUnitHandle(Ia,Ix,0,Iv)
+call TimerStart(CS,.1,true,function gaoxiangSheild)
+else
+call SaveReal(FS,GetHandleId(Iv),$130B62EC,4.)
+endif
+else
+call SaveReal(FS,GetHandleId(Iv),$130B62EC,4.)
+set CS=CreateTimer()
+set Ix=GetHandleId(CS)
+call SaveUnitHandle(Ia,Ix,0,Iv)
+call TimerStart(CS,.1,true,function gaoxiangSheild)
+endif
+endif
+
+// 
+if GetSpellAbilityId()=='Ab6i' then
+call mazhong_f(Iv)
+endif
+
+if GetSpellAbilityId()=='Ab6h' then
+    
+call mazhong_tracing_technique(Iv,CE)
+call CreateTextTagUnitBJ("当前悬赏：" + I2S(gold_time), Iv, 0, 10, 100, 100, 20., 0)
+call SetTextTagPermanent(GetLastCreatedTextTag(),false)
+call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
+call SetTextTagLifespan(GetLastCreatedTextTag(),1.)
+endif
 // 死亡判决
 if GetSpellAbilityId()=='Ab5g' then
 call maliang_zhansha(Iv,CE)
@@ -34830,7 +36147,17 @@ call genieW_action()
 return
 endif
 
+if GetSpellAbilityId()=='Ab5t' then
+    if LoadReal(hero_hash, GetHandleId(Iv), StringHash("phantom_x")) != 0 and LoadReal(hero_hash, GetHandleId(Iv), StringHash("phantom_y")) != 0 then
+    call UnitAddItem(Iv,CreateItem($66676668,GetUnitX(Iv),GetUnitY(Iv)))
 
+    call SetUnitPosition(Iv, LoadReal(hero_hash, GetHandleId(Iv), StringHash("phantom_x")),LoadReal(hero_hash, GetHandleId(Iv), StringHash("phantom_y")))
+    call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab5r',true)
+    call SetPlayerAbilityAvailable(GetOwningPlayer(Iv),'Ab5t',false)
+    endif
+    
+endif
+// 蛇免疫
 if GetUnitTypeId(CE) == GetUnitTypeId(she) and GetUnitState(she, UNIT_STATE_LIFE) >1 then
 call DisplayTextToPlayer(GetOwningPlayer(Iv),0,0,"|cffff0000八岐化蛇不受法术影响！")
 call UnitRemoveBuffs(CE,false,true)
@@ -34839,7 +36166,16 @@ call UnitRemoveAbility(CE,$42505345)
 // call UnitRemoveAbility(CE,$42303054)
 return
 endif
-
+if GetUnitAbilityLevel(Iv, 'Ab6j') >0 then
+// 闪烁的时候布置陷阱
+if (GetSpellAbilityId()=='A0EW' or GetSpellAbilityId()=='AEbl' or GetSpellAbilityId()=='A0AP')  then
+call CreateUnit(GetOwningPlayer(Iv), 'n00L', GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()), 200.02)
+endif
+endif
+// 大灵爆
+if GetSpellAbilityId()=='Ab6j' then
+    call lingbao_aoe(Iv)
+endif
 if GetSpellAbilityId()=='Ab5i' then
 set Pr = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), 'h008', GetSpellTargetX(), GetSpellTargetY(), 0)
 call UnitApplyTimedLife(Pr,$42487765,30.)
@@ -35610,16 +36946,13 @@ call RemoveItem(GetSpellTargetItem())
 call UnitAddItem(Iv,CreateItem($49303342,0,0))
 
 // 勾魂镰刀
-elseif GetItemTypeId(GetSpellTargetItem())=='it17' then
+elseif GetItemTypeId(GetSpellTargetItem())=='it17'  then
 if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
-    // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
 set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("gouhunliandao")))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("gouhunliandao")))*2)*100)
 else
-     // 否则，则强化成功概率为装备等级：100- level*500/ ((20 + level)*5)
 set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("gouhunliandao")))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("gouhunliandao")))*5)*100)
 endif
 if GetRandomInt(0,100)>FZ then
-
 // 如果有幸运币，则将幸运币的次数+1
 if bC(Iv,$69743067) then
 call SetItemCharges(aj(Iv, $69743067), GetItemCharges(aj(Iv, $69743067)) +1)
@@ -35669,7 +37002,36 @@ else
 
 endif
 
-// 自然魂珠强化结束
+// 玄天头盔
+elseif GetItemTypeId(GetSpellTargetItem())=='it1d' then
+if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
+    // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("xuantian_header")))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("xuantian_header")))*2)*100)
+else
+     // 否则，则强化成功概率为装备等级：100- level*500/ ((20 + level)*5)
+set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("xuantian_header")))*5/(20+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("xuantian_header")))*5)*100)
+endif
+if GetRandomInt(0,100)>FZ then
+
+// 如果有幸运币，则将幸运币的次数+1
+if bC(Iv,$69743067) then
+call SetItemCharges(aj(Iv, $69743067), GetItemCharges(aj(Iv, $69743067)) +1)
+// 如果幸运币次数大于4，则摧毁幸运币
+if GetItemCharges(aj(Iv, $69743067)) >=6 then
+    call RemoveItem(aj(GetTriggerUnit(),$69743067))
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|Cff808000幸运币承受不住这份因果，碎裂了")
+endif
+endif
+call SaveInteger(Ia, GetHandleId(Iv), StringHash("xuantian_header"), LoadInteger(Ia, GetHandleId(Iv), StringHash("xuantian_header")) +1)
+call SetUnitState(Iv,UNIT_STATE_MAX_LIFE,GetUnitState(Iv,UNIT_STATE_MAX_LIFE)+4000)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00恭喜你，你成功能将装备强化！基础生命值+4000|r")
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), StringHash("xuantian_header"))))
+else
+    call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
+
+endif
+
+
 
 // 真龙铠甲
 elseif GetItemTypeId(GetSpellTargetItem())=='it0q' then
@@ -35692,9 +37054,9 @@ if GetItemCharges(aj(Iv, $69743067)) >=6 then
 endif
 endif
 call SaveInteger(Ia, GetHandleId(Iv), $130B62E8, LoadInteger(Ia, GetHandleId(Iv), $130B62E8) +1)
-call SetUnitState(Iv,UNIT_STATE_MAX_LIFE,GetUnitState(Iv,UNIT_STATE_MAX_LIFE)+3000)
-call SetUnitState(Iv,ConvertUnitState(32),GetUnitState(Iv,ConvertUnitState(32))+7)
-call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00恭喜你，你成功能将装备强化！基础护甲+7，最大生命+3000|r")
+call SetUnitState(Iv,UNIT_STATE_MAX_LIFE,GetUnitState(Iv,UNIT_STATE_MAX_LIFE)+2000)
+call SetUnitState(Iv,ConvertUnitState(32),GetUnitState(Iv,ConvertUnitState(32))+5)
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00恭喜你，你成功能将装备强化！基础护甲+7，最大生命+2000|r")
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()), 0, 0, "|cffffcc00当前强化层数:" + I2S( LoadInteger(Ia, GetHandleId(Iv), $130B62E8)))
 else
     call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
@@ -35732,7 +37094,7 @@ else
 endif
 
 // 自然魂珠
-elseif GetItemTypeId(GetSpellTargetItem())=='it0k' then
+elseif GetItemTypeId(GetSpellTargetItem())=='it0k' or GetItemTypeId(GetSpellTargetItem())=='it1e' then
 if GetUnitAbilityLevel(Iv, $41304641) > 0 or bC(Iv,$69743067) then
     // 如果拥有瞬移，则强化成功概率为装备等级：100- level*200/ ((200 + level)*2)
 set FZ=R2I(I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu")))*2/(200+I2R(LoadInteger(Ia, GetHandleId(Iv), StringHash("ziranhunzhu")))*2)*100)
@@ -35790,7 +37152,7 @@ endif
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffffcc00恭喜你，你成功能将装备强化！|r")
 if GetItemTypeId(GetSpellTargetItem())!=$7372746C  then
     // 如果被强化的物品不是七星灯，则基础攻击+100
-call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))+120)
+call SetUnitState(Iv,ConvertUnitState(18),GetUnitState(Iv,ConvertUnitState(18))+80)
 endif
 else
 call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,"|cffff0000强化失败！|r")
@@ -35950,6 +37312,8 @@ endfunction
 function attack_event takes nothing returns nothing
 local unit Iv=GetAttacker()
 local unit CE=GetAttackedUnitBJ()
+local unit loc_u = null
+local item loc_i =null
 local real loc_dmg =0
 // call textToPlayer(GetLocalPlayer(), 0, 0, "|cff00ff00攻击开始|r")
 // 双剑被动计数
@@ -36037,12 +37401,12 @@ if GetUnitAbilityLevel(Iv, 'Ab4l') >0 then
     call SaveInteger(Ia, GetHandleId(Iv), StringHash("Ab4l"),0)
     // 如果携带双刃，会额外附带全属性两倍的伤害
     if GetUnitAbilityLevel(Iv, 'Ab4f') >0  then 
-    call take_magic_damage(Iv, CE,  GetUnitState(Iv, ConvertUnitState(21)) * GetUnitAbilityLevel(Iv, 'Ab4l') , false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNIVERSAL, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Iv, CE,  GetUnitState(Iv, ConvertUnitState(21)) * GetUnitAbilityLevel(Iv, 'Ab4l') , false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
 
     call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S(I2R((GetHeroAgi(Iv, true) + GetHeroStr(Iv, true)) * 5) + bk(Iv, 0, 6) + GetUnitState(Iv, ConvertUnitState(21)) * GetUnitAbilityLevel(Iv, 'Ab4l')))
     
     else
-    call take_magic_damage(Iv, CE, GetUnitState(Iv, ConvertUnitState(21)) * GetUnitAbilityLevel(Iv, 'Ab4l') , false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+    call take_magic_damage(Iv, CE, GetUnitState(Iv, ConvertUnitState(21)) * GetUnitAbilityLevel(Iv, 'Ab4l')*0.5 , false, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
     call textToPlayer(GetOwningPlayer(Iv), 0, 0, "第3次攻击伤害：" + R2S(GetUnitState(Iv, ConvertUnitState(21)) * GetUnitAbilityLevel(Iv, 'Ab4l') *0.5))
 
     endif
@@ -36068,6 +37432,40 @@ call IncUnitAbilityLevel(Iv,$41304C50)
 call DecUnitAbilityLevel(Iv,$41304C50)
 
 endif
+
+
+// 无名W状态生成幻象
+if GetUnitAbilityLevel(Iv,'Ab5l')>0 and IsUnitAlly(Iv,Player(8))==true then
+    // 无名
+if GetUnitTypeId(Iv)==$55647265 or GetUnitTypeId(Iv)==$55303038 and IsUnitType(Iv,UNIT_TYPE_HERO)==true then
+// 问天枪
+
+
+if GetRandomInt(1, 100) <= GetUnitAbilityLevel(Iv, 'Ab5l')  then
+set loc_u = CreateUnit(GetOwningPlayer(Iv), GetUnitTypeId(Iv), GetUnitX(Iv), GetUnitY(Iv), bT(GetUnitX(Iv), GetUnitY(Iv), GetUnitX(CE), GetUnitY(CE)))
+call SetHeroLevelBJ(loc_u, GetUnitLevel(Iv),false)
+call SelectHeroSkill(loc_u,'Ab5l')
+call SetUnitAbilityLevel(loc_u, 'Ab5l', GetUnitAbilityLevel(Iv,'Ab5l'))
+set loc_i = UnitAddItemByIdSwapped(GetItemTypeId(UnitItemInSlot(Iv, 0)), loc_u)
+call SetItemCharges(loc_i,GetItemCharges(UnitItemInSlot(Iv, 0)))
+set loc_i = UnitAddItemByIdSwapped(GetItemTypeId(UnitItemInSlot(Iv, 1)), loc_u)
+call SetItemCharges(loc_i,GetItemCharges(UnitItemInSlot(Iv, 1)))
+set loc_i = UnitAddItemByIdSwapped(GetItemTypeId(UnitItemInSlot(Iv, 2)), loc_u)
+call SetItemCharges(loc_i,GetItemCharges(UnitItemInSlot(Iv, 2)))
+set loc_i = UnitAddItemByIdSwapped(GetItemTypeId(UnitItemInSlot(Iv, 3)), loc_u)
+call SetItemCharges(loc_i,GetItemCharges(UnitItemInSlot(Iv, 3)))
+set loc_i = UnitAddItemByIdSwapped(GetItemTypeId(UnitItemInSlot(Iv, 4)), loc_u)
+call SetItemCharges(loc_i,GetItemCharges(UnitItemInSlot(Iv, 4)))
+set loc_i = UnitAddItemByIdSwapped(GetItemTypeId(UnitItemInSlot(Iv, 5)), loc_u)
+call SetItemCharges(loc_i,GetItemCharges(UnitItemInSlot(Iv, 5)))
+call UnitAddItemByIdSwapped($66676668,loc_u)
+call RemoveUnit(loc_u)
+call wuming_w_acion(Iv,CE)
+
+endif
+endif
+endif
+
 
 endfunction
 function attack_init takes nothing returns nothing
@@ -36132,6 +37530,12 @@ endif
 // 玄武15%cd
 if GetUnitAbilityLevel(GetTriggerUnit(),$4130345A)>0  then
 call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.85)
+else
+endif
+
+// 玄天套20%CD
+if GetUnitAbilityLevel(GetTriggerUnit(),'Ab6r')>0  then
+call XV(GetTriggerUnit(),GetSpellAbilityId(),1,XR(GetTriggerUnit(),GetSpellAbilityId(),1)*.8)
 else
 endif
 endfunction
@@ -36468,7 +37872,11 @@ call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"修真","击杀圣兽以后，�
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"五虎将","杀死BOOS后会爆虎符，拿虎符走到孔明就能得到五虎官职(跟交玉玺一样)。徐晃必爆。（五虎将特点：增加一被动回复技能，增加50%生命、魔法、攻击和移动速度）切记不可以在得到五虎将技能时再去找孔明，否则后果自负。","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"孔明清包","需难度四以上,任意玩家输入QB,可清孔明身上装备。","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED, "游戏命令","所有玩家输入:-Q  即可清除地上物品,慎用!!!每清除一个物品可以获得100*游戏波数的金钱奖励
-红色玩家输入:-TR+玩家编号  即可踢除玩家,慎用!!!
+红色玩家输入:-TR+玩家编号  即可踢除玩家,慎用!!!|n
+1 楼 输 入:-reset可以重置boss的刷新，冷却时间500秒，慎用！|n
+任意玩家输入:-up可以收集地上所有优质兽皮放到孔明后面|n
+任意玩家输入:-txt可以打开部分文本提示消息|n
+任意玩家输入:-s可以查询当前英雄属性|n
 任意玩家输入:-JHYX+玩家编号  即可与对方交换英雄","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
 call CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED,"新增佣兵","*增加诸葛弩,攻击强劲,射程远,能够搭乘单位,当搭乘南蛮苦工操作时,将会提升战斗能力.(诸葛瞻及黄月英搭乘战斗力提升的更多)
 |n*增加弓骑兵,需要开启新城（必须保住孟达不死）,在新城军需官处购买马匹,安全带回剑阁,再买�","ReplaceableTextures\\CommandButtons\\BTNAmbush.blp")
@@ -37346,8 +38754,10 @@ call a9(MH,Bn)
 call TriggerAddCondition(MH,Condition(function uw))
 call TriggerAddAction(MH,function ux)
 endfunction
+
+// and GetUnitState(door_boss1,UNIT_STATE_LIFE)<1. and GetUnitState(door_boss2,UNIT_STATE_LIFE)<1. and GetUnitState(door_boss3,UNIT_STATE_LIFE)<1. and GetUnitState(door_boss4,UNIT_STATE_LIFE)<1.
 function uz takes nothing returns boolean
-return IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true and IsUnitAlly(GetTriggerUnit(),Player(8))==true and GetUnitState(Cg,UNIT_STATE_LIFE)<1. and GetUnitState(Ch,UNIT_STATE_LIFE)<1. and GetUnitState(Ci,UNIT_STATE_LIFE)<1. and GetUnitState(Cj,UNIT_STATE_LIFE)<1.
+return IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true and IsUnitAlly(GetTriggerUnit(),Player(8))==true 
 endfunction
 function u0 takes nothing returns nothing
 if GetUnitState(Ck,UNIT_STATE_LIFE)>=5. then
@@ -37522,9 +38932,11 @@ return
 elseif bC(GetTriggerUnit(),$676D6672)==true then
 call RemoveItem(aj(GetTriggerUnit(),$676D6672))
 call UnitAddAbilityBJ($41303450,GetTriggerUnit())
+// 苍龙之力
 call UnitAddAbility(GetTriggerUnit(),$41303443)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303450)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303443)
+// 龙威
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303551)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303643)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41497831)
@@ -37538,10 +38950,10 @@ return
 elseif bC(GetTriggerUnit(),$73636C70)==true then
 call RemoveItem(aj(GetTriggerUnit(),$73636C70))
 call UnitAddAbilityBJ($4162306A,GetTriggerUnit())
-call UnitAddAbilityBJ($41303655,GetTriggerUnit())
+call UnitAddAbilityBJ('A06U',GetTriggerUnit())
 call UnitAddAbilityBJ('Ab35',GetTriggerUnit())
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab35')
-call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303655)
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'A06U')
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab36')
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$41303631)
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$4130354F)
@@ -37550,6 +38962,30 @@ call SetPlayerAbilityAvailable(GetOwningPlayer(GetTriggerUnit()),'Ab35',false)
 set Hq[640+GetUnitUserData(GetTriggerUnit())]=0
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"开始修真，狂野之神！全属性随修炼提升")
 call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cff00ff00狂野之神")
+call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
+return
+
+// 老虎
+elseif bC(GetTriggerUnit(),'it1a')==true then
+call RemoveItem(aj(GetTriggerUnit(),'it1a'))
+// 修真
+call UnitAddAbilityBJ('Ab67',GetTriggerUnit())
+call UnitAddAbilityBJ('Ab69',GetTriggerUnit())
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab67')
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab69')
+// 生命值+10000
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'AT0T')
+// 护甲+50
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'At05')
+// 攻击等级+25
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'Ab68')
+// 重生
+call UnitMakeAbilityPermanent(GetTriggerUnit(),true,'AOr3')
+
+call SetPlayerAbilityAvailable(GetOwningPlayer(GetTriggerUnit()),'Ab67',false)
+set Hq[1280+GetUnitUserData(GetTriggerUnit())]=0
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(GetTriggerUnit()))+"开始修真，狂兽之魂，生命值和护甲随修炼提升")
+call MultiboardSetItemValue(MultiboardGetItem(KS,GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit())),5),"|cff00ff00狂兽之魂")
 call TriggerRegisterUnitEvent(TL,GetTriggerUnit(),EVENT_UNIT_SPELL_EFFECT)
 return
 
@@ -37594,7 +39030,7 @@ call TriggerAddCondition(TK,Condition(function vO))
 call TriggerAddAction(TK,function vP)
 endfunction
 function vR takes nothing returns boolean
-return GetSpellAbilityId()==$41305853 or GetSpellAbilityId()==$41303655 or GetSpellAbilityId()==$41303443
+return GetSpellAbilityId()==$41305853 or GetSpellAbilityId()==$41303655 or GetSpellAbilityId()==$41303443  or GetSpellAbilityId()=='Ab69'
 endfunction
 function vS takes nothing returns nothing
 local group KB
@@ -37778,6 +39214,33 @@ endif
 endif
 else
 endif
+// 老虎
+if GetUnitAbilityLevelSwapped('Ab67',GetTriggerUnit())==1 and Hq[1280+GetUnitUserData(GetTriggerUnit())]<200 then
+set Hq[1280+GetUnitUserData(GetTriggerUnit())]=Hq[1280+GetUnitUserData(GetTriggerUnit())]+1
+call DisplayTextToPlayer(GetOwningPlayer(GetTriggerUnit()),0,0,GetHeroProperName(GetTriggerUnit())+("|cFF808080你的兽魂（虎麒麟）修炼至："+(I2S(Hq[1280+GetConvertedPlayerId(GetOwningPlayer(GetTriggerUnit()))])+" /200")))
+if Hq[1280+GetUnitUserData(GetTriggerUnit())]<=160 then
+if ModuloInteger(Hq[1280+GetUnitUserData(GetTriggerUnit())],20)==0 then
+call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"|cFF0000FF通过自身不断修行，最大生命+1000，护甲+5")
+call SetHeroStr(GetTriggerUnit(),GetHeroStr(GetTriggerUnit(),false)+10,true)
+call SetHeroAgi(GetTriggerUnit(),GetHeroAgi(GetTriggerUnit(),false)+10,true)
+call SetHeroInt(GetTriggerUnit(),GetHeroInt(GetTriggerUnit(),false)+10,true)
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(1),GetUnitState(GetTriggerUnit(),ConvertUnitState(1))+1000)
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(32),GetUnitState(GetTriggerUnit(),ConvertUnitState(32))+5)
+
+else
+endif
+else
+if Hq[1280+GetUnitUserData(GetTriggerUnit())]==200 then
+call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"|cFF808080兽魂（虎麒麟）修炼至顶,可以选择进入|cffffcc00仙魔")
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(1),GetUnitState(GetTriggerUnit(),ConvertUnitState(1))+2000)
+call SetUnitState(GetTriggerUnit(),ConvertUnitState(32),GetUnitState(GetTriggerUnit(),ConvertUnitState(32))+15)
+
+else
+endif
+endif
+else
+endif
+
 set Iv=null
 set KB=null
 set KC=null
@@ -37788,7 +39251,7 @@ call TriggerAddCondition(TL,Condition(function vR))
 call TriggerAddAction(TL,function vS)
 endfunction
 function vU takes nothing returns boolean
-return GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$41303443)>0 or GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$41303655)>0 or GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$41305853)>0 and IsUnitAlly(GetTriggerUnit(),Player(8))==false and GetOwningPlayer(GetTriggerUnit())==Player(PLAYER_NEUTRAL_AGGRESSIVE) or IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true
+return GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],'Ab67')>0 or GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$41303443)>0 or GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$41303655)>0 or GetUnitAbilityLevel(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],$41305853)>0 and IsUnitAlly(GetTriggerUnit(),Player(8))==false and GetOwningPlayer(GetTriggerUnit())==Player(PLAYER_NEUTRAL_AGGRESSIVE) or IsUnitType(GetTriggerUnit(),UNIT_TYPE_HERO)==true
 endfunction
 function vV takes nothing returns nothing
 if GetUnitAbilityLevelSwapped($41303530,Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])==1 and Hq[10+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])]<200 then
@@ -37937,7 +39400,31 @@ endif
 else
 endif
 
+// 老虎
 
+if GetUnitAbilityLevelSwapped('Ab67',Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])==1 and Hq[1280+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])]<200 then
+set Hq[1280+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])]=Hq[1280+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])]+1
+call DisplayTextToPlayer(GetOwningPlayer(GetKillingUnitBJ()),0,0,GetHeroProperName(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])+("|cFF808080你的兽魂（虎麒麟）修炼至："+(I2S(Hq[1280+GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])+" /200")))
+if Hq[1280+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])]<=160 then
+if ModuloInteger(Hq[1280+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])],20)==0 then
+// call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])+("|cFF1FBF00你的兽魂（血狼）修炼至"+Hr[Hq[160+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])]/20]))
+// call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])+"|cFF0000FF通过自身不断修行，自身潜能得到提升，全属性+10")
+call SetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(1),GetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(1))+1000)
+call SetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(32),GetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(32))+5)
+
+else
+endif
+else
+if Hq[1280+GetUnitUserData(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])]==200 then
+call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))])+"|cFF808080兽魂（虎麒麟）修炼至顶,可以选择进入|cffffcc00仙魔")
+call SetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(1),GetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(1))+2000)
+call SetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(32),GetUnitState(Ib[GetConvertedPlayerId(GetOwningPlayer(GetKillingUnitBJ()))],ConvertUnitState(32))+15)
+
+else
+endif
+endif
+else
+endif
 endfunction
 function vW takes nothing returns nothing
 set TM=CreateTrigger()
@@ -37951,7 +39438,7 @@ function vX takes nothing returns boolean
 return GetItemTypeId(GetManipulatedItem())==$4930305A or GetItemTypeId(GetManipulatedItem())==$70686C74 and GetPlayerTechCountSimple($52756E65,GetOwningPlayer(GetTriggerUnit()))<1 and GetUnitAbilityLevelSwapped($4130354D,GetTriggerUnit())<1 and GetUnitAbilityLevelSwapped($4130354E,GetTriggerUnit())<1
 endfunction
 function vY takes nothing returns nothing
-if GetItemTypeId(GetManipulatedItem())==$4930305A and Hq[10+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[20+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[40+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[80+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[160+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[320+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[640+GetUnitUserData(GetTriggerUnit())]>=200 then
+if GetItemTypeId(GetManipulatedItem())==$4930305A and Hq[10+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[20+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[40+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[80+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[160+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[320+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[640+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[1280+GetUnitUserData(GetTriggerUnit())]>=200 then
 call DisplayTextToForce(GetPlayersAll(),"恭喜："+GetHeroProperName(GetTriggerUnit())+"已经修成半仙在生命低于60%时有一定机率回复10%生命！")
 call UnitAddAbilityBJ($4130354D,GetTriggerUnit())
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$4130354D)
@@ -37960,7 +39447,7 @@ call SetPlayerTechResearchedSwap($5267666F,1,GetOwningPlayer(GetTriggerUnit()))
 call TriggerRegisterUnitEvent(TO,GetTriggerUnit(),EVENT_UNIT_DAMAGED)
 else
 endif
-if GetItemTypeId(GetManipulatedItem())==$70686C74 and Hq[10+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[20+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[40+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[80+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[160+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[320+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[640+GetUnitUserData(GetTriggerUnit())]>=200 then
+if GetItemTypeId(GetManipulatedItem())==$70686C74 and Hq[10+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[20+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[40+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[80+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[160+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[320+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[640+GetUnitUserData(GetTriggerUnit())]>=200 or Hq[1280+GetUnitUserData(GetTriggerUnit())]>=200 then
 call DisplayTextToForce(GetPlayersAll(),"恭喜："+GetHeroProperName(GetTriggerUnit())+"已经成为小魔头攻击进有一定机率附带等级*20的无视魔免防御的伤害！")
 call UnitAddAbilityBJ($4130354E,GetTriggerUnit())
 call UnitMakeAbilityPermanent(GetTriggerUnit(),true,$4130354E)
@@ -38036,9 +39523,10 @@ if GetUnitAbilityLevel(GetTriggerUnit(),$41303652)>0 then
 call IncUnitAbilityLevelSwapped($41303653,GetTriggerUnit())
 call SetUnitState(GetTriggerUnit(),ConvertUnitState(37),GetUnitState(GetTriggerUnit(),ConvertUnitState(37))-.05)
 else
-if GetUnitTypeId(GetTriggerUnit())==$4F726578 then
+    // GetUnitTypeId(GetTriggerUnit())==$4F726578
+if GetUnitAbilityLevel(GetTriggerUnit(),$41303131)>0 then
 call IncUnitAbilityLevelSwapped($41303131,GetTriggerUnit())
-call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
+// call ModifyHeroStat(bj_HEROSTAT_STR,Cs,bj_MODIFYMETHOD_ADD,100)
 else
 if GetUnitAbilityLevel(GetTriggerUnit(),$41304C32)>0 then
 call IncUnitAbilityLevelSwapped($4130384F,GetTriggerUnit())
@@ -38165,7 +39653,7 @@ else
     // 盖聂大招
 if GetUnitAbilityLevelSwapped('S008', GetTriggerUnit()) >0 then
 call IncUnitAbilityLevelSwapped('Ab5s',GetTriggerUnit())
-call Trig_Coup_de_Grace_study(Iv)
+call Trig_Coup_de_Grace_study(GetTriggerUnit())
 else
 endif
 endif
@@ -38196,7 +39684,7 @@ if GetUnitAbilityLevel(GetTriggerUnit(),$41304335)>0 then
 call IncUnitAbilityLevelSwapped($41486176,GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$4530305A or GetUnitTypeId(GetTriggerUnit())==$48303059 then
-call IncUnitAbilityLevelSwapped($41304151,GetTriggerUnit())
+call IncUnitAbilityLevelSwapped('Ab6i',GetTriggerUnit())
 else
 if GetUnitTypeId(GetTriggerUnit())==$48444430 then
 call IncUnitAbilityLevelSwapped($41304D48,GetTriggerUnit())
@@ -38590,9 +40078,11 @@ call UnitAddItemByIdSwapped($736F756C,GetTriggerUnit())
 return
 endif
 if GetUnitTypeId(GetTriggerUnit())==$4530305A or GetUnitTypeId(GetTriggerUnit())==$48303059 then
-    // 马忠-震天弓穿云箭
-call UnitAddItemByIdSwapped($72616D34,GetTriggerUnit())
-call UnitAddItemByIdSwapped($6F76656E,GetTriggerUnit())
+    // 马忠-震天弓穿云箭/玄光之翼
+// call UnitAddItemByIdSwapped($72616D34,GetTriggerUnit())
+// call UnitAddItemByIdSwapped($6F76656E,GetTriggerUnit())
+call UnitAddItemByIdSwapped('bfhr',GetTriggerUnit())
+
 return
 endif
 if GetUnitTypeId(GetTriggerUnit())==$4F303033 or GetUnitTypeId(GetTriggerUnit())==$4F303035 then
@@ -38611,8 +40101,8 @@ call UnitAddItemByIdSwapped($6F636F72,GetTriggerUnit())
 return
 endif
 if GetUnitTypeId(GetTriggerUnit())==$4F726578 then
-    // 孟获-巨象
-call UnitAddItemByIdSwapped($49303037,GetTriggerUnit())
+    // 孟获-盘古斧
+call UnitAddItemByIdSwapped($6F636F72,GetTriggerUnit())
 return
 endif
 if GetUnitTypeId(GetTriggerUnit())==GetUnitTypeId(DQ) then
@@ -39033,16 +40523,16 @@ endfunction
 function we takes nothing returns nothing
 call DisplayTextToForce(GetPlayersAll(),GetHeroProperName(GetTriggerUnit())+"大仙，看在我辛苦守卫剑阁的份上，赐我几件宝物吧。")
 // 孙乾的专属
-if GetTriggerUnit() == Tg and GetTriggerUnit() == sunQian and giveTongQian ==false then
+if GetTriggerUnit() == Tg and (GetTriggerUnit() == sunQian or GetTriggerUnit() == DJ) and giveTongQian ==false then
     // and bC(GetTriggerUnit(), $69743067) == true
     set giveTongQian=true
     set Tg=null
     call DisplayTextToForce(GetPlayersAll(),"这是上古人族铸造的第一枚铸币，希望它能助你大业所成。")
     call DisplayTextToForce(GetPlayersAll(),GetUnitName(GetTriggerUnit())+"|cffffdead获得了落宝铜钱！")
-    call UnitAddItemByIdSwapped($69743065,GetTriggerUnit())
+    call UnitAddItemByIdSwapped('it0e',GetTriggerUnit())
     // call UnitAddItemByIdSwapped($69743067,GetTriggerUnit())
 endif
-// 心之钢
+// 承影剑
 if GetTriggerUnit() == Tg and ((giveGang == false and GetRandomInt(1, 10) == 1) or GetTriggerUnit() ==yanyu) then
     // and bC(GetTriggerUnit(), $69743067) == true
     set giveGang=true
@@ -39199,7 +40689,7 @@ return Gq>=7
 endfunction
 function wp takes nothing returns nothing
 
-call CreateItem(hight_level_item_pool[GetRandomInt(99,134)],GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
+call CreateItem(hight_level_item_pool[GetRandomInt(99,143)],GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 if GetRandomInt(1,5)==4 then
 call CreateItem('I027',GetUnitX(GetTriggerUnit()),GetUnitY(GetTriggerUnit()))
 else
@@ -40145,6 +41635,10 @@ call xY()
 // 自定义事件
 call sheEvent()
 call spiderEvent()
+call door_boss1_Event()
+call door_boss2_Event()
+call door_boss3_Event()
+call door_boss4_Event()
 call registerXinzhigang()
 call regisetGaoxiangAttacked()
 call game_start_event()
