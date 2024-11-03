@@ -92150,6 +92150,7 @@ set t=null
 set s=null
 set g=null
 endfunction
+// 
 function II_1___11I takes unit s,real a,integer i returns nothing
 local trigger t=CreateTrigger()
 call TriggerRegisterUnitEvent(t,s,EVENT_UNIT_DEATH)

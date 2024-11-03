@@ -4059,7 +4059,7 @@ endif
 endif
 set CS=null
 endfunction
-// 击飞函数
+// 击飞函数 释放者 被击飞单位 击飞时间 击飞高度 击飞速度 击飞伤害
 function bd takes unit Ij,unit CE,integer Ik,real Il,real Im,real In,real Io,real Ip returns nothing
 local timer CS
 local integer Is=0
@@ -10342,7 +10342,7 @@ call bv(JW,GetUnitState(JW,ConvertUnitState(21))*2,bN(JW,Ig),1500,110)
 elseif GetUnitAbilityLevel(JW,$41304C31)>0 and IsPlayerAlly(GetOwningPlayer(Ig),GetOwningPlayer(JW))==false and bW(JW,$6D6C7374)!=null or bW(JW,$676F626D)!=null then
 if GetRandomInt(2,5)==5 then
 set Jd[10]=GetUnitLoc(JW)
-call UnitDamageTargetBJ(JW, Ig, I2R(GetHeroAgi(JW, true) + GetHeroStr(JW,true)) * GetRandomReal(2., 6.), ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED)
+call UnitDamageTargetBJ(JW, Ig, I2R(GetHeroAgi(JW, true) + GetHeroStr(JW, true)) * RMinBJ(12, (1. + GetItemCharges(bW(JW, $676F626D)) *0.5)), ATTACK_TYPE_CHAOS, DAMAGE_TYPE_ENHANCED)
 call CreateTextTagLocBJ("冲锋之志",Jd[10],1.,15.,100.,100,40.,20.)
 set Jc[4]=bj_lastCreatedTextTag
 call SetTextTagVelocity(Jc[4],64*.071/128*Cos(90*bj_DEGTORAD),64*.071/128*Sin(90*bj_DEGTORAD))
@@ -14412,7 +14412,7 @@ call SetTextTagPermanent(GetLastCreatedTextTag(),false)
 call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
 call SetTextTagLifespan(GetLastCreatedTextTag(),2.)
 
-call bd(Iv, CE, 10, 30, 0, 0, loc_r, 2)
+call bd(Iv, CE, 18, 30, 0, 0, loc_r, 2)
 endif
 return I2R(GetHeroAgi(Iv,true))
 endfunction
@@ -22472,12 +22472,18 @@ else
 endif
 else
 endif
-// 赵统解控效果
-// if GetTriggerUnit()==C8 or UnitHasBuffBJ(GetTriggerUnit(),$42303230)==true or GetUnitAbilityLevel(GetTriggerUnit(),$41304733)>0  then
-// call EXPauseUnit(GetTriggerUnit(),false)
-// call UnitRemoveBuffs(GetTriggerUnit(),false,true)
-// else
-// endif
+// 赵统W解控效果
+if  UnitHasBuffBJ(GetTriggerUnit(),$42303230)==true and GetUnitAbilityLevel(GetTriggerUnit(),'A0G3')>0  then
+call EXPauseUnit(GetTriggerUnit(),false)
+call UnitRemoveBuffs(GetTriggerUnit(),false,true)
+endif
+// 赵统W吸血效果
+
+if  UnitHasBuffBJ(Ih,$42303230)==true and GetUnitAbilityLevel(Ih,'A0G3')>0  then
+call SetUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) + GetEventDamage() * GetUnitAbilityLevel(Ih, 'A0G3') *0.1)
+
+endif
+
 // 高翔大招解控
 if GetTriggerUnit() == gaoxiang and LoadReal(FS, GetHandleId(gaoxiang), $130B62E1) > .0 then
 call EXPauseUnit(GetTriggerUnit(),false)
