@@ -120,6 +120,13 @@ trigger damaged_trig=null
 trigger trig_lifeLoss =null
 group life_loss_group
 location loss_loc
+// 刻晴-贾谊
+sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06 = null
 // PA事件
 trigger gg_trg_Coup_de_Grace =null
 // 张角
@@ -4908,7 +4915,47 @@ endif
 set CS=null
 set CE=null
 endfunction
-// 
+// 贾谊技能开始
+// Q星斗归位
+function jiayi_Q takes nothing returns nothing
+    local trigger loc_tirg
+    local integer loc_sound= GetRandomInt(1, 6)
+    local location unit_loc =GetUnitLoc(GetTriggerUnit())
+    local location target_loc =GetSpellTargetLoc()
+
+    if ((loc_sound == 1)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01, 100, GetTriggerUnit())
+    endif
+    if ((loc_sound == 2)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02, 100, GetTriggerUnit())
+    endif
+    if ((loc_sound == 3)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03, 100, GetTriggerUnit())
+    endif
+    if ((loc_sound == 4)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04, 100, GetTriggerUnit())
+    endif
+    if ((loc_sound == 5)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05, 100, GetTriggerUnit())
+    endif
+    if ((loc_sound == 6)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06, 100, GetTriggerUnit())
+    endif
+
+    call AddSpecialEffectLocBJ(unit_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
+    call DestroyEffect(GetLastCreatedEffectBJ())
+    call AddSpecialEffectLocBJ(target_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
+    call DestroyEffect(GetLastCreatedEffectBJ())
+    call SetUnitAnimationByIndex(GetTriggerUnit(), 10)
+      call RemoveLocation(unit_loc)
+    call RemoveLocation(target_loc)
+    // set loc_tirg = null
+endfunction
+
+// 刻晴技能结束
+
+
+
 
 // 马忠追踪术标记
 function mazhong_tracing_action takes nothing returns nothing
@@ -15955,10 +16002,13 @@ endfunction
 function fy takes nothing returns nothing
 // 音效注册
 set gang=CreateSound("war3mapImported\\gangAttack.mp3",false,false,false,10,10,"")
-call SetSoundDuration(Q,5250)
-call SetSoundChannel(Q,0)
-call SetSoundVolume(Q,127)
-call SetSoundPitch(Q,1.)
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_01.mp3",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_02.mp3",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_03.mp3",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_04.mp3",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_05.mp3",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_06.mp3",false,false,false,10,10,"")
+
 set O=CreateSound("Sound\\Music\\mp3Music\\IllidansTheme.mp3",false,false,false,10,10,"")
 call SetSoundDuration(O,108006)
 call SetSoundChannel(O,0)
