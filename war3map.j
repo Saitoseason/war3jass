@@ -4512,6 +4512,16 @@ function magicDefendLevel takes unit Iv returns integer
      if GetUnitAbilityLevel(Iv, 'AT0R') > 0 then 
       set int_MD = int_MD +150
     endif 
+
+         // 孤军奋战+10魔抗
+     if GetUnitAbilityLevel(Iv, 'Ab0b') > 0 then 
+      set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Ab0b') *10
+    endif 
+    
+            // 陷阵之志+10魔抗
+     if GetUnitAbilityLevel(Iv, 'Ab6x') > 0 then 
+      set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Ab6x') *10
+    endif 
      // 独自一人+10魔抗
      if GetUnitAbilityLevel(Iv, 'Ab5x') > 0 then 
       set int_MD = int_MD + GetUnitAbilityLevel(Iv, 'Ab5x') *10
@@ -4706,6 +4716,26 @@ function physicalStrike takes unit Iv, unit CE, real amor_amout returns real
     call textToPlayer(GetOwningPlayer(Iv), 0, 0, "计算后伤害减免减伤" + R2S(after_percent))
     call textToPlayer(GetOwningPlayer(Iv), 0, 0, "增幅比例" + R2S(loc_r))
     return loc_r
+endfunction
+
+// 百分比穿透计算
+function physicalStrikePercent takes unit Iv, unit CE returns real
+local real armor_percent = 1
+// 后羿弓+45%
+if GetUnitAbilityLevel(Iv, 'Ab6v') >0 then
+set armor_percent = 1 - armor_percent *0.45
+endif
+// 亮银枪+30%
+if GetUnitAbilityLevel(Iv, 'Ab6u') >0 then
+set armor_percent = armor_percent - armor_percent *0.3
+endif
+// 陷阵之志+3%每级
+if GetUnitAbilityLevel(Iv, 'Ab6x') >0 then
+set armor_percent = armor_percent - armor_percent * GetUnitAbilityLevel(Iv, 'Ab6x') *0.03
+endif
+
+set armor_percent = 1 - armor_percent
+return physicalStrike(Iv, CE, armor_percent)
 endfunction
 
 // 通用伤害可以伤害虚无，强化伤害无视护甲魔抗，不能伤害虚无
@@ -5925,6 +5955,8 @@ call DestroyGroup(I2)
 set I2=null
 set CE=null
 endfunction
+
+
 
 // 大灵爆效果
 function lingbao_aoe takes unit Iv returns nothing
@@ -22210,7 +22242,7 @@ local real Ii=GetEventDamage()
 local real loc_dmg =0
 local unit loc_unit =null
 // 马良Q伤害效果
-call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00造成伤害：" + R2S(Ii))
+// call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00造成伤害：" + R2S(Ii))
 
 // 飞轮触发攻击特效
 if GetUnitTypeId(Ih) == 'u006'  then
@@ -22222,10 +22254,13 @@ if GetUnitTypeId(Ih) == 'e0ZQ'  then
 // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00飞轮海伤害" )
 set Ih = Ib[GetConvertedPlayerId(GetOwningPlayer(Ih))]
 endif
-// 后羿弓45%穿透
-if GetUnitAbilityLevel(Ih, 'Ab6v') >0 then
-call EXSetEventDamage(GetEventDamage() * physicalStrike(Ih, Ig, 0.45))
-endif
+// if GetUnitAbilityLevel(Ih, 'Ab6x') >0 then
+// call EXSetEventDamage(GetEventDamage() * physicalStrike(Ih, Ig, 0.03 *'Ab6x'))
+// endif
+
+call EXSetEventDamage(GetEventDamage() * physicalStrikePercent(Ih, Ig))
+
+
 // 如果有含光剑且有恩赐解脱
 if bC(Ih, 'it19') and GetUnitAbilityLevel(Ih, 'Ab5s') >0 then
 call Serious_injury(Ih,Ig)
@@ -22472,15 +22507,16 @@ else
 endif
 else
 endif
-// 赵统W解控效果
-if  UnitHasBuffBJ(GetTriggerUnit(),$42303230)==true and GetUnitAbilityLevel(GetTriggerUnit(),'A0G3')>0  then
+// 赵统R解控效果
+if  UnitHasBuffBJ(GetTriggerUnit(),'B02O')==true and GetUnitAbilityLevel(GetTriggerUnit(),'Ab6y')>0  then
 call EXPauseUnit(GetTriggerUnit(),false)
 call UnitRemoveBuffs(GetTriggerUnit(),false,true)
 endif
-// 赵统W吸血效果
+// 赵统R吸血效果
 
-if  UnitHasBuffBJ(Ih,$42303230)==true and GetUnitAbilityLevel(Ih,'A0G3')>0  then
-call SetUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) + GetEventDamage() * GetUnitAbilityLevel(Ih, 'A0G3') *0.1)
+if  UnitHasBuffBJ(Ih,'B02O')==true and GetUnitAbilityLevel(Ih,'Ab6y')>0  then
+call SetUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) + GetEventDamage() * GetUnitAbilityLevel(Ih, 'Ab6y') *0.1)
+call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00吸血：" + R2S(GetEventDamage() * GetUnitAbilityLevel(Ih, 'Ab6y') *0.1))
 
 endif
 
@@ -22645,10 +22681,10 @@ endif
 else
 endif
 // 赵统吸血
-if GetUnitAbilityLevel(Ih,$41304733)>0 then
-call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41304733))))
-else
-endif
+// if GetUnitAbilityLevel(Ih,$41304733)>0 then
+// call SetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE,GetUnitState(GetEventDamageSource(),UNIT_STATE_LIFE)+GetUnitState(GetEventDamageSource(),UNIT_STATE_MAX_LIFE)*(.1*I2R(GetUnitAbilityLevel(Ih,$41304733))))
+// else
+// endif
 // 马超被动夺命枪效果,如果是玩家的话造成力量系数乘以0.1的伤害，如果携带问天枪，造成0.3系数的伤害
 if GetUnitAbilityLevel(Ih,$41303755)>0 then
 if IsUnitAlly(Ih,Player(8))==true then
@@ -36076,6 +36112,15 @@ if GetSpellAbilityId()=='Ab3r' then
 call zhangjiao_Q(Iv)
 endif
 endfunction
+function remove_attack takes nothing returns nothing
+   local timer CS=GetExpiredTimer()
+    local unit Iv = LoadUnitHandle(hero_hash, GetHandleId(CS), StringHash("xixue_unit"))
+call XX(Iv, $41304C50, 1, 108, 0)
+call IncUnitAbilityLevel(Iv,$41304C50)
+call DecUnitAbilityLevel(Iv,$41304C50)
+call FlushChildHashtable(hero_hash, GetHandleId(CS))
+call DestroyTimer(CS)
+endfunction
 
 // 释放技能前摇时触发函数
 function tO takes nothing returns nothing
@@ -36098,7 +36143,19 @@ local real Iu=0.
 local unit Pr=null
 local group I2=CreateGroup()
 
-
+if JZ == 'Ab6y'  then
+if GetUnitAbilityLevel(Iv, $41304C50) == 0 then
+call UnitAddAbility(Iv, $41304C50)
+call UnitMakeAbilityPermanent(Iv, true, $41304C50)
+endif
+call XX(Iv, $41304C50, 1, 108, 60 * GetUnitAbilityLevel(Iv, 'Ab6y'))
+call IncUnitAbilityLevel(Iv,$41304C50)
+call DecUnitAbilityLevel(Iv,$41304C50)
+set CS = CreateTimer()
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("xixue_unit"),Iv)
+call TimerStart(CS, 5.0 +GetUnitAbilityLevel(Iv, 'Ab6y'), false, function remove_attack)
+set CS=null
+endif
 // 冰甲
 if GetUnitAbilityLevel(Iv, 'Ab6p') > 0 then
     //护盾值
