@@ -190,6 +190,7 @@ trigger door_boss2_trig =null
 trigger door_boss3_trig =null
 trigger door_boss4_trig =null
 // 新英雄
+unit keqing=null
 unit genie =null
 unit liurui=null
 unit gongshuban=null
@@ -4701,10 +4702,13 @@ function physicalStrike takes unit Iv, unit CE, real amor_amout returns real
     local real after_armor = unit_armor *amor_amout
     local real after_percent = 1 - ((after_armor * 4) / (100 + 4 * after_armor))
     local real fix_amout = amor_amout *200
-    if after_armor < 0 then
-    
-        return 1
-    endif
+if after_armor == 1 then 
+return 1
+endif
+if after_armor < 1 then
+
+return 1
+endif
     if after_armor <fix_amout then
         set after_armor = RMaxBJ(-24, unit_armor - fix_amout)
 
@@ -4742,6 +4746,9 @@ set armor_percent = armor_percent - armor_percent * GetUnitAbilityLevel(Iv, 'Ab6
 endif
 
 set armor_percent = 1 - armor_percent
+if armor_percent == 1 then
+return 1
+endif
 return physicalStrike(Iv, CE, armor_percent)
 endfunction
 
@@ -4915,40 +4922,40 @@ endif
 set CS=null
 set CE=null
 endfunction
-// 贾谊技能开始
+// 刻晴技能开始
 // Q星斗归位
-function jiayi_Q takes nothing returns nothing
-    local trigger loc_tirg
-    local integer loc_sound= GetRandomInt(1, 6)
-    local location unit_loc =GetUnitLoc(GetTriggerUnit())
-    local location target_loc =GetSpellTargetLoc()
+function keqing_Q takes unit Iv returns nothing
+    // local trigger loc_tirg
+    // local integer loc_sound= GetRandomInt(1, 6)
+    // local location unit_loc =GetUnitLoc(Iv)
+    // local location target_loc =GetSpellTargetLoc()
 
-    if ((loc_sound == 1)) then
-        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01, 100, GetTriggerUnit())
-    endif
-    if ((loc_sound == 2)) then
-        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02, 100, GetTriggerUnit())
-    endif
-    if ((loc_sound == 3)) then
-        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03, 100, GetTriggerUnit())
-    endif
-    if ((loc_sound == 4)) then
-        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04, 100, GetTriggerUnit())
-    endif
-    if ((loc_sound == 5)) then
-        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05, 100, GetTriggerUnit())
-    endif
-    if ((loc_sound == 6)) then
-        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06, 100, GetTriggerUnit())
-    endif
+    // if ((loc_sound == 1)) then
+    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01, 100, Iv)
+    // endif
+    // if ((loc_sound == 2)) then
+    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02, 100, Iv)
+    // endif
+    // if ((loc_sound == 3)) then
+    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03, 100, Iv)
+    // endif
+    // if ((loc_sound == 4)) then
+    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04, 100, Iv)
+    // endif
+    // if ((loc_sound == 5)) then
+    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05, 100, Iv)
+    // endif
+    // if ((loc_sound == 6)) then
+    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06, 100, Iv)
+    // endif
 
-    call AddSpecialEffectLocBJ(unit_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
-    call DestroyEffect(GetLastCreatedEffectBJ())
-    call AddSpecialEffectLocBJ(target_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
-    call DestroyEffect(GetLastCreatedEffectBJ())
-    call SetUnitAnimationByIndex(GetTriggerUnit(), 10)
-      call RemoveLocation(unit_loc)
-    call RemoveLocation(target_loc)
+    // call AddSpecialEffectLocBJ(unit_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
+    // call DestroyEffect(GetLastCreatedEffectBJ())
+    // call AddSpecialEffectLocBJ(target_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
+    // call DestroyEffect(GetLastCreatedEffectBJ())
+    // call SetUnitAnimationByIndex(Iv, 10)
+    //   call RemoveLocation(unit_loc)
+    // call RemoveLocation(target_loc)
     // set loc_tirg = null
 endfunction
 
@@ -16002,12 +16009,12 @@ endfunction
 function fy takes nothing returns nothing
 // 音效注册
 set gang=CreateSound("war3mapImported\\gangAttack.mp3",false,false,false,10,10,"")
-set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_01.mp3",false,false,false,10,10,"")
-set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_02.mp3",false,false,false,10,10,"")
-set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_03.mp3",false,false,false,10,10,"")
-set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_04.mp3",false,false,false,10,10,"")
-set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_05.mp3",false,false,false,10,10,"")
-set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_06.mp3",false,false,false,10,10,"")
+// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_01.mp3",false,false,false,10,10,"")
+// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_02.mp3",false,false,false,10,10,"")
+// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_03.mp3",false,false,false,10,10,"")
+// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_04.mp3",false,false,false,10,10,"")
+// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_05.mp3",false,false,false,10,10,"")
+// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_06.mp3",false,false,false,10,10,"")
 
 set O=CreateSound("Sound\\Music\\mp3Music\\IllidansTheme.mp3",false,false,false,10,10,"")
 call SetSoundDuration(O,108006)
@@ -20950,13 +20957,18 @@ call UnitAddItemToSlotById(Cv,$72646531,0)
 call UnitAddItemToSlotById(Cv,$636C666D,1)
 call UnitAddItemToSlotById(Cv,$70656E72,2)
 // PA
-set genie=CreateUnit(CC,'HA0I',-3522.2,-7867.1,277.77)
+set genie=CreateUnit(CC,'HA0I',-3622.2,-7867.1,277.77)
 call UnitAddItemToSlotById(genie,$72646531,0)
 call UnitAddItemToSlotById(genie,$636C666D,1)
 call UnitAddItemToSlotById(genie,$70656E72,2)
 // set genie=CreateUnit(CC,'u00o',-3522.2,-7867.1,277.77)
 // call UnitAddItemToSlotById(genie,'it19',0)
 // call UnitAddItemToSlotById(liurui,$70656E72,2)
+// 刻晴
+set keqing=CreateUnit(CC,'HA0J',-3222.2,-7867.1,277.77)
+call UnitAddItemToSlotById(keqing,$72646531,0)
+call UnitAddItemToSlotById(keqing,$636C666D,1)
+call UnitAddItemToSlotById(keqing,$70656E72,2)
 // 刘璿
 set liurui=CreateUnit(CC,'HA07',-3422.2,-7867.1,277.77)
 call UnitMakeAbilityPermanent(liurui, true,'S005')
@@ -22308,7 +22320,10 @@ endif
 // call EXSetEventDamage(GetEventDamage() * physicalStrike(Ih, Ig, 0.03 *'Ab6x'))
 // endif
 
-call EXSetEventDamage(GetEventDamage() * physicalStrikePercent(Ih, Ig))
+if YDWEIsEventAttackDamage() and IsUnitType(Ih, UNIT_TYPE_HERO) then
+    call EXSetEventDamage(GetEventDamage() * physicalStrikePercent(Ih, Ig))
+
+endif
 
 
 // 如果有含光剑且有恩赐解脱
@@ -22566,7 +22581,7 @@ endif
 
 if  UnitHasBuffBJ(Ih,'B02O')==true and GetUnitAbilityLevel(Ih,'Ab6y')>0  then
 call SetUnitState(Ih, UNIT_STATE_LIFE, GetUnitState(Ih, UNIT_STATE_LIFE) + GetEventDamage() * GetUnitAbilityLevel(Ih, 'Ab6y') *0.1)
-call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00吸血：" + R2S(GetEventDamage() * GetUnitAbilityLevel(Ih, 'Ab6y') *0.1))
+// call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00吸血：" + R2S(GetEventDamage() * GetUnitAbilityLevel(Ih, 'Ab6y') *0.1))
 
 endif
 
@@ -36278,6 +36293,11 @@ call UnitRemoveAbility(CE,$4253544E)
 call UnitRemoveAbility(CE,$42505345)
 // call UnitRemoveAbility(CE,$42303054)
 return
+endif
+
+// 
+if GetSpellAbilityId()=='Ab70' then
+    call keqing_Q(Iv)
 endif
 if GetUnitAbilityLevel(Iv, 'Ab6j') >0 then
 // 闪烁的时候布置陷阱
