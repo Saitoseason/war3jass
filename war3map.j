@@ -120,13 +120,21 @@ trigger damaged_trig=null
 trigger trig_lifeLoss =null
 group life_loss_group
 location loss_loc
-// 刻晴-贾谊
+// 刻晴
 sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01 = null
 sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02 = null
 sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03 = null
 sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04 = null
 sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05 = null
 sound gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Burst_01 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Burst_02 = null
+sound gg_snd_VO_ZH_Keqing_Elemental_Burst_03 = null
+sound gg_snd_MetalSlash101=null
+sound gg_snd_MetalSlash102=null
+sound gg_snd_MetalSlash103=null
+sound gg_snd_MetalSlash104=null
+sound gg_snd_BigSlice=null
 // PA事件
 trigger gg_trg_Coup_de_Grace =null
 // 张角
@@ -3902,9 +3910,11 @@ endfunction
 function bM takes real Px,real Py,real JP,real JQ returns real
 return SquareRoot((JP-Px)*(JP-Px)+(JQ-Py)*(JQ-Py))
 endfunction
+// 击退角度
 function bN takes unit JK,unit JL returns real
 return bj_RADTODEG*Atan2(GetUnitY(JL)-GetUnitY(JK),GetUnitX(JL)-GetUnitX(JK))
 endfunction
+// 两者之间的距离
 function bO takes unit JK,unit JL returns real
 return SquareRoot((GetUnitX(JL)-GetUnitX(JK))*(GetUnitX(JL)-GetUnitX(JK))+(GetUnitY(JL)-GetUnitY(JK))*(GetUnitY(JL)-GetUnitY(JK)))
 endfunction
@@ -3914,6 +3924,7 @@ endfunction
 function bQ takes unit JK,real It,real Iu returns real
 return bj_RADTODEG*Atan2(Iu-GetUnitY(JK),It-GetUnitX(JK))
 endfunction
+// 击退函数
 function bR takes unit CE,real Im,real In returns nothing
 local real It=GetUnitX(CE)+In*Cos(Im*bj_DEGTORAD)
 local real Iu=GetUnitY(CE)+In*Sin(Im*bj_DEGTORAD)
@@ -4322,6 +4333,11 @@ function magicLevel takes unit Iv returns real
     if GetUnitAbilityLevel(Iv, 'Ab42') > 0 then 
         set extra = extra + 0.8 
     endif 
+    // 刻晴W 
+    if GetUnitAbilityLevel(Iv, 'Ab72') > 0 then 
+        // set JT=JT*1.2     
+        set extra = extra * (1+LoadInteger(hero_hash, GetHandleId(Iv), StringHash("keqing_E_ability")) * GetUnitAbilityLevel(Iv, 'Ab72') *0.01)
+    endif
      // 自修系数1.2    
     if GetUnitAbilityLevel(Iv, $41304238) > 0 then 
         // set JT=JT*1.15     
@@ -4398,6 +4414,9 @@ function bk takes unit Ij, integer Ik, integer JS returns real
    elseif Ik == 5 then 
     // 智力+敏捷伤害
     set JT = I2R(GetHeroInt(Ij, true)) + I2R(GetHeroAgi(Ij, true)) *JS
+   elseif Ik == 6 then 
+    // 攻击力加成的法强伤害
+    set JT = JT + GetUnitState(Ij, ConvertUnitState(21)) * JS *.4
     endif 
     // call DisplayTextToPlayer(GetOwningPlayer(Ij), 0, 0, "|Cff00ff00基础技能伤害：" + R2S(JT))     
     // 五虎每级+5%的技能伤害     
@@ -4922,44 +4941,26 @@ endif
 set CS=null
 set CE=null
 endfunction
-// 刻晴技能开始
-// Q星斗归位
-function keqing_Q takes unit Iv returns nothing
-    // local trigger loc_tirg
-    // local integer loc_sound= GetRandomInt(1, 6)
-    // local location unit_loc =GetUnitLoc(Iv)
-    // local location target_loc =GetSpellTargetLoc()
+// 范围击退+伤害
+function range_repel takes unit Iv, real loc_x, real loc_y, real loc_range, real loc_distance, real loc_damage, integer attack_type, integer damage_type returns nothing
+local unit CE
+local group I2=CreateGroup()
+call GroupEnumUnitsInRange(I2,loc_x,loc_y,loc_range,null)
+loop
+set CE=FirstOfGroup(I2)
+exitwhen CE==null
+call GroupRemoveUnit(I2,CE)
+if Iv != CE and GetUnitState(CE, UNIT_STATE_LIFE) > .405 and IsUnitEnemy(CE, GetOwningPlayer(Iv)) == true and IsUnitType(CE, UNIT_TYPE_STRUCTURE) == false and GetUnitTypeId(CE) != GetUnitTypeId(she) then
+call bR(CE,bN(Iv,CE),loc_distance)
+call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",CE,"chest"))
 
-    // if ((loc_sound == 1)) then
-    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01, 100, Iv)
-    // endif
-    // if ((loc_sound == 2)) then
-    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02, 100, Iv)
-    // endif
-    // if ((loc_sound == 3)) then
-    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03, 100, Iv)
-    // endif
-    // if ((loc_sound == 4)) then
-    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04, 100, Iv)
-    // endif
-    // if ((loc_sound == 5)) then
-    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05, 100, Iv)
-    // endif
-    // if ((loc_sound == 6)) then
-    //     call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06, 100, Iv)
-    // endif
-
-    // call AddSpecialEffectLocBJ(unit_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
-    // call DestroyEffect(GetLastCreatedEffectBJ())
-    // call AddSpecialEffectLocBJ(target_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
-    // call DestroyEffect(GetLastCreatedEffectBJ())
-    // call SetUnitAnimationByIndex(Iv, 10)
-    //   call RemoveLocation(unit_loc)
-    // call RemoveLocation(target_loc)
-    // set loc_tirg = null
+call take_magic_damage(Iv,CE,loc_damage,false,false,I3[attack_type],I4[damage_type],WEAPON_TYPE_WHOKNOWS)
+endif
+endloop
+set CE=null
+call DestroyGroup(I2)
+set I2=null
 endfunction
-
-// 刻晴技能结束
 
 
 
@@ -6009,6 +6010,290 @@ call DestroyGroup(I2)
 set I2=null
 set CE=null
 endfunction
+
+
+// 刻晴技能开始
+
+function clear_keqing_attack takes nothing returns nothing
+   local timer CS=GetExpiredTimer()
+    local unit Iv = LoadUnitHandle(hero_hash, GetHandleId(CS), StringHash("localUnit"))
+    local real loc_time = LoadReal(hero_hash, GetHandleId(Iv), StringHash("keqing_e_time"))
+    if loc_time >0 then
+        set loc_time = loc_time -0.1
+        call SaveReal(hero_hash, GetHandleId(Iv), StringHash("keqing_e_time"), loc_time)
+
+    else
+    call SaveReal(hero_hash, GetHandleId(Iv), StringHash("keqing_e_time"), 0)
+    call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("keqing_E_attack"), 0)
+    call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("keqing_E_ability"), 0)
+    call XX(Iv, $41304C50, 1, 108, 0)
+    call IncUnitAbilityLevel(Iv,$41304C50)
+    call DecUnitAbilityLevel(Iv,$41304C50)
+    call FlushChildHashtable(hero_hash, GetHandleId(CS))
+    call DestroyTimer(CS)
+    endif
+
+endfunction
+
+function keqing_w_time takes unit Iv returns nothing
+    local timer CS =null
+    set CS = CreateTimer()
+    call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("localUnit"),Iv)
+    call TimerStart(CS,0.1, true, function clear_keqing_attack)
+    set CS =null
+endfunction
+
+function keqing_E_hengsao takes unit Iv returns nothing
+local unit loc_u =null
+local real loc_damage = (bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab70')) + bk(Iv, 6, GetUnitAbilityLevel(Iv, 'Ab70'))) *0.5
+call SetUnitAnimationByIndex(Iv, 2)
+set loc_u = CreateUnit(GetOwningPlayer(Iv), 'u00q', GetUnitX(Iv), GetUnitY(Iv), GetUnitFacing(Iv))
+call UnitApplyTimedLife(loc_u,$42487765,.1)
+// call range_repel(Iv, )
+call range_repel(Iv, GetUnitX(Iv), GetUnitY(Iv), 350, 300, loc_damage, 1, 0)
+ 
+endfunction
+// Q星斗归位
+function keqing_E takes unit Iv returns nothing
+    local trigger loc_tirg
+    local integer loc_sound= GetRandomInt(1, 6)
+    local location unit_loc =GetUnitLoc(Iv)
+    local location target_loc =GetSpellTargetLoc()
+    local unit loc_u = null
+    call TriggerSleepAction(0.1)
+
+    if ((loc_sound == 1)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01, 100, Iv)
+    endif
+    if ((loc_sound == 2)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02, 100, Iv)
+    endif
+    if ((loc_sound == 3)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03, 100, Iv)
+    endif
+    if ((loc_sound == 4)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04, 100, Iv)
+    endif
+    if ((loc_sound == 5)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05, 100, Iv)
+    endif
+    if ((loc_sound == 6)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06, 100, Iv)
+    endif
+
+    call AddSpecialEffectLocBJ(unit_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
+    call DestroyEffect(GetLastCreatedEffectBJ())
+    call AddSpecialEffectLocBJ(target_loc, "Abilities\\Spells\\NightElf\\Blink\\BlinkCaster.mdl")
+    call DestroyEffect(GetLastCreatedEffectBJ())
+    call SetUnitPositionLoc(Iv, target_loc)
+    call keqing_E_hengsao(Iv)
+
+    call RemoveLocation(unit_loc)
+    call RemoveLocation(target_loc)
+
+    set loc_tirg = null
+endfunction
+
+function keqing_Q takes unit Iv returns nothing
+    local real loc_damage = (bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab71')) + bk(Iv, 6, GetUnitAbilityLevel(Iv, 'Ab71'))) *0.5
+    local unit loc_u =null
+    local integer loc_sound= GetRandomInt(1, 6)
+    call TriggerSleepAction(0.1)
+    // set loc_i =CosBJ(GetUnitFacing(Iv))
+    if ((loc_sound == 1)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01, 100, Iv)
+    endif
+    if ((loc_sound == 2)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02, 100, Iv)
+    endif
+    if ((loc_sound == 3)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03, 100, Iv)
+    endif
+    if ((loc_sound == 4)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04, 100, Iv)
+    endif
+    if ((loc_sound == 5)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05, 100, Iv)
+    endif
+    if ((loc_sound == 6)) then
+        call PlaySoundOnUnitBJ(gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06, 100, Iv)
+    endif
+
+
+    call bR(Iv, GetUnitFacing(Iv),200)
+    call SetUnitAnimationByIndex(Iv, 2)
+    set loc_u = CreateUnit(GetOwningPlayer(Iv), 'u00r', GetUnitX(Iv), GetUnitY(Iv), GetUnitFacing(Iv))
+    call UnitApplyTimedLife(loc_u,$42487765,.1)
+    call range_repel(Iv, GetUnitX(Iv), GetUnitY(Iv), 350, 0, loc_damage, 1, 0)
+    // call bs(Iv, GetUnitX(Iv),  GetUnitY(Iv), 600, loc_damage, 1, 0)
+endfunction
+// 刻晴大招特效
+
+
+
+function keqing_f_action takes nothing returns nothing
+local timer CS=GetExpiredTimer()
+local integer Ix=GetHandleId(CS)
+local unit Iv = LoadUnitHandle(hero_hash, Ix, StringHash("keqing"))
+local unit loc_self = LoadUnitHandle(hero_hash, Ix, StringHash("unit"))
+local integer loc_i = LoadInteger(hero_hash, Ix, StringHash("keqing_f_number"))
+local unit loc_unit =null
+local location loc_location =LoadLocationHandle(hero_hash, Ix, StringHash("location" + I2S(loc_i)))
+local location self_location = GetUnitLoc(Iv)
+local real loc_damage = (bk(Iv, 2, GetUnitAbilityLevel(Iv, 'Ab74')) + bk(Iv, 6, GetUnitAbilityLevel(Iv, 'Ab74'))) *0.6
+local unit CE = LoadUnitHandle(hero_hash, Ix, StringHash("keqing_target"))
+
+call UnitRemoveBuffs(CE,true,false)
+
+if loc_i > 11 then
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0,"清除定时器")
+
+
+call RemoveUnit(loc_self)
+
+set loc_i = 0
+loop 
+exitwhen loc_i >10
+set loc_unit = LoadUnitHandle(hero_hash, Ix, StringHash("unit" + I2S(loc_i)))
+call RemoveUnit(loc_unit)
+call RemoveLocation(LoadLocationHandle(hero_hash, Ix, StringHash("location" + I2S(loc_i))))
+set loc_i = loc_i+1
+endloop
+
+call DestroyEffect(AddSpecialEffect("zhangjiao_F_texiao.mdl",GetUnitX(Iv),GetUnitY(Iv)))
+call DestroyEffect(AddSpecialEffect("war3mapImported\\AZ_JianCi.mdl",GetUnitX(Iv),GetUnitY(Iv)))
+call DestroyEffect(LoadEffectHandle(hero_hash, Ix, StringHash("keqing_weapon1")))
+call DestroyEffect(LoadEffectHandle(hero_hash, Ix, StringHash("keqing_weapon2")))
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0,"0.6秒后最后一击")
+call bs(Iv, GetUnitX(CE), GetUnitY(CE), 600, loc_damage *2, 1, 0)
+
+call PlaySoundOnUnitBJ(gg_snd_BigSlice, 100, Iv)
+call ShowUnitShow( Iv )
+call SetUnitInvulnerable( Iv, false )
+call PauseUnitBJ( false, CE )
+call PauseUnitBJ(false, Iv)
+
+call FlushChildHashtable(hero_hash, Ix)
+call DestroyTimer(CS)
+
+else
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "坐标点" + I2S(loc_i) + "：" + R2S(GetLocationX(loc_location)) + ",y:" + R2S(GetLocationY(loc_location)))
+
+// 第一个残影
+if loc_i == 0 then
+// 隱藏
+call ShowUnitHide( Iv )
+// 分身
+endif  
+
+if loc_i < 9 then
+call SetUnitPositionLocFacingBJ(loc_self, LoadLocationHandle(hero_hash, Ix, StringHash("location" + I2S(loc_i + 1))), AngleBetweenPoints(LoadLocationHandle(hero_hash, Ix, StringHash("location0")), LoadLocationHandle(hero_hash, Ix, StringHash("location"+ I2S(loc_i + 1)))))
+// call DisplayTextToPlayer(GetOwningPlayer(loc_self), 0, 0, "面对方向:" + R2S(GetUnitFacing(loc_self)) + "计算夹角：" + R2S(AngleBetweenPoints(LoadLocationHandle(hero_hash, Ix, StringHash("location0" )), LoadLocationHandle(hero_hash, Ix, StringHash("location"+ I2S(loc_i + 1))))))
+set self_location =  GetUnitLoc(loc_self)
+
+set loc_unit = CreateUnitAtLoc(GetOwningPlayer(Iv), 'u00u',self_location, AngleBetweenPoints(LoadLocationHandle(hero_hash, Ix, StringHash("location0")), LoadLocationHandle(hero_hash, Ix, StringHash("location"+ I2S(loc_i + 1)))))
+call AddSpecialEffectTargetUnitBJ( "weapon", loc_unit, "war3mapImported\\Sweep_Astral_Large.mdx" )
+
+call AddSpecialEffectTargetUnitBJ( "weapon", loc_unit, "war3mapImported\\Sweep_Lightning_Large.mdx" )
+call SaveUnitHandle(hero_hash, Ix, StringHash("unit" + I2S(loc_i +1)), loc_unit)
+call SetUnitAnimation( loc_unit, "attack - 2" )
+call DestroyEffect(AddSpecialEffect("war3mapImported\\AZ_JianCi.mdl",GetUnitX(Iv),GetUnitY(Iv)))
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "本体位置：" + R2S(GetUnitX(Iv)) + "," +R2S(GetUnitY(Iv)))
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "镜像位置：" + R2S(GetUnitX(loc_unit)) + "," +R2S(GetUnitY(loc_unit)))
+call take_magic_damage(Iv,CE,loc_damage,false,false,ATTACK_TYPE_HERO,DAMAGE_TYPE_ENHANCED,WEAPON_TYPE_WHOKNOWS)
+
+if(ModuloInteger(loc_i,4)==1)then
+call PlaySoundOnUnitBJ(gg_snd_MetalSlash101, 100, loc_self)
+endif
+if(ModuloInteger(loc_i,4)==2)then
+call PlaySoundOnUnitBJ(gg_snd_MetalSlash102, 100, loc_self)
+endif
+if(ModuloInteger(loc_i,4)==3)then
+call PlaySoundOnUnitBJ(gg_snd_MetalSlash103, 100, loc_self)
+endif
+if(ModuloInteger(loc_i,4)==0)then
+call PlaySoundOnUnitBJ(gg_snd_MetalSlash104, 100, loc_self)
+endif
+
+
+else
+call ShowUnitHide( loc_self )
+
+// call SetUnitFacingToFaceUnitTimed(loc_unit, Iv, 1)
+endif
+
+
+set loc_i = loc_i + 1
+call SaveInteger(hero_hash, Ix, StringHash("keqing_f_number"), loc_i)
+endif
+call RemoveLocation(self_location)
+
+endfunction
+
+function keqing_F takes unit Iv,unit CE returns nothing
+local integer loc_i= GetRandomInt(1, 3)
+local location loc_unit_location = GetUnitLoc(Iv)
+local unit loc_unit=null
+local timer CS=null
+// 大招音效
+if loc_i == 1 then
+call PlaySoundOnUnitBJ( gg_snd_VO_ZH_Keqing_Elemental_Burst_01, 100, Iv )
+endif
+if ((loc_i == 2)) then
+call PlaySoundOnUnitBJ( gg_snd_VO_ZH_Keqing_Elemental_Burst_02, 100, Iv)
+endif
+if ((loc_i == 3)) then
+call PlaySoundOnUnitBJ( gg_snd_VO_ZH_Keqing_Elemental_Burst_03, 100,Iv )
+endif
+call PauseUnitBJ( true, CE )
+call PauseUnitBJ( true, Iv )
+call SetUnitPosition(Iv, GetUnitX(CE), GetUnitY(CE))
+call SetUnitInvulnerable( Iv, true )
+call SetUnitAnimation( Iv, "spell Throw" )
+set CS = CreateTimer()
+// 武器特效
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("keqing"), Iv)
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("keqing_target"), CE)
+call SaveEffectHandle(hero_hash, GetHandleId(CS), StringHash("keqing_weapon1"), AddSpecialEffectTarget("war3mapImported\\Sweep_Astral_Large.mdx", Iv, "weapon"))
+call SaveEffectHandle(hero_hash, GetHandleId(CS), StringHash("keqing_weapon2"), AddSpecialEffectTarget("war3mapImported\\Sweep_Lightning_Large.mdx", Iv, "weapon"))
+// 原来位置
+
+
+
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location0"),GetUnitLoc(Iv))
+
+set loc_unit = CreateUnitAtLoc(GetOwningPlayer(Iv), 'u00u', GetUnitLoc(Iv), GetUnitFacing(Iv))
+call AddSpecialEffectTargetUnitBJ( "weapon", loc_unit, "war3mapImported\\Sweep_Astral_Large.mdx" )
+call AddSpecialEffectTargetUnitBJ( "weapon", loc_unit, "war3mapImported\\Sweep_Lightning_Large.mdx" )
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("unit"), loc_unit)
+call SetUnitAnimation( loc_unit, "attack - 2" )
+
+call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "坐标点0：" + R2S(GetLocationX(GetUnitLoc(Iv))) + ",y:" + R2S(GetLocationY(GetUnitLoc(Iv))) )
+
+// 设置残影的镜像点
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location1"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 36.00))
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location2"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 252.00))
+
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location3"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 144.00))
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location4"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 288.00))
+
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location5"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 108.00))
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location6"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 216.00))
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location7"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 72.00))
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location8"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 180.00))
+call SaveLocationHandle(hero_hash, GetHandleId(CS) , StringHash("location9"), PolarProjectionBJ(GetUnitLoc(Iv), 300, 360.00))
+
+
+
+// call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "坐标点2：" + R2S(GetLocationX(LoadLocationHandle(hero_hash, GetHandleId(CS), StringHash("location" + I2S(2))))) + ",y:" + R2S(GetLocationY(LoadLocationHandle(hero_hash, GetHandleId(CS), StringHash("location" + I2S(2))))) )
+
+// 设置次序
+call SaveInteger(hero_hash, GetHandleId(CS), StringHash("keqing_f_number"),0)
+call TimerStart(CS,.3,true,function keqing_f_action)
+call RemoveLocation(loc_unit_location)
+endfunction
+// 刻晴技能结束
+
 
 
 
@@ -16009,13 +16294,20 @@ endfunction
 function fy takes nothing returns nothing
 // 音效注册
 set gang=CreateSound("war3mapImported\\gangAttack.mp3",false,false,false,10,10,"")
-// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_01.mp3",false,false,false,10,10,"")
-// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_02.mp3",false,false,false,10,10,"")
-// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_03.mp3",false,false,false,10,10,"")
-// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_04.mp3",false,false,false,10,10,"")
-// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_05.mp3",false,false,false,10,10,"")
-// set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_06.mp3",false,false,false,10,10,"")
-
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_01 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_01.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_02 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_02.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_03 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_03.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_04 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_04.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_05 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_05.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Skill_1_06 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Skill_1_06.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Burst_01 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Burst_01.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Burst_02 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Burst_02.wav",false,false,false,10,10,"")
+set gg_snd_VO_ZH_Keqing_Elemental_Burst_03 = CreateSound("war3mapImported\\VO_ZH_Keqing_Elemental_Burst_03.wav",false,false,false,10,10,"")
+set gg_snd_MetalSlash101 = CreateSound("war3mapImported\\MetalSlash1.wav",false,false,false,10,10,"")
+set gg_snd_MetalSlash102 = CreateSound("war3mapImported\\MetalSlash1.wav",false,false,false,10,10,"")
+set gg_snd_MetalSlash103 = CreateSound("war3mapImported\\MetalSlash1.wav",false,false,false,10,10,"")
+set gg_snd_MetalSlash104 = CreateSound("war3mapImported\\MetalSlash1.wav",false,false,false,10,10,"")
+set gg_snd_BigSlice = CreateSound("war3mapImported\\BigSlice.wav",false,false,false,10,10,"")
 set O=CreateSound("Sound\\Music\\mp3Music\\IllidansTheme.mp3",false,false,false,10,10,"")
 call SetSoundDuration(O,108006)
 call SetSoundChannel(O,0)
@@ -22303,6 +22595,7 @@ local unit Ih=GetEventDamageSource()
 local real Ii=GetEventDamage()
 local real loc_dmg =0
 local unit loc_unit =null
+local integer loc_i=0
 // 马良Q伤害效果
 // call DisplayTextToPlayer(GetOwningPlayer(Ih), 0, 0, "|cff00ff00造成伤害：" + R2S(Ii))
 
@@ -22325,6 +22618,21 @@ if YDWEIsEventAttackDamage() and IsUnitType(Ih, UNIT_TYPE_HERO) then
 
 endif
 
+if YDWEIsEventAttackDamage() and GetUnitAbilityLevel(Ih, 'Ab72')>0 then
+set loc_i = LoadInteger(hero_hash, GetHandleId(Ih), StringHash("keqing_E_ability"))
+set loc_i = IMinBJ(loc_i +1, 7)
+call SaveInteger(hero_hash, GetHandleId(Ih), StringHash("keqing_E_ability"), loc_i)
+
+if LoadReal(hero_hash, GetHandleId(Ih), StringHash("keqing_e_time")) > 0 then
+call SaveReal(hero_hash, GetHandleId(Ih), StringHash("keqing_e_time"), 7)
+else
+call keqing_w_time(Ih)
+endif
+
+
+
+
+endif
 
 // 如果有含光剑且有恩赐解脱
 if bC(Ih, 'it19') and GetUnitAbilityLevel(Ih, 'Ab5s') >0 then
@@ -23224,7 +23532,18 @@ call SetTextTagVelocity(bj_lastCreatedTextTag,GetRandomReal(-.03,.03),.02)
 call SetTextTagLifespan(GetLastCreatedTextTag(),2.)
 else
 endif
-// 孟获W伤害
+// 
+if UnitHasBuffBJ(Ig,'B03W')==true then
+call UnitRemoveBuffs(Ig,false,true)
+call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",Ih,"chest"))
+call take_magic_damage(Ig, Ih, (bk(Ig, 2, GetUnitAbilityLevel(Ig, 'Ab76')) + bk(Ig, 6, GetUnitAbilityLevel(Ig, 'Ab76'))) *0.5, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_ENHANCED, WEAPON_TYPE_WHOKNOWS)
+
+if GetRandomInt(1,10)==5 then
+call IssueTargetOrderById(XB(GetPlayerId(GetOwningPlayer(Ig)),$65303939,$41304654,1,GetUnitX(Ig),GetUnitY(Ig),bj_UNIT_FACING,1),852111,Ih)
+endif
+
+endif
+// 孟获W伤害、马谡闪电护盾
 if UnitHasBuffBJ(Ig,$42304659)==true or UnitHasBuffBJ(Ig,$426C7361)==true or UnitHasBuffBJ(Ig,$426C7368)==true then
 call UnitRemoveBuffs(Ig,false,true)
 if UnitHasBuffBJ(Ig,$42304659)==true and UnitHasBuffBJ(Ih,$42486473)==false and GetUnitAbilityLevel(Ih,$416C6F63)==0 and GetUnitAbilityLevel(Ih,$4176756C)==0 then
@@ -23244,6 +23563,7 @@ call take_magic_damage(Ig,Ih,GetUnitState(Ig,UNIT_STATE_MAX_LIFE)*.05* (1 +I2R(G
 endif
 
 else
+    // 马谡闪电护盾、孟获W
 if UnitHasBuffBJ(Ig,$426C7361)==true or UnitHasBuffBJ(Ig,$426C7368)==true and UnitHasBuffBJ(Ih,$42486473)==false and GetUnitAbilityLevel(Ih,$416C6F63)==0 and GetUnitAbilityLevel(Ih,$4176756C)==0 then
 call DestroyEffect(AddSpecialEffectTarget("Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",Ih,"chest"))
 // 轩辕剑、雷神管
@@ -34584,6 +34904,23 @@ call IncUnitAbilityLevel(Iv,'Ab5s')
 call Trig_Coup_de_Grace_study(Iv)
 call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00恩赐解脱的等级已经提升了！")
 endif
+// 刻晴
+elseif Iv == keqing or GetUnitAbilityLevelSwapped('S009', Iv) == 1 then
+if GetHeroLevel(Iv)>=30 and GetUnitAbilityLevelSwapped('Ab74',Iv)<1  then
+call UnitAddAbilityBJ('Ab74',Iv)
+call UnitMakeAbilityPermanent(Iv,true,'Ab74')
+call Trig_Coup_de_Grace_study(Iv)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"领悟了终级技能：|Cff00ff00天街巡游！")
+elseif GetHeroLevel(Iv)>=50 and GetUnitAbilityLevelSwapped('Ab74',Iv)==1 then
+call IncUnitAbilityLevel(Iv,'Ab74')
+call Trig_Coup_de_Grace_study(Iv)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00天街巡游的等级已经提升了！")
+elseif GetHeroLevel(Iv)>=70 and GetUnitAbilityLevelSwapped('Ab74',Iv)==2 then
+call IncUnitAbilityLevel(Iv,'Ab74')
+call Trig_Coup_de_Grace_study(Iv)
+call DisplayTextToForce(GetPlayersAll(),GetPlayerName(GetOwningPlayer(Iv))+"|Cff00ff00天街巡游的等级已经提升了！")
+endif
+
 endif
 set Iv=null
 endfunction
@@ -36187,6 +36524,9 @@ call FlushChildHashtable(hero_hash, GetHandleId(CS))
 call DestroyTimer(CS)
 endfunction
 
+
+
+
 // 释放技能前摇时触发函数
 function tO takes nothing returns nothing
 local timer CS
@@ -36207,6 +36547,7 @@ local real It=0.
 local real Iu=0.
 local unit Pr=null
 local group I2=CreateGroup()
+local integer loc_i=0
 
 if JZ == 'Ab6y'  then
 if GetUnitAbilityLevel(Iv, $41304C50) == 0 then
@@ -36295,10 +36636,47 @@ call UnitRemoveAbility(CE,$42505345)
 return
 endif
 
-// 
+// 刻晴E
 if GetSpellAbilityId()=='Ab70' then
+    call keqing_E(Iv)
+endif
+// 刻晴Q
+if GetSpellAbilityId()=='Ab71' then
     call keqing_Q(Iv)
 endif
+// 刻晴F
+if GetSpellAbilityId()=='Ab74' then
+    call keqing_F(Iv,CE)
+endif
+// 刻晴被动加攻击
+if GetUnitAbilityLevel(Iv, 'Ab72') >0 then
+
+if GetUnitAbilityLevel(Iv, $41304C50) == 0 then
+call UnitAddAbility(Iv, $41304C50)
+call UnitMakeAbilityPermanent(Iv, true, $41304C50)
+endif
+set loc_i = LoadInteger(hero_hash, GetHandleId(Iv), StringHash("keqing_E_attack"))
+set loc_i = IMinBJ(loc_i +1, 7)
+call SaveInteger(hero_hash, GetHandleId(Iv), StringHash("keqing_E_attack"), loc_i)
+call XX(Iv, $41304C50, 1, 108, loc_i * GetUnitState(Iv, ConvertUnitState(18)) * GetUnitAbilityLevel(Iv, 'Ab72') *0.01)
+call IncUnitAbilityLevel(Iv,$41304C50)
+call DecUnitAbilityLevel(Iv,$41304C50)
+
+if LoadReal(hero_hash, GetHandleId(Iv), StringHash("keqing_e_time")) > 0 then
+call SaveReal(hero_hash, GetHandleId(Iv), StringHash("keqing_e_time"), 7)
+else
+call SaveReal(hero_hash, GetHandleId(Iv), StringHash("keqing_e_time"), 7)
+
+set CS = CreateTimer()
+call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("localUnit"),Iv)
+call TimerStart(CS,0.1, true, function clear_keqing_attack)
+endif
+
+
+set CS=null
+
+endif
+
 if GetUnitAbilityLevel(Iv, 'Ab6j') >0 then
 // 闪烁的时候布置陷阱
 if (GetSpellAbilityId()=='A0EW' or GetSpellAbilityId()=='AEbl' or GetSpellAbilityId()=='A0AP')  then
@@ -36948,6 +37326,7 @@ elseif GetSpellAbilityId()==$41305744 then
 call UnitAddItem(Iv,CreateItem($49303053,GetUnitX(Iv),GetUnitY(Iv)))
 elseif GetSpellAbilityId()==$4130364E and IsUnitAlly(Iv,Player(8))==true then
 call UnitAddItem(Iv,CreateItem($4930324F,GetUnitX(Iv),GetUnitY(Iv)))
+// 赵云Q突刺
 elseif GetSpellAbilityId()==$415A5951 then
 call fa(Iv,CE)
 elseif GetSpellAbilityId()==$415A5931 then
@@ -39788,6 +40167,11 @@ if GetUnitAbilityLevelSwapped('S008', GetTriggerUnit()) >0 then
 call IncUnitAbilityLevelSwapped('Ab5s',GetTriggerUnit())
 call Trig_Coup_de_Grace_study(GetTriggerUnit())
 else
+        // 刻晴大招
+if GetUnitAbilityLevelSwapped('S009', GetTriggerUnit()) >0 then
+call IncUnitAbilityLevelSwapped('Ab74',GetTriggerUnit())
+else
+endif
 endif
 endif
 endif
