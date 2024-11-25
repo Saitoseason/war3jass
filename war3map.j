@@ -23623,7 +23623,7 @@ endif
 else
 endif
 // 玄冰真气冰冻、九龙真气、冰甲
-if UnitHasBuffBJ(Ig,$42556661)==true or GetUnitAbilityLevel(Ig,'Ab5n')>0 or GetUnitAbilityLevel(Ig,'Ab6p')>0 then
+if UnitHasBuffBJ(Ig, $42556661) == true or GetUnitAbilityLevel(Ig, 'Ab5n') > 0 or (GetUnitAbilityLevel(Ig, 'Ab6p') > 0 and bC(Ig,'it1g')) then
     // 如果是黄月英，则直接冰冻
 if GetUnitAbilityLevel(Ig,'S006')>0 then
 call IssueTargetOrder(CreateUnit(GetOwningPlayer(Ig),$6530304D,GetUnitX(Ih),GetUnitY(Ih),270.),"thunderbolt",Ih)
@@ -37190,7 +37190,15 @@ call FlushChildHashtable(hero_hash, GetHandleId(CS))
 call DestroyTimer(CS)
 endfunction
 
+function liurui_reset_attack takes nothing returns nothing
+       local timer CS=GetExpiredTimer()
+    local unit Iv = LoadUnitHandle(hero_hash, GetHandleId(CS), 0)
 
+       call SetUnitState(Iv, ConvertUnitState(18), LoadReal(Ia, GetHandleId(Iv), StringHash("baseAttack")))
+call FlushChildHashtable(hero_hash, GetHandleId(CS))
+  call DestroyTimer(CS)  
+endfunction
+    
 
 
 // 释放技能前摇时触发函数
@@ -37228,6 +37236,21 @@ call SaveUnitHandle(hero_hash, GetHandleId(CS), StringHash("xixue_unit"),Iv)
 call TimerStart(CS, 5.0 +GetUnitAbilityLevel(Iv, 'Ab6y'), false, function remove_attack)
 set CS=null
 endif
+// 切换冰甲
+if GetSpellAbilityId() == 'Ab7e' then
+    call DisplayTextToPlayer(GetOwningPlayer(Iv), 0, 0, "开关冰甲")
+    if bC(Iv,'it1g') then
+    call UnitRemoveItemSwapped('it1g',GetTriggerUnit())
+    call UnitAddItem(Iv,CreateItem('it1j',GetUnitX(Iv),GetUnitY(Iv)))
+
+    else
+   call UnitRemoveItemSwapped('it1j',GetTriggerUnit())
+    call UnitAddItem(Iv,CreateItem('it1g',GetUnitX(Iv),GetUnitY(Iv)))
+    endif
+
+return 
+endif
+
 // 冰甲
 if GetUnitAbilityLevel(Iv, 'Ab6p') > 0 then
     //护盾值
@@ -37365,6 +37388,11 @@ endif
 // 刘睿变身存一下基础攻击
 if GetSpellAbilityId() == 'Ab4m' then
 call SaveReal(Ia, GetHandleId(Iv), StringHash("baseAttack"),GetUnitState(Iv, ConvertUnitState(18)))
+
+set CS=CreateTimer()
+set Ix=GetHandleId(CS)
+call SaveUnitHandle(hero_hash,Ix,0,Iv)
+call TimerStart(CS,32,true,function liurui_reset_attack)
 
 endif
 // 张角E被动效果
@@ -38570,9 +38598,9 @@ endif
 // 龙血沸腾被动
 if GetUnitAbilityLevel(Iv, 'Ab4l') >0 then
   
-    if GetUnitState(Iv, ConvertUnitState(18)) < LoadReal(Ia, GetHandleId(Iv), StringHash("baseAttack")) then
-     call SetUnitState(Iv, ConvertUnitState(18), LoadReal(Ia, GetHandleId(Iv), StringHash("baseAttack")))
-    endif
+    // if GetUnitState(Iv, ConvertUnitState(18)) < LoadReal(Ia, GetHandleId(Iv), StringHash("baseAttack")) then
+    //  call SetUnitState(Iv, ConvertUnitState(18), LoadReal(Ia, GetHandleId(Iv), StringHash("baseAttack")))
+    // endif
 
      call SaveInteger(Ia, GetHandleId(Iv), StringHash("Ab4l"), LoadInteger(Ia, GetHandleId(Iv), StringHash("Ab4l")) + 1)
     if LoadInteger(Ia, GetHandleId(Iv), StringHash("Ab4l")) > 2 then
@@ -41196,12 +41224,23 @@ endif
 if GetTriggerUnit()==keqing then
     // 雷霆之力、轩辕剑、龙鳞
     if bC(GetTriggerUnit(),'I00B') and  bC(GetTriggerUnit(),'mlst') and bC(GetTriggerUnit(),'cnob') then
+    
+    if GetItemUserData(aj(GetTriggerUnit(),'mlst'))>0 then
+    set loc_random_num = M9[GetItemUserData(GetManipulatedItem())]
+    endif
     call RemoveItem(aj(GetTriggerUnit(),'I00B'))
     call RemoveItem(aj(GetTriggerUnit(),'mlst'))
     call RemoveItem(aj(GetTriggerUnit(),'cnob'))
         // 龙吟剑
     call UnitAddItemByIdSwapped('it1i',GetTriggerUnit()) 
-
+    
+    call TriggerSleepAction(1)
+    if loc_random_num != 0 then
+    call UnitAddAbility(GetTriggerUnit(),loc_random_num)
+    call UnitMakeAbilityPermanent(GetTriggerUnit(),true,loc_random_num)
+    set loc_random_num = 0
+    endif
+    return 
     else
         // 轩辕剑
     call UnitAddItemByIdSwapped('mlst',GetTriggerUnit()) 
